@@ -22,7 +22,7 @@ function Sidebar() {
       <div className="sidebar-header">
         <h1>
           <span>💎</span>
-          <span>Inventario Joyería</span>
+          <span>Cuero & Perla</span>
         </h1>
       </div>
       <ul className="sidebar-nav">
