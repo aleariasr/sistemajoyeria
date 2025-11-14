@@ -1,11 +1,12 @@
+
 {
-  "name": "sistemajoyeria-backend",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "Backend para Sistema de Inventario de Joyería",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "clear-db": "node clear-db.js"
   },
   "keywords": ["joyeria", "inventario", "backend"],
   "author": "",
