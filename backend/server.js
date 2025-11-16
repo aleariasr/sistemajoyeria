@@ -5,11 +5,20 @@ const { initDatabase } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+// Log de peticiones en desarrollo
+if (NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Rutas
 const joyasRoutes = require('./routes/joyas');
@@ -20,26 +29,73 @@ app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/reportes', reportesRoutes);
 
-// Ruta de prueba
+// Ruta de salud del servidor
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV
+  });
+});
+
+// Ruta raíz
 app.get('/', (req, res) => {
-  res.json({ mensaje: 'API del Sistema de Inventario de Joyería' });
+  res.json({ 
+    mensaje: 'API del Sistema de Inventario de Joyería',
+    version: '1.0.0',
+    endpoints: {
+      joyas: '/api/joyas',
+      movimientos: '/api/movimientos',
+      reportes: '/api/reportes',
+      health: '/health'
+    }
+  });
+});
+
+// Manejo de rutas no encontradas
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Ruta no encontrada',
+    path: req.path 
+  });
 });
 
 // Manejo de errores
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Error interno del servidor' });
+  console.error('Error:', err.stack);
+  
+  // Manejo de errores de JSON inválido
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'JSON inválido en la petición' });
+  }
+  
+  res.status(err.status || 500).json({ 
+    error: NODE_ENV === 'production' 
+      ? 'Error interno del servidor' 
+      : err.message 
+  });
+});
+
+// Manejo de cierre graceful
+process.on('SIGTERM', () => {
+  console.log('SIGTERM recibido, cerrando servidor...');
+  server.close(() => {
+    console.log('Servidor cerrado');
+    process.exit(0);
+  });
 });
 
 // Inicializar base de datos y servidor
+let server;
 initDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
-      console.log('Base de datos inicializada correctamente');
+    server = app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`📊 Ambiente: ${NODE_ENV}`);
+      console.log(`✅ Base de datos inicializada correctamente`);
     });
   })
   .catch((err) => {
-    console.error('Error al inicializar la base de datos:', err);
+    console.error('❌ Error al inicializar la base de datos:', err);
     process.exit(1);
   });

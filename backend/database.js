@@ -69,17 +69,9 @@ const initDatabase = () => {
           reject(err);
         } else {
           console.log('Tabla movimientos_inventario creada o ya existe.');
-
-          // Antes: se ejecutaba el seed siempre; ahora solo si SEED=true
-          if (process.env.SEED === 'true') {
-            const { insertarJoyasEjemplo } = require('./seed');
-            insertarJoyasEjemplo()
-              .then(() => resolve())
-              .catch((err) => reject(err));
-          } else {
-            // No seed automático: resolvemos la inicialización
-            resolve();
-          }
+          console.log('Base de datos lista. Comienza con una base limpia (sin datos de prueba).');
+          console.log('Nota: Para cargar datos de ejemplo, ejecuta: SEED=true npm start');
+          resolve();
         }
       });
     });
