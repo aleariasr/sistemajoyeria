@@ -6,14 +6,19 @@
  * Valida que un valor sea un número positivo
  */
 const esNumeroPositivo = (valor) => {
-  return typeof valor === 'number' && !isNaN(valor) && valor >= 0;
+  // Convert string to number if needed
+  const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+  return typeof num === 'number' && !isNaN(num) && num >= 0;
 };
 
 /**
  * Valida que un valor sea un entero positivo
  */
 const esEnteroPositivo = (valor) => {
-  return Number.isInteger(valor) && valor >= 0;
+  // Convert string to number if needed
+  const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+  // Check if it's a valid number and an integer
+  return typeof num === 'number' && !isNaN(num) && Number.isInteger(num) && num >= 0;
 };
 
 /**
