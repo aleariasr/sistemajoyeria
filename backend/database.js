@@ -15,6 +15,25 @@ const db = new sqlite3.Database(dbPath, (err) => {
 const initDatabase = () => {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
+      // Tabla de Usuarios
+      db.run(`
+        CREATE TABLE IF NOT EXISTS usuarios (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL,
+          full_name TEXT NOT NULL,
+          fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `, (err) => {
+        if (err) {
+          console.error('Error al crear tabla usuarios:', err.message);
+          reject(err);
+        } else {
+          console.log('Tabla usuarios creada o ya existe.');
+        }
+      });
+
       // Tabla de Joyas
       db.run(`
         CREATE TABLE IF NOT EXISTS joyas (
