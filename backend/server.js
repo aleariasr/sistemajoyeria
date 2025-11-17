@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const session = require('express-session');
 const { initDatabase } = require('./database');
 
 const app = express();
@@ -20,14 +21,30 @@ if (NODE_ENV === 'development') {
   });
 }
 
+// Configurar sesiones
+app.use(session({
+  secret: 'joyeria-secret-key-2024',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: false, // Cambiar a true si se usa HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 horas
+  }
+}));
+
 // Rutas
 const joyasRoutes = require('./routes/joyas');
 const movimientosRoutes = require('./routes/movimientos');
 const reportesRoutes = require('./routes/reportes');
+const authRoutes = require('./routes/auth');
+const ventasRoutes = require('./routes/ventas');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/reportes', reportesRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/ventas', ventasRoutes);
 
 // Ruta de salud del servidor
 app.get('/health', (req, res) => {

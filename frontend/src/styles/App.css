@@ -44,6 +44,23 @@ body {
   gap: 10px;
 }
 
+.user-info {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info p {
+  color: white;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.user-info small {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
 .sidebar-nav {
   list-style: none;
 }
@@ -52,7 +69,14 @@ body {
   margin-bottom: 5px;
 }
 
-.sidebar-nav a {
+.sidebar-nav li.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 15px 20px;
+}
+
+.sidebar-nav a,
+.sidebar-nav button {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -60,12 +84,27 @@ body {
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: all 0.3s;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  font-size: 1rem;
+  text-align: left;
 }
 
 .sidebar-nav a:hover,
-.sidebar-nav a.active {
+.sidebar-nav a.active,
+.sidebar-nav button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
+}
+
+.logout-btn {
+  color: #ff6b6b !important;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 107, 107, 0.1) !important;
 }
 
 .sidebar-nav .icon {
