@@ -2,29 +2,47 @@ const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const {
+  esNumeroPositivo,
+  esEnteroPositivo,
+  validarCodigo,
+  esStringNoVacio,
+  validarMoneda,
+  validarEstado
+} = require('../utils/validaciones');
 
 // Validación de datos de joya
 const validarJoya = (data) => {
   const errores = [];
 
-  if (!data.codigo || data.codigo.trim() === '') {
+  if (!esStringNoVacio(data.codigo)) {
     errores.push('El código es obligatorio');
+  } else if (!validarCodigo(data.codigo)) {
+    errores.push('El código solo puede contener letras, números, guiones y guiones bajos');
   }
 
-  if (!data.nombre || data.nombre.trim() === '') {
+  if (!esStringNoVacio(data.nombre)) {
     errores.push('El nombre es obligatorio');
   }
 
-  if (data.costo === undefined || data.costo === null || data.costo < 0) {
+  if (!esNumeroPositivo(data.costo)) {
     errores.push('El costo es obligatorio y debe ser mayor o igual a 0');
   }
 
-  if (data.precio_venta === undefined || data.precio_venta === null || data.precio_venta < 0) {
+  if (!esNumeroPositivo(data.precio_venta)) {
     errores.push('El precio de venta es obligatorio y debe ser mayor o igual a 0');
   }
 
-  if (data.stock_actual === undefined || data.stock_actual === null || data.stock_actual < 0) {
-    errores.push('El stock actual es obligatorio y debe ser mayor o igual a 0');
+  if (!esEnteroPositivo(data.stock_actual)) {
+    errores.push('El stock actual es obligatorio y debe ser un número entero mayor o igual a 0');
+  }
+
+  if (data.moneda && !validarMoneda(data.moneda)) {
+    errores.push('La moneda debe ser CRC, USD o EUR');
+  }
+
+  if (data.estado && !validarEstado(data.estado)) {
+    errores.push('El estado debe ser Activo, Descontinuado o Agotado');
   }
 
   return errores;

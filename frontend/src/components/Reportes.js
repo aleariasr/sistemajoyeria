@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { obtenerReporteInventario, obtenerReporteStockBajo } from '../services/api';
 
 function Reportes() {
@@ -7,11 +7,7 @@ function Reportes() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    cargarReporte();
-  }, [reporteActivo]);
-
-  const cargarReporte = async () => {
+  const cargarReporte = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -30,7 +26,11 @@ function Reportes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reporteActivo]);
+
+  useEffect(() => {
+    cargarReporte();
+  }, [cargarReporte]);
 
   const formatearMoneda = (valor, moneda = 'CRC') => {
     return new Intl.NumberFormat('es-CR', {

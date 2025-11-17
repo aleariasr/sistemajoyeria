@@ -174,9 +174,18 @@ cd backend
 npm run dev
 ```
 
-### Datos de Ejemplo
+### Datos de Ejemplo (Opcional)
 
-El sistema incluye 10 joyas de ejemplo que se cargarán automáticamente la primera vez que se inicie el backend. Estos datos incluyen:
+Por defecto, el sistema inicia con una base de datos vacía y lista para producción.
+
+Si deseas cargar datos de ejemplo para pruebas o desarrollo, ejecuta:
+
+```bash
+cd backend
+node load-sample-data.js
+```
+
+Los datos de ejemplo incluyen 10 joyas:
 - Anillos de oro y plata
 - Aretes con perlas
 - Collares de oro
@@ -185,7 +194,13 @@ El sistema incluye 10 joyas de ejemplo que se cargarán automáticamente la prim
 - Relojes
 - Sets de joyería
 
+**Nota**: Los datos de ejemplo solo se cargarán si la base de datos está vacía.
+
 ## 📝 API Endpoints
+
+### Sistema
+- `GET /` - Información de la API y endpoints disponibles
+- `GET /health` - Estado del servidor
 
 ### Joyas
 - `GET /api/joyas` - Obtener todas las joyas (con filtros y paginación)
@@ -266,6 +281,43 @@ El sistema incluye 10 joyas de ejemplo que se cargarán automáticamente la prim
 - **Axios** - Cliente HTTP
 - **CSS3** - Estilos
 
+## 🗄️ Gestión de Base de Datos
+
+### Iniciar con Base de Datos Limpia (Producción)
+El sistema está configurado para iniciar con una base de datos vacía, lista para usar en producción:
+```bash
+cd backend
+npm start
+```
+
+### Cargar Datos de Ejemplo (Desarrollo/Pruebas)
+Si necesitas datos de prueba:
+```bash
+cd backend
+node load-sample-data.js
+```
+
+### Limpiar la Base de Datos
+Para comenzar desde cero:
+```bash
+cd backend
+rm joyeria.db
+npm start
+```
+
+### Backup de la Base de Datos
+La base de datos se encuentra en: `backend/joyeria.db`
+
+Para hacer un backup:
+```bash
+cp backend/joyeria.db backend/joyeria.db.backup
+```
+
+Para restaurar:
+```bash
+cp backend/joyeria.db.backup backend/joyeria.db
+```
+
 ## 📊 Funcionalidades Futuras (Opcionales)
 
 - 🔐 Sistema de autenticación y usuarios
@@ -288,7 +340,18 @@ El sistema incluye 10 joyas de ejemplo que se cargarán automáticamente la prim
 - Revisar la URL de la API en `frontend/src/services/api.js`
 
 ### Error de base de datos
-- Eliminar el archivo `backend/joyeria.db` y reiniciar el backend para recrearlo
+- Si experimentas problemas con la base de datos, elimina el archivo `backend/joyeria.db` y reinicia el backend
+- El sistema creará automáticamente una base de datos nueva y limpia
+
+### La aplicación está lenta
+- Verifica la cantidad de datos en la base de datos
+- Los filtros y búsquedas están optimizados, pero con grandes volúmenes considera agregar índices
+- En producción, considera usar PostgreSQL o MySQL en lugar de SQLite
+
+### Datos de ejemplo no aparecen
+- El sistema ya NO carga datos de ejemplo automáticamente
+- Para cargar datos de prueba: `cd backend && node load-sample-data.js`
+- Verifica que no haya errores en la consola del backend
 
 ## 📄 Licencia
 

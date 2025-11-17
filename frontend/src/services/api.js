@@ -2,13 +2,23 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-// Configurar axios para incluir credenciales
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true
-});
-
-export default api;
+// Configurar interceptor para manejo de errores global
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // El servidor respondió con un código de estado fuera del rango 2xx
+      console.error('Error de respuesta:', error.response.data);
+    } else if (error.request) {
+      // La petición se hizo pero no se recibió respuesta
+      console.error('Error de conexión: No se pudo conectar con el servidor');
+    } else {
+      // Algo pasó al configurar la petición
+      console.error('Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Joyas
 export const obtenerJoyas = (filtros = {}) => {
@@ -60,3 +70,4 @@ export const obtenerReporteInventario = () => {
 export const obtenerReporteStockBajo = () => {
   return api.get('/reportes/stock-bajo');
 };
+

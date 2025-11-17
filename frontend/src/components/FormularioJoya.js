@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crearJoya, actualizarJoya, obtenerJoya } from '../services/api';
 
@@ -39,13 +39,7 @@ function FormularioJoya() {
     estado: 'Activo'
   });
 
-  useEffect(() => {
-    if (esEdicion) {
-      cargarJoya();
-    }
-  }, [id]);
-
-  const cargarJoya = async () => {
+  const cargarJoya = useCallback(async () => {
     try {
       setLoading(true);
       const response = await obtenerJoya(id);
@@ -76,7 +70,13 @@ function FormularioJoya() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (esEdicion) {
+      cargarJoya();
+    }
+  }, [esEdicion, cargarJoya]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
