@@ -78,27 +78,30 @@ const limitarLongitud = (str, maxLength) => {
   return str.substring(0, maxLength);
 };
 
-module.exports = {
-  esNumeroPositivo,
-  esEnteroPositivo,
-  sanitizarString,
-  validarCodigo,
-  esStringNoVacio,
-  validarMoneda,
-  validarEstado,
-  validarTipoMovimiento,
-  limitarLongitud
-};
-
-// Helper function to convert numeric fields from strings to numbers
+/**
+ * Helper function to convert numeric fields from strings to numbers
+ * Handles empty strings and invalid values by returning undefined
+ */
 const convertirCamposNumericos = (data) => {
+  const convertirNumero = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    const num = parseFloat(valor);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const convertirEntero = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    const num = parseInt(valor, 10);
+    return isNaN(num) ? undefined : num;
+  };
+
   return {
     ...data,
-    costo: data.costo !== undefined ? parseFloat(data.costo) : undefined,
-    precio_venta: data.precio_venta !== undefined ? parseFloat(data.precio_venta) : undefined,
-    stock_actual: data.stock_actual !== undefined ? parseInt(data.stock_actual, 10) : undefined,
-    stock_minimo: data.stock_minimo !== undefined ? parseInt(data.stock_minimo, 10) : undefined,
-    peso_gramos: data.peso_gramos !== undefined && data.peso_gramos !== '' ? parseFloat(data.peso_gramos) : undefined
+    costo: convertirNumero(data.costo),
+    precio_venta: convertirNumero(data.precio_venta),
+    stock_actual: convertirEntero(data.stock_actual),
+    stock_minimo: convertirEntero(data.stock_minimo),
+    peso_gramos: convertirNumero(data.peso_gramos)
   };
 };
 
