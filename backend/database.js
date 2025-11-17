@@ -70,16 +70,88 @@ const initDatabase = () => {
         } else {
           console.log('Tabla movimientos_inventario creada o ya existe.');
 
-          // Antes: se ejecutaba el seed siempre; ahora solo si SEED=true
-          if (process.env.SEED === 'true') {
-            const { insertarJoyasEjemplo } = require('./seed');
-            insertarJoyasEjemplo()
-              .then(() => resolve())
-              .catch((err) => reject(err));
-          } else {
-            // No seed automático: resolvemos la inicialización
-            resolve();
-          }
+          // Tabla de Usuarios
+          db.run(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL,
+              role TEXT NOT NULL DEFAULT 'dependiente',
+              full_name TEXT NOT NULL,
+              fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `, (err) => {
+            if (err) {
+              console.error('Error al crear tabla usuarios:', err.message);
+              reject(err);
+            } else {
+              console.log('Tabla usuarios creada o ya existe.');
+
+              // Tabla de Ventas
+              db.run(`
+                CREATE TABLE IF NOT EXISTS ventas (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  id_usuario INTEGER NOT NULL,
+                  metodo_pago TEXT NOT NULL,
+                  subtotal REAL NOT NULL DEFAULT 0,
+                  descuento REAL DEFAULT 0,
+                  total REAL NOT NULL,
+                  efectivo_recibido REAL,
+                  cambio REAL,
+                  notas TEXT,
+                  fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+                )
+              `, (err) => {
+                if (err) {
+                  console.error('Error al crear tabla ventas:', err.message);
+                  reject(err);
+                } else {
+                  console.log('Tabla ventas creada o ya existe.');
+
+                  // Tabla de Items de Venta
+                  db.run(`
+                    CREATE TABLE IF NOT EXISTS items_venta (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      id_venta INTEGER NOT NULL,
+                      id_joya INTEGER NOT NULL,
+                      cantidad INTEGER NOT NULL,
+                      precio_unitario REAL NOT NULL,
+                      subtotal REAL NOT NULL,
+                      FOREIGN KEY (id_venta) REFERENCES ventas(id),
+                      FOREIGN KEY (id_joya) REFERENCES joyas(id)
+                    )
+                  `, (err) => {
+                    if (err) {
+                      console.error('Error al crear tabla items_venta:', err.message);
+                      reject(err);
+                    } else {
+                      console.log('Tabla items_venta creada o ya existe.');
+
+                      // Seed automático o no
+                      if (process.env.SEED === 'true') {
+                        const { insertarJoyasEjemplo } = require('./seed');
+                        insertarJoyasEjemplo()
+                          .then(() => {
+                            // Crear usuarios iniciales después del seed
+                            const { crearUsuariosIniciales } = require('./init-users');
+                            return crearUsuariosIniciales();
+                          })
+                          .then(() => resolve())
+                          .catch((err) => reject(err));
+                      } else {
+                        // Crear usuarios iniciales aunque no haya seed de joyas
+                        const { crearUsuariosIniciales } = require('./init-users');
+                        crearUsuariosIniciales()
+                          .then(() => resolve())
+                          .catch((err) => reject(err));
+                      }
+                    }
+                  });
+                }
+              });
+            }
+          });
         }
       });
     });
