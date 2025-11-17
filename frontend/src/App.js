@@ -1,20 +1,32 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import './styles/App.css';
 
+// Context
+import { AuthProvider, useAuth } from './context/AuthContext';
+
 // Components
+import Login from './components/Login';
 import ListadoJoyas from './components/ListadoJoyas';
 import FormularioJoya from './components/FormularioJoya';
 import DetalleJoya from './components/DetalleJoya';
 import Movimientos from './components/Movimientos';
 import Reportes from './components/Reportes';
 import StockBajo from './components/StockBajo';
+import Ventas from './components/Ventas';
+import HistorialVentas from './components/HistorialVentas';
+import DetalleVenta from './components/DetalleVenta';
 
 function Sidebar() {
   const location = useLocation();
+  const { user, isAdmin, logout } = useAuth();
 
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -24,61 +36,145 @@ function Sidebar() {
           <span>💎</span>
           <span>Cuero & Perla</span>
         </h1>
+        <div className="user-info">
+          <p>{user?.full_name}</p>
+          <small>{user?.role === 'administrador' ? '👨‍💼 Administrador' : '👤 Dependiente'}</small>
+        </div>
       </div>
       <ul className="sidebar-nav">
+        {/* Módulo de Ventas - Todos los usuarios */}
         <li>
-          <Link to="/" className={isActive('/')}>
-            <span className="icon">📋</span>
-            <span>Inventario</span>
+          <Link to="/ventas" className={isActive('/ventas')}>
+            <span className="icon">💰</span>
+            <span>Nueva Venta</span>
           </Link>
         </li>
         <li>
-          <Link to="/nueva-joya" className={isActive('/nueva-joya')}>
-            <span className="icon">➕</span>
-            <span>Nueva Joya</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/movimientos" className={isActive('/movimientos')}>
-            <span className="icon">📦</span>
-            <span>Movimientos</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/stock-bajo" className={isActive('/stock-bajo')}>
-            <span className="icon">⚠️</span>
-            <span>Stock Bajo</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/reportes" className={isActive('/reportes')}>
+          <Link to="/historial-ventas" className={isActive('/historial-ventas')}>
             <span className="icon">📊</span>
-            <span>Reportes</span>
+            <span>Historial Ventas</span>
           </Link>
+        </li>
+
+        {/* Separador */}
+        {isAdmin() && <li className="separator"></li>}
+
+        {/* Módulos administrativos - Solo administradores */}
+        {isAdmin() && (
+          <>
+            <li>
+              <Link to="/" className={isActive('/')}>
+                <span className="icon">📋</span>
+                <span>Inventario</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/nueva-joya" className={isActive('/nueva-joya')}>
+                <span className="icon">➕</span>
+                <span>Nueva Joya</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/movimientos" className={isActive('/movimientos')}>
+                <span className="icon">📦</span>
+                <span>Movimientos</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/stock-bajo" className={isActive('/stock-bajo')}>
+                <span className="icon">⚠️</span>
+                <span>Stock Bajo</span>
+              </Link>
+            </li>
+            <li>
+              <Link to="/reportes" className={isActive('/reportes')}>
+                <span className="icon">📈</span>
+                <span>Reportes</span>
+              </Link>
+            </li>
+          </>
+        )}
+
+        <li className="separator"></li>
+        <li>
+          <button onClick={handleLogout} className="logout-btn">
+            <span className="icon">🚪</span>
+            <span>Cerrar Sesión</span>
+          </button>
         </li>
       </ul>
     </div>
   );
 }
 
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (adminOnly && !isAdmin()) {
+    return <Navigate to="/ventas" replace />;
+  }
+
+  return children;
+}
+
+function AppContent() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="loading">Cargando...</div>;
+  }
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <div className="app">
+      <Sidebar />
+      <div className="main-content">
+        <Routes>
+          {/* Rutas de ventas - Accesibles para todos */}
+          <Route path="/ventas" element={<ProtectedRoute><Ventas /></ProtectedRoute>} />
+          <Route path="/historial-ventas" element={<ProtectedRoute><HistorialVentas /></ProtectedRoute>} />
+          <Route path="/venta/:id" element={<ProtectedRoute><DetalleVenta /></ProtectedRoute>} />
+
+          {/* Rutas administrativas - Solo administradores */}
+          <Route path="/" element={<ProtectedRoute adminOnly={true}><ListadoJoyas /></ProtectedRoute>} />
+          <Route path="/nueva-joya" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
+          <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
+          <Route path="/joya/:id" element={<ProtectedRoute adminOnly={true}><DetalleJoya /></ProtectedRoute>} />
+          <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
+          <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
+          <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />
+
+          {/* Redirección por defecto */}
+          <Route path="*" element={<Navigate to="/ventas" replace />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
-    <Router>
-      <div className="app">
-        <Sidebar />
-        <div className="main-content">
-          <Routes>
-            <Route path="/" element={<ListadoJoyas />} />
-            <Route path="/nueva-joya" element={<FormularioJoya />} />
-            <Route path="/editar-joya/:id" element={<FormularioJoya />} />
-            <Route path="/joya/:id" element={<DetalleJoya />} />
-            <Route path="/movimientos" element={<Movimientos />} />
-            <Route path="/stock-bajo" element={<StockBajo />} />
-            <Route path="/reportes" element={<Reportes />} />
-          </Routes>
-        </div>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 }
 

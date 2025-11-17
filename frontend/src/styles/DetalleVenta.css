@@ -1,0 +1,126 @@
+.detalle-venta-container {
+  padding: 20px;
+}
+
+.detalle-venta-container .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.btn-volver {
+  background-color: #666;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-volver:hover {
+  background-color: #777;
+}
+
+.venta-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h3 {
+  margin: 0 0 15px 0;
+  color: #1a237e;
+  font-size: 18px;
+  border-bottom: 2px solid #1a237e;
+  padding-bottom: 10px;
+}
+
+.info-linea {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.info-linea:last-child {
+  border-bottom: none;
+}
+
+.info-linea .label {
+  font-weight: 500;
+  color: #666;
+}
+
+.info-linea.total {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a237e;
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 2px solid #1a237e;
+}
+
+.descuento {
+  color: #c62828;
+}
+
+.items-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.items-section h3 {
+  margin: 0 0 20px 0;
+  color: #1a237e;
+  font-size: 18px;
+}
+
+.items-tabla {
+  overflow-x: auto;
+}
+
+.items-tabla table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.items-tabla th {
+  background-color: #1a237e;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.items-tabla td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.items-tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.items-tabla .subtotal {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.loading,
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
