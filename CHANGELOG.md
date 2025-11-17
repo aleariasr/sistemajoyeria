@@ -1,5 +1,77 @@
 # Changelog
 
+## [2.0.0] - 2025-11-17 - Autenticación y Gestión de Usuarios
+
+### 🎯 Cambios Principales
+- Sistema de autenticación completo implementado
+- Gestión de usuarios para administradores
+- Control de acceso basado en roles
+- Sistema listo para producción con seguridad mejorada
+
+### ✨ Agregado
+- **Autenticación y Sesiones**:
+  - Login con validación de credenciales
+  - Sesiones seguras con cookies HTTP-only
+  - Logout con destrucción de sesión
+  - Verificación de sesión activa
+  
+- **Gestión de Usuarios**:
+  - Componente Usuarios.js para listar usuarios
+  - Componente FormularioUsuario.js para crear/editar
+  - Rutas protegidas para administradores
+  - Modelo Usuario.js con métodos CRUD
+  - Encriptación de contraseñas con bcrypt
+  
+- **Control de Acceso**:
+  - Dos roles: Administrador y Dependiente
+  - AuthContext para gestión de estado de autenticación
+  - Protección de rutas según rol
+  - Menú dinámico según permisos
+  
+- **Backend**:
+  - Tabla usuarios en base de datos
+  - Rutas de autenticación en `/api/auth`
+  - Middleware de sesiones con express-session
+  - Usuarios iniciales creados automáticamente
+  - CORS configurado con credenciales
+
+### 🔧 Mejorado
+- Servicio API configurado con `withCredentials: true`
+- CORS del backend con origin específico y credentials
+- Protección contra eliminación del propio usuario
+- Validación de contraseñas (mínimo 6 caracteres)
+- Mensajes de error más descriptivos
+- Documentación completa actualizada
+
+### 🗑️ Eliminado
+- Archivo `seed.js` obsoleto (reemplazado por load-sample-data.js)
+- Archivo `package-lock.json` vacío en la raíz
+
+### 🔒 Seguridad
+- CodeQL scan: **0 vulnerabilidades**
+- Encriptación de contraseñas con bcrypt (10 rounds)
+- Sesiones HTTP-only para prevenir XSS
+- Protección CSRF con cookies de sesión
+- Validación de roles en backend
+- Control de acceso a rutas protegidas
+
+### 📝 Documentación
+- README actualizado con sección de autenticación
+- Tabla de usuarios agregada al modelo de datos
+- Endpoints de autenticación documentados
+- Arquitectura actualizada con nuevos componentes
+- Sección de seguridad ampliada
+- Instrucciones de usuarios por defecto
+
+### 🧪 Testing
+- Login exitoso con credenciales válidas
+- Creación de nuevos usuarios
+- Edición de usuarios existentes
+- Eliminación de usuarios (excepto propio usuario)
+- Verificación de sesión persistente
+- Acceso denegado a dependientes en rutas administrativas
+- Frontend sin advertencias de React
+
 ## [1.0.0] - 2025-11-17 - Versión de Producción
 
 ### 🎯 Cambios Principales
@@ -43,21 +115,6 @@
 - Validación de entrada mejorada en todos los endpoints
 - Sanitización de strings de entrada
 - Validación de tipos de datos numéricos y enteros
-
-### 📝 Documentación
-- Guía completa de gestión de base de datos
-- Instrucciones de despliegue en producción
-- Solución de problemas ampliada
-- Ejemplos de configuración con variables de entorno
-- Mejores descripciones de características del sistema
-
-### 🧪 Testing
-- Verificado funcionamiento con base de datos limpia
-- Probado script de carga de datos de ejemplo
-- Validado prevención de carga duplicada de datos
-- Testeados endpoints principales de la API
-- Verificada validación de entrada de datos
-- Frontend build exitoso sin advertencias
 
 ## [0.1.0] - 2025-11-13 - Versión Inicial
 
