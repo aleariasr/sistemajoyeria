@@ -21,35 +21,36 @@ function FormularioUsuario() {
   const [loadingUsuario, setLoadingUsuario] = useState(esEdicion);
 
   useEffect(() => {
+    const cargarUsuario = async () => {
+      try {
+        setLoadingUsuario(true);
+        const response = await api.get('/auth');
+        const usuario = response.data.find(u => u.id === parseInt(id));
+        
+        if (usuario) {
+          setFormData({
+            username: usuario.username,
+            password: '',
+            confirmPassword: '',
+            role: usuario.role,
+            full_name: usuario.full_name
+          });
+        } else {
+          setError('Usuario no encontrado');
+        }
+      } catch (error) {
+        console.error('Error al cargar usuario:', error);
+        setError('Error al cargar usuario');
+      } finally {
+        setLoadingUsuario(false);
+      }
+    };
+
     if (esEdicion) {
       cargarUsuario();
     }
-  }, [id]);
-
-  const cargarUsuario = async () => {
-    try {
-      setLoadingUsuario(true);
-      const response = await api.get('/auth');
-      const usuario = response.data.find(u => u.id === parseInt(id));
-      
-      if (usuario) {
-        setFormData({
-          username: usuario.username,
-          password: '',
-          confirmPassword: '',
-          role: usuario.role,
-          full_name: usuario.full_name
-        });
-      } else {
-        setError('Usuario no encontrado');
-      }
-    } catch (error) {
-      console.error('Error al cargar usuario:', error);
-      setError('Error al cargar usuario');
-    } finally {
-      setLoadingUsuario(false);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, esEdicion]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
