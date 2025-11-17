@@ -3,9 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { crearJoya, actualizarJoya, obtenerJoya } from '../services/api';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
-const TIPOS_METAL = ['Oro 10k', 'Oro 14k', 'Oro 18k', 'Plata 925', 'Acero', 'Platino', 'Baño de oro', 'Otro'];
-const COLORES_METAL = ['dorado', 'plateado', 'rosado', 'blanco', 'negro'];
-const PIEDRAS = ['circonia', 'diamante', 'perla', 'esmeralda', 'rubí', 'zafiro', 'sin piedra', 'otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
 const MONEDAS = ['CRC', 'USD'];
 
@@ -23,12 +20,6 @@ function FormularioJoya() {
     nombre: '',
     descripcion: '',
     categoria: '',
-    tipo_metal: '',
-    color_metal: '',
-    piedras: '',
-    peso_gramos: '',
-    talla: '',
-    coleccion: '',
     proveedor: '',
     costo: '',
     precio_venta: '',
@@ -49,12 +40,6 @@ function FormularioJoya() {
         nombre: joya.nombre || '',
         descripcion: joya.descripcion || '',
         categoria: joya.categoria || '',
-        tipo_metal: joya.tipo_metal || '',
-        color_metal: joya.color_metal || '',
-        piedras: joya.piedras || '',
-        peso_gramos: joya.peso_gramos || '',
-        talla: joya.talla || '',
-        coleccion: joya.coleccion || '',
         proveedor: joya.proveedor || '',
         costo: joya.costo || '',
         precio_venta: joya.precio_venta || '',
@@ -174,7 +159,7 @@ function FormularioJoya() {
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleChange}
-                placeholder="Ej: Anillo Solitario Oro 14k"
+                placeholder="Ej: Pulsera artesanal trenzada"
                 required
               />
             </div>
@@ -208,74 +193,6 @@ function FormularioJoya() {
               placeholder="Descripción detallada de la joya..."
               rows="3"
             />
-          </div>
-
-          <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Características</h3>
-
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Tipo de Metal</label>
-              <select name="tipo_metal" value={formData.tipo_metal} onChange={handleChange}>
-                <option value="">Seleccionar</option>
-                {TIPOS_METAL.map((tipo) => (
-                  <option key={tipo} value={tipo}>{tipo}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Color del Metal</label>
-              <select name="color_metal" value={formData.color_metal} onChange={handleChange}>
-                <option value="">Seleccionar</option>
-                {COLORES_METAL.map((color) => (
-                  <option key={color} value={color}>{color}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Piedras</label>
-              <select name="piedras" value={formData.piedras} onChange={handleChange}>
-                <option value="">Seleccionar</option>
-                {PIEDRAS.map((piedra) => (
-                  <option key={piedra} value={piedra}>{piedra}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Peso (gramos)</label>
-              <input
-                type="number"
-                step="0.1"
-                name="peso_gramos"
-                value={formData.peso_gramos}
-                onChange={handleChange}
-                placeholder="Ej: 3.5"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Talla / Medida</label>
-              <input
-                type="text"
-                name="talla"
-                value={formData.talla}
-                onChange={handleChange}
-                placeholder="Ej: 7, 45cm, Único"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Colección</label>
-              <input
-                type="text"
-                name="coleccion"
-                value={formData.coleccion}
-                onChange={handleChange}
-                placeholder="Ej: Colección Novias 2025"
-              />
-            </div>
           </div>
 
           <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Información Comercial</h3>

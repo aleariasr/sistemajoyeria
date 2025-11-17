@@ -54,10 +54,6 @@ export const obtenerCategorias = () => {
   return api.get('/joyas/categorias');
 };
 
-export const obtenerTiposMetal = () => {
-  return api.get('/joyas/tipos-metal');
-};
-
 export const obtenerJoyasStockBajo = () => {
   return api.get('/joyas/stock-bajo');
 };

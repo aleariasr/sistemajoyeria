@@ -100,8 +100,7 @@ const convertirCamposNumericos = (data) => {
     costo: convertirNumero(data.costo),
     precio_venta: convertirNumero(data.precio_venta),
     stock_actual: convertirEntero(data.stock_actual),
-    stock_minimo: convertirEntero(data.stock_minimo),
-    peso_gramos: convertirNumero(data.peso_gramos)
+    stock_minimo: convertirEntero(data.stock_minimo)
   };
 };
 

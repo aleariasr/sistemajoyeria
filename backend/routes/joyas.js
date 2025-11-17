@@ -55,7 +55,6 @@ router.get('/', async (req, res) => {
     const filtros = {
       busqueda: req.query.busqueda,
       categoria: req.query.categoria,
-      tipo_metal: req.query.tipo_metal,
       precio_min: req.query.precio_min,
       precio_max: req.query.precio_max,
       stock_bajo: req.query.stock_bajo,
@@ -81,17 +80,6 @@ router.get('/categorias', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener categorías:', error);
     res.status(500).json({ error: 'Error al obtener categorías' });
-  }
-});
-
-// GET /api/joyas/tipos-metal - Obtener tipos de metal únicos
-router.get('/tipos-metal', async (req, res) => {
-  try {
-    const tipos = await Joya.obtenerTiposMetal();
-    res.json(tipos);
-  } catch (error) {
-    console.error('Error al obtener tipos de metal:', error);
-    res.status(500).json({ error: 'Error al obtener tipos de metal' });
   }
 });
 

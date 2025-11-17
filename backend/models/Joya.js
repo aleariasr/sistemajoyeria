@@ -5,22 +5,19 @@ class Joya {
   static crear(joyaData) {
     return new Promise((resolve, reject) => {
       const {
-        codigo, nombre, descripcion, categoria, tipo_metal, color_metal,
-        piedras, peso_gramos, talla, coleccion, proveedor, costo,
+        codigo, nombre, descripcion, categoria, proveedor, costo,
         precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado
       } = joyaData;
 
       const sql = `
         INSERT INTO joyas (
-          codigo, nombre, descripcion, categoria, tipo_metal, color_metal,
-          piedras, peso_gramos, talla, coleccion, proveedor, costo,
+          codigo, nombre, descripcion, categoria, proveedor, costo,
           precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.run(sql, [
-        codigo, nombre, descripcion, categoria, tipo_metal, color_metal,
-        piedras, peso_gramos, talla, coleccion, proveedor, costo,
+        codigo, nombre, descripcion, categoria, proveedor, costo,
         precio_venta, moneda || 'CRC', stock_actual, stock_minimo || 5, ubicacion, estado || 'Activo'
       ], function(err) {
         if (err) {
@@ -36,7 +33,7 @@ class Joya {
   static obtenerTodas(filtros = {}) {
     return new Promise((resolve, reject) => {
       const {
-        busqueda, categoria, tipo_metal, precio_min, precio_max,
+        busqueda, categoria, precio_min, precio_max,
         stock_bajo, sin_stock, estado, pagina = 1, por_pagina = 20
       } = filtros;
 
@@ -50,23 +47,16 @@ class Joya {
           nombre LIKE ? OR 
           descripcion LIKE ? OR 
           categoria LIKE ? OR 
-          tipo_metal LIKE ? OR 
           proveedor LIKE ?
         )`;
         const searchPattern = `%${busqueda}%`;
-        params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
       }
 
       // Filtro por categoría
       if (categoria) {
         sql += ' AND categoria = ?';
         params.push(categoria);
-      }
-
-      // Filtro por tipo de metal
-      if (tipo_metal) {
-        sql += ' AND tipo_metal = ?';
-        params.push(tipo_metal);
       }
 
       // Filtro por rango de precios
@@ -158,15 +148,13 @@ class Joya {
   static actualizar(id, joyaData) {
     return new Promise((resolve, reject) => {
       const {
-        codigo, nombre, descripcion, categoria, tipo_metal, color_metal,
-        piedras, peso_gramos, talla, coleccion, proveedor, costo,
+        codigo, nombre, descripcion, categoria, proveedor, costo,
         precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado
       } = joyaData;
 
       const sql = `
         UPDATE joyas SET
-          codigo = ?, nombre = ?, descripcion = ?, categoria = ?, tipo_metal = ?,
-          color_metal = ?, piedras = ?, peso_gramos = ?, talla = ?, coleccion = ?,
+          codigo = ?, nombre = ?, descripcion = ?, categoria = ?,
           proveedor = ?, costo = ?, precio_venta = ?, moneda = ?, stock_actual = ?,
           stock_minimo = ?, ubicacion = ?, estado = ?,
           fecha_ultima_modificacion = CURRENT_TIMESTAMP
@@ -174,8 +162,7 @@ class Joya {
       `;
 
       db.run(sql, [
-        codigo, nombre, descripcion, categoria, tipo_metal, color_metal,
-        piedras, peso_gramos, talla, coleccion, proveedor, costo,
+        codigo, nombre, descripcion, categoria, proveedor, costo,
         precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado, id
       ], function(err) {
         if (err) {
@@ -244,20 +231,6 @@ class Joya {
           reject(err);
         } else {
           resolve(rows.map(row => row.categoria));
-        }
-      });
-    });
-  }
-
-  // Obtener tipos de metal únicos
-  static obtenerTiposMetal() {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT DISTINCT tipo_metal FROM joyas WHERE tipo_metal IS NOT NULL ORDER BY tipo_metal';
-      db.all(sql, [], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows.map(row => row.tipo_metal));
         }
       });
     });
