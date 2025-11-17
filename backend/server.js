@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { initDatabase } = require('./database');
+const { crearUsuariosIniciales } = require('./init-users');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -105,6 +106,7 @@ process.on('SIGTERM', () => {
 // Inicializar base de datos y servidor
 let server;
 initDatabase()
+  .then(() => crearUsuariosIniciales())
   .then(() => {
     server = app.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
