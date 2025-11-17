@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { obtenerJoya } from '../services/api';
 
@@ -10,11 +10,7 @@ function DetalleJoya() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    cargarJoya();
-  }, [id]);
-
-  const cargarJoya = async () => {
+  const cargarJoya = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -27,7 +23,11 @@ function DetalleJoya() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    cargarJoya();
+  }, [cargarJoya]);
 
   const formatearMoneda = (valor, moneda) => {
     return new Intl.NumberFormat('es-CR', {

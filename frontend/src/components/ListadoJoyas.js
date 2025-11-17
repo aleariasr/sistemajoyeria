@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias, obtenerTiposMetal } from '../services/api';
 
@@ -33,29 +33,7 @@ function ListadoJoyas() {
     cargarTiposMetal();
   }, []);
 
-  useEffect(() => {
-    cargarJoyas();
-  }, [paginaActual, busqueda, categoria, tipoMetal, precioMin, precioMax, stockBajo, sinStock, estado]);
-
-  const cargarCategorias = async () => {
-    try {
-      const response = await obtenerCategorias();
-      setCategorias(response.data);
-    } catch (err) {
-      console.error('Error al cargar categorías:', err);
-    }
-  };
-
-  const cargarTiposMetal = async () => {
-    try {
-      const response = await obtenerTiposMetal();
-      setTiposMetal(response.data);
-    } catch (err) {
-      console.error('Error al cargar tipos de metal:', err);
-    }
-  };
-
-  const cargarJoyas = async () => {
+  const cargarJoyas = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -83,6 +61,28 @@ function ListadoJoyas() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }, [paginaActual, busqueda, categoria, tipoMetal, precioMin, precioMax, stockBajo, sinStock, estado]);
+
+  useEffect(() => {
+    cargarJoyas();
+  }, [cargarJoyas]);
+
+  const cargarCategorias = async () => {
+    try {
+      const response = await obtenerCategorias();
+      setCategorias(response.data);
+    } catch (err) {
+      console.error('Error al cargar categorías:', err);
+    }
+  };
+
+  const cargarTiposMetal = async () => {
+    try {
+      const response = await obtenerTiposMetal();
+      setTiposMetal(response.data);
+    } catch (err) {
+      console.error('Error al cargar tipos de metal:', err);
     }
   };
 
