@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import '../styles/Ventas.css';
@@ -16,15 +16,7 @@ function Ventas() {
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  useEffect(() => {
-    if (busqueda.length >= 2) {
-      buscarJoyas();
-    } else {
-      setJoyas([]);
-    }
-  }, [busqueda]);
-
-  const buscarJoyas = async () => {
+  const buscarJoyas = useCallback(async () => {
     try {
       const response = await api.get('/joyas', {
         params: { busqueda, estado: 'Activo', por_pagina: 10 }
@@ -33,7 +25,15 @@ function Ventas() {
     } catch (error) {
       console.error('Error al buscar joyas:', error);
     }
-  };
+  }, [busqueda]);
+
+  useEffect(() => {
+    if (busqueda.length >= 2) {
+      buscarJoyas();
+    } else {
+      setJoyas([]);
+    }
+  }, [busqueda, buscarJoyas]);
 
   const agregarAlCarrito = (joya) => {
     const itemExistente = carrito.find(item => item.id === joya.id);

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/HistorialVentas.css';
 
 function HistorialVentas() {
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [ventas, setVentas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,11 +19,7 @@ function HistorialVentas() {
     total_paginas: 1
   });
 
-  useEffect(() => {
-    cargarVentas();
-  }, [filtros, paginacion.pagina]);
-
-  const cargarVentas = async () => {
+  const cargarVentas = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -43,7 +39,11 @@ function HistorialVentas() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtros, paginacion.pagina]);
+
+  useEffect(() => {
+    cargarVentas();
+  }, [cargarVentas]);
 
   const verDetalleVenta = (id) => {
     navigate(`/venta/${id}`);

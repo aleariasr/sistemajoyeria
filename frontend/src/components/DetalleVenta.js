@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/DetalleVenta.css';
@@ -9,11 +9,7 @@ function DetalleVenta() {
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    cargarVenta();
-  }, [id]);
-
-  const cargarVenta = async () => {
+  const cargarVenta = useCallback(async () => {
     try {
       const response = await api.get(`/ventas/${id}`);
       setVenta(response.data);
@@ -22,7 +18,11 @@ function DetalleVenta() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    cargarVenta();
+  }, [cargarVenta]);
 
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-CR', {
