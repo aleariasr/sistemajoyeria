@@ -32,7 +32,7 @@ function Login() {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <h1>💎 Cuero & Perla</h1>
+          <h1>Cuero & Perla</h1>
           <p>Sistema de Joyería</p>
         </div>
         
