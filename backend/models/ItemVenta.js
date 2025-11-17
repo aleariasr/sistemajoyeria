@@ -30,7 +30,7 @@ class ItemVenta {
   static obtenerPorVenta(id_venta) {
     return new Promise((resolve, reject) => {
       const sql = `
-        SELECT iv.*, j.codigo, j.nombre, j.categoria, j.tipo_metal
+        SELECT iv.*, j.codigo, j.nombre, j.categoria
         FROM items_venta iv
         LEFT JOIN joyas j ON iv.id_joya = j.id
         WHERE iv.id_venta = ?

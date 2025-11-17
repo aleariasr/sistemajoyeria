@@ -143,44 +143,6 @@ function DetalleJoya() {
 
       <div className="card">
         <div className="card-header">
-          <h3>Características</h3>
-        </div>
-        
-        <div className="detail-grid">
-          <div className="detail-item">
-            <label>Tipo de Metal</label>
-            <div className="value">{joya.tipo_metal || '-'}</div>
-          </div>
-          
-          <div className="detail-item">
-            <label>Color del Metal</label>
-            <div className="value">{joya.color_metal || '-'}</div>
-          </div>
-          
-          <div className="detail-item">
-            <label>Piedras</label>
-            <div className="value">{joya.piedras || '-'}</div>
-          </div>
-          
-          <div className="detail-item">
-            <label>Peso</label>
-            <div className="value">{joya.peso_gramos ? `${joya.peso_gramos}g` : '-'}</div>
-          </div>
-          
-          <div className="detail-item">
-            <label>Talla / Medida</label>
-            <div className="value">{joya.talla || '-'}</div>
-          </div>
-          
-          <div className="detail-item">
-            <label>Colección</label>
-            <div className="value">{joya.coleccion || '-'}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="card-header">
           <h3>Información Comercial</h3>
         </div>
         

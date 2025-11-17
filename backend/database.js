@@ -42,12 +42,6 @@ const initDatabase = () => {
           nombre TEXT NOT NULL,
           descripcion TEXT,
           categoria TEXT,
-          tipo_metal TEXT,
-          color_metal TEXT,
-          piedras TEXT,
-          peso_gramos REAL,
-          talla TEXT,
-          coleccion TEXT,
           proveedor TEXT,
           costo REAL NOT NULL,
           precio_venta REAL NOT NULL,
@@ -65,6 +59,88 @@ const initDatabase = () => {
           reject(err);
         } else {
           console.log('Tabla joyas creada o ya existe.');
+          
+          // Migrar tabla existente si tiene columnas antiguas
+          db.all("PRAGMA table_info(joyas)", [], (err, columns) => {
+            if (err) {
+              console.error('Error al verificar columnas:', err.message);
+              return;
+            }
+            
+            const columnNames = columns.map(col => col.name);
+            const hasOldColumns = columnNames.includes('tipo_metal') || 
+                                  columnNames.includes('color_metal') || 
+                                  columnNames.includes('piedras') ||
+                                  columnNames.includes('peso_gramos') ||
+                                  columnNames.includes('talla') ||
+                                  columnNames.includes('coleccion');
+            
+            if (hasOldColumns) {
+              console.log('Detectadas columnas antiguas. Ejecutando migración...');
+              
+              // Crear tabla temporal con nueva estructura
+              db.run(`
+                CREATE TABLE joyas_new (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  codigo TEXT UNIQUE NOT NULL,
+                  nombre TEXT NOT NULL,
+                  descripcion TEXT,
+                  categoria TEXT,
+                  proveedor TEXT,
+                  costo REAL NOT NULL,
+                  precio_venta REAL NOT NULL,
+                  moneda TEXT DEFAULT 'CRC',
+                  stock_actual INTEGER NOT NULL DEFAULT 0,
+                  stock_minimo INTEGER DEFAULT 5,
+                  ubicacion TEXT,
+                  estado TEXT DEFAULT 'Activo',
+                  fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  fecha_ultima_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+              `, (err) => {
+                if (err) {
+                  console.error('Error al crear tabla temporal:', err.message);
+                  return;
+                }
+                
+                // Copiar datos de la tabla antigua a la nueva
+                db.run(`
+                  INSERT INTO joyas_new (
+                    id, codigo, nombre, descripcion, categoria, proveedor,
+                    costo, precio_venta, moneda, stock_actual, stock_minimo,
+                    ubicacion, estado, fecha_creacion, fecha_ultima_modificacion
+                  )
+                  SELECT 
+                    id, codigo, nombre, descripcion, categoria, proveedor,
+                    costo, precio_venta, moneda, stock_actual, stock_minimo,
+                    ubicacion, estado, fecha_creacion, fecha_ultima_modificacion
+                  FROM joyas
+                `, (err) => {
+                  if (err) {
+                    console.error('Error al copiar datos:', err.message);
+                    return;
+                  }
+                  
+                  // Eliminar tabla antigua
+                  db.run('DROP TABLE joyas', (err) => {
+                    if (err) {
+                      console.error('Error al eliminar tabla antigua:', err.message);
+                      return;
+                    }
+                    
+                    // Renombrar tabla nueva
+                    db.run('ALTER TABLE joyas_new RENAME TO joyas', (err) => {
+                      if (err) {
+                        console.error('Error al renombrar tabla:', err.message);
+                      } else {
+                        console.log('✅ Migración completada: columnas de características eliminadas.');
+                      }
+                    });
+                  });
+                });
+              });
+            }
+          });
         }
       });
 

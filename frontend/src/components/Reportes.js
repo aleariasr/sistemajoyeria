@@ -46,9 +46,9 @@ function Reportes() {
     let csv = '';
     
     if (reporteActivo === 'inventario') {
-      csv = 'Código,Nombre,Categoría,Tipo Metal,Stock,Costo,Precio Venta,Moneda,Valor Total Costo,Valor Total Venta,Estado\n';
+      csv = 'Código,Nombre,Categoría,Stock,Costo,Precio Venta,Moneda,Valor Total Costo,Valor Total Venta,Estado\n';
       datos.forEach((item) => {
-        csv += `${item.codigo},"${item.nombre}","${item.categoria}","${item.tipo_metal}",${item.stock_actual},${item.costo},${item.precio_venta},${item.moneda},${item.valor_total_costo},${item.valor_total_venta},${item.estado}\n`;
+        csv += `${item.codigo},"${item.nombre}","${item.categoria}",${item.stock_actual},${item.costo},${item.precio_venta},${item.moneda},${item.valor_total_costo},${item.valor_total_venta},${item.estado}\n`;
       });
     } else {
       csv = 'Código,Nombre,Categoría,Stock Actual,Stock Mínimo,Diferencia,Precio Venta,Moneda\n';
@@ -155,7 +155,6 @@ function Reportes() {
                       <th>Código</th>
                       <th>Nombre</th>
                       <th>Categoría</th>
-                      <th>Tipo Metal</th>
                       <th>Stock</th>
                       <th>Costo</th>
                       <th>Precio Venta</th>
@@ -170,7 +169,6 @@ function Reportes() {
                         <td><strong>{item.codigo}</strong></td>
                         <td>{item.nombre}</td>
                         <td>{item.categoria}</td>
-                        <td>{item.tipo_metal}</td>
                         <td><strong>{item.stock_actual}</strong></td>
                         <td>{formatearMoneda(item.costo, item.moneda)}</td>
                         <td>{formatearMoneda(item.precio_venta, item.moneda)}</td>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { obtenerJoyas, eliminarJoya, obtenerCategorias, obtenerTiposMetal } from '../services/api';
+import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 
 function ListadoJoyas() {
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ function ListadoJoyas() {
   // Filtros
   const [busqueda, setBusqueda] = useState('');
   const [categoria, setCategoria] = useState('');
-  const [tipoMetal, setTipoMetal] = useState('');
   const [precioMin, setPrecioMin] = useState('');
   const [precioMax, setPrecioMax] = useState('');
   const [stockBajo, setStockBajo] = useState(false);
@@ -26,11 +25,9 @@ function ListadoJoyas() {
   
   // Listas para filtros
   const [categorias, setCategorias] = useState([]);
-  const [tiposMetal, setTiposMetal] = useState([]);
 
   useEffect(() => {
     cargarCategorias();
-    cargarTiposMetal();
   }, []);
 
   const cargarJoyas = useCallback(async () => {
@@ -45,7 +42,6 @@ function ListadoJoyas() {
       
       if (busqueda) filtros.busqueda = busqueda;
       if (categoria) filtros.categoria = categoria;
-      if (tipoMetal) filtros.tipo_metal = tipoMetal;
       if (precioMin) filtros.precio_min = precioMin;
       if (precioMax) filtros.precio_max = precioMax;
       if (stockBajo) filtros.stock_bajo = 'true';
@@ -62,7 +58,7 @@ function ListadoJoyas() {
     } finally {
       setLoading(false);
     }
-  }, [paginaActual, busqueda, categoria, tipoMetal, precioMin, precioMax, stockBajo, sinStock, estado]);
+  }, [paginaActual, busqueda, categoria, precioMin, precioMax, stockBajo, sinStock, estado]);
 
   useEffect(() => {
     cargarJoyas();
@@ -74,15 +70,6 @@ function ListadoJoyas() {
       setCategorias(response.data);
     } catch (err) {
       console.error('Error al cargar categorías:', err);
-    }
-  };
-
-  const cargarTiposMetal = async () => {
-    try {
-      const response = await obtenerTiposMetal();
-      setTiposMetal(response.data);
-    } catch (err) {
-      console.error('Error al cargar tipos de metal:', err);
     }
   };
 
@@ -103,7 +90,6 @@ function ListadoJoyas() {
   const limpiarFiltros = () => {
     setBusqueda('');
     setCategoria('');
-    setTipoMetal('');
     setPrecioMin('');
     setPrecioMax('');
     setStockBajo(false);
@@ -152,7 +138,7 @@ function ListadoJoyas() {
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Buscar por código, nombre, descripción, categoría, tipo de metal o proveedor..."
+            placeholder="Buscar por código, nombre, descripción, categoría o proveedor..."
             value={busqueda}
             onChange={(e) => {
               setBusqueda(e.target.value);
@@ -168,16 +154,6 @@ function ListadoJoyas() {
               <option value="">Todas</option>
               {categorias.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Tipo de Metal</label>
-            <select value={tipoMetal} onChange={(e) => setTipoMetal(e.target.value)}>
-              <option value="">Todos</option>
-              {tiposMetal.map((tipo) => (
-                <option key={tipo} value={tipo}>{tipo}</option>
               ))}
             </select>
           </div>
@@ -266,7 +242,6 @@ function ListadoJoyas() {
                     <th>Código</th>
                     <th>Nombre</th>
                     <th>Categoría</th>
-                    <th>Tipo Metal</th>
                     <th>Precio Venta</th>
                     <th>Stock</th>
                     <th>Ubicación</th>
@@ -280,7 +255,6 @@ function ListadoJoyas() {
                       <td><strong>{joya.codigo}</strong></td>
                       <td>{joya.nombre}</td>
                       <td>{joya.categoria}</td>
-                      <td>{joya.tipo_metal}</td>
                       <td>{formatearMoneda(joya.precio_venta, joya.moneda)}</td>
                       <td>
                         <strong>{joya.stock_actual}</strong>

@@ -11,7 +11,6 @@ router.get('/inventario', async (req, res) => {
       codigo: joya.codigo,
       nombre: joya.nombre,
       categoria: joya.categoria,
-      tipo_metal: joya.tipo_metal,
       stock_actual: joya.stock_actual,
       costo: joya.costo,
       precio_venta: joya.precio_venta,
