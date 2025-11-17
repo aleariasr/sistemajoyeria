@@ -6,14 +6,19 @@
  * Valida que un valor sea un número positivo
  */
 const esNumeroPositivo = (valor) => {
-  return typeof valor === 'number' && !isNaN(valor) && valor >= 0;
+  // Convert string to number if needed
+  const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+  return typeof num === 'number' && !isNaN(num) && num >= 0;
 };
 
 /**
  * Valida que un valor sea un entero positivo
  */
 const esEnteroPositivo = (valor) => {
-  return Number.isInteger(valor) && valor >= 0;
+  // Convert string to number if needed
+  const num = typeof valor === 'string' ? parseFloat(valor) : valor;
+  // Check if it's a valid number and an integer
+  return typeof num === 'number' && !isNaN(num) && Number.isInteger(num) && num >= 0;
 };
 
 /**
@@ -73,6 +78,33 @@ const limitarLongitud = (str, maxLength) => {
   return str.substring(0, maxLength);
 };
 
+/**
+ * Helper function to convert numeric fields from strings to numbers
+ * Handles empty strings and invalid values by returning undefined
+ */
+const convertirCamposNumericos = (data) => {
+  const convertirNumero = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    const num = parseFloat(valor);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const convertirEntero = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    const num = parseInt(valor, 10);
+    return isNaN(num) ? undefined : num;
+  };
+
+  return {
+    ...data,
+    costo: convertirNumero(data.costo),
+    precio_venta: convertirNumero(data.precio_venta),
+    stock_actual: convertirEntero(data.stock_actual),
+    stock_minimo: convertirEntero(data.stock_minimo),
+    peso_gramos: convertirNumero(data.peso_gramos)
+  };
+};
+
 module.exports = {
   esNumeroPositivo,
   esEnteroPositivo,
@@ -82,5 +114,6 @@ module.exports = {
   validarMoneda,
   validarEstado,
   validarTipoMovimiento,
-  limitarLongitud
+  limitarLongitud,
+  convertirCamposNumericos
 };

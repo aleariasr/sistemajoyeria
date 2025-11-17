@@ -8,7 +8,8 @@ const {
   validarCodigo,
   esStringNoVacio,
   validarMoneda,
-  validarEstado
+  validarEstado,
+  convertirCamposNumericos
 } = require('../utils/validaciones');
 
 // Validación de datos de joya
@@ -127,29 +128,32 @@ router.get('/:id', async (req, res) => {
 // POST /api/joyas - Crear nueva joya
 router.post('/', async (req, res) => {
   try {
-    const errores = validarJoya(req.body);
+    // Convert numeric fields from strings to numbers
+    const joyaData = convertirCamposNumericos(req.body);
+
+    const errores = validarJoya(joyaData);
     
     if (errores.length > 0) {
       return res.status(400).json({ errores });
     }
 
     // Verificar que el código no exista
-    const joyaExistente = await Joya.obtenerPorCodigo(req.body.codigo);
+    const joyaExistente = await Joya.obtenerPorCodigo(joyaData.codigo);
     if (joyaExistente) {
       return res.status(400).json({ errores: ['El código ya existe'] });
     }
 
-    const resultado = await Joya.crear(req.body);
+    const resultado = await Joya.crear(joyaData);
     
     // Registrar movimiento inicial si hay stock
-    if (req.body.stock_actual > 0) {
+    if (joyaData.stock_actual > 0) {
       await MovimientoInventario.crear({
         id_joya: resultado.id,
         tipo_movimiento: 'Entrada',
-        cantidad: req.body.stock_actual,
+        cantidad: joyaData.stock_actual,
         motivo: 'Inventario inicial',
         stock_antes: 0,
-        stock_despues: req.body.stock_actual
+        stock_despues: joyaData.stock_actual
       });
     }
 
@@ -163,7 +167,10 @@ router.post('/', async (req, res) => {
 // PUT /api/joyas/:id - Actualizar joya
 router.put('/:id', async (req, res) => {
   try {
-    const errores = validarJoya(req.body);
+    // Convert numeric fields from strings to numbers
+    const joyaData = convertirCamposNumericos(req.body);
+
+    const errores = validarJoya(joyaData);
     
     if (errores.length > 0) {
       return res.status(400).json({ errores });
@@ -175,14 +182,14 @@ router.put('/:id', async (req, res) => {
     }
 
     // Verificar que el código no esté duplicado (excepto para la misma joya)
-    if (req.body.codigo !== joyaExistente.codigo) {
-      const joyaConCodigo = await Joya.obtenerPorCodigo(req.body.codigo);
+    if (joyaData.codigo !== joyaExistente.codigo) {
+      const joyaConCodigo = await Joya.obtenerPorCodigo(joyaData.codigo);
       if (joyaConCodigo) {
         return res.status(400).json({ errores: ['El código ya existe'] });
       }
     }
 
-    await Joya.actualizar(req.params.id, req.body);
+    await Joya.actualizar(req.params.id, joyaData);
     res.json({ mensaje: 'Joya actualizada correctamente' });
   } catch (error) {
     console.error('Error al actualizar joya:', error);
