@@ -16,6 +16,8 @@ import StockBajo from './components/StockBajo';
 import Ventas from './components/Ventas';
 import HistorialVentas from './components/HistorialVentas';
 import DetalleVenta from './components/DetalleVenta';
+import Usuarios from './components/Usuarios';
+import FormularioUsuario from './components/FormularioUsuario';
 
 function Sidebar() {
   const location = useLocation();
@@ -92,6 +94,12 @@ function Sidebar() {
                 <span>Reportes</span>
               </Link>
             </li>
+            <li>
+              <Link to="/usuarios" className={isActive('/usuarios')}>
+                <span className="icon">👥</span>
+                <span>Usuarios</span>
+              </Link>
+            </li>
           </>
         )}
 
@@ -159,6 +167,9 @@ function AppContent() {
           <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
           <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
           <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />
+          <Route path="/usuarios" element={<ProtectedRoute adminOnly={true}><Usuarios /></ProtectedRoute>} />
+          <Route path="/nuevo-usuario" element={<ProtectedRoute adminOnly={true}><FormularioUsuario /></ProtectedRoute>} />
+          <Route path="/editar-usuario/:id" element={<ProtectedRoute adminOnly={true}><FormularioUsuario /></ProtectedRoute>} />
 
           {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="/ventas" replace />} />
