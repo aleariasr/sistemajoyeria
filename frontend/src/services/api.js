@@ -2,8 +2,13 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+// Crear instancia de axios con la URL base
+const api = axios.create({
+  baseURL: API_URL,
+});
+
 // Configurar interceptor para manejo de errores global
-axios.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
@@ -19,6 +24,9 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Exportar instancia como default para compatibilidad con imports existentes
+export default api;
 
 // Joyas
 export const obtenerJoyas = (filtros = {}) => {
