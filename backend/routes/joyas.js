@@ -8,7 +8,8 @@ const {
   validarCodigo,
   esStringNoVacio,
   validarMoneda,
-  validarEstado
+  validarEstado,
+  convertirCamposNumericos
 } = require('../utils/validaciones');
 
 // Validación de datos de joya
@@ -128,14 +129,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // Convert numeric fields from strings to numbers
-    const joyaData = {
-      ...req.body,
-      costo: req.body.costo !== undefined ? parseFloat(req.body.costo) : undefined,
-      precio_venta: req.body.precio_venta !== undefined ? parseFloat(req.body.precio_venta) : undefined,
-      stock_actual: req.body.stock_actual !== undefined ? parseInt(req.body.stock_actual, 10) : undefined,
-      stock_minimo: req.body.stock_minimo !== undefined ? parseInt(req.body.stock_minimo, 10) : undefined,
-      peso_gramos: req.body.peso_gramos !== undefined && req.body.peso_gramos !== '' ? parseFloat(req.body.peso_gramos) : undefined
-    };
+    const joyaData = convertirCamposNumericos(req.body);
 
     const errores = validarJoya(joyaData);
     
@@ -174,14 +168,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     // Convert numeric fields from strings to numbers
-    const joyaData = {
-      ...req.body,
-      costo: req.body.costo !== undefined ? parseFloat(req.body.costo) : undefined,
-      precio_venta: req.body.precio_venta !== undefined ? parseFloat(req.body.precio_venta) : undefined,
-      stock_actual: req.body.stock_actual !== undefined ? parseInt(req.body.stock_actual, 10) : undefined,
-      stock_minimo: req.body.stock_minimo !== undefined ? parseInt(req.body.stock_minimo, 10) : undefined,
-      peso_gramos: req.body.peso_gramos !== undefined && req.body.peso_gramos !== '' ? parseFloat(req.body.peso_gramos) : undefined
-    };
+    const joyaData = convertirCamposNumericos(req.body);
 
     const errores = validarJoya(joyaData);
     

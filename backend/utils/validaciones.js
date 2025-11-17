@@ -89,3 +89,28 @@ module.exports = {
   validarTipoMovimiento,
   limitarLongitud
 };
+
+// Helper function to convert numeric fields from strings to numbers
+const convertirCamposNumericos = (data) => {
+  return {
+    ...data,
+    costo: data.costo !== undefined ? parseFloat(data.costo) : undefined,
+    precio_venta: data.precio_venta !== undefined ? parseFloat(data.precio_venta) : undefined,
+    stock_actual: data.stock_actual !== undefined ? parseInt(data.stock_actual, 10) : undefined,
+    stock_minimo: data.stock_minimo !== undefined ? parseInt(data.stock_minimo, 10) : undefined,
+    peso_gramos: data.peso_gramos !== undefined && data.peso_gramos !== '' ? parseFloat(data.peso_gramos) : undefined
+  };
+};
+
+module.exports = {
+  esNumeroPositivo,
+  esEnteroPositivo,
+  sanitizarString,
+  validarCodigo,
+  esStringNoVacio,
+  validarMoneda,
+  validarEstado,
+  validarTipoMovimiento,
+  limitarLongitud,
+  convertirCamposNumericos
+};
