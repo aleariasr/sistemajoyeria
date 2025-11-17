@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { obtenerMovimientos, crearMovimiento, obtenerJoyas } from '../services/api';
 
 function Movimientos() {
@@ -33,11 +33,7 @@ function Movimientos() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
 
-  useEffect(() => {
-    cargarMovimientos();
-  }, [paginaActual, filtros]);
-
-  const cargarMovimientos = async () => {
+  const cargarMovimientos = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +53,11 @@ function Movimientos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [paginaActual, filtros]);
+
+  useEffect(() => {
+    cargarMovimientos();
+  }, [cargarMovimientos]);
 
   const buscarJoyas = async (termino) => {
     if (!termino || termino.length < 2) {

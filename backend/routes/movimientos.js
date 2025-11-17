@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Joya = require('../models/Joya');
+const {
+  esEnteroPositivo,
+  validarTipoMovimiento
+} = require('../utils/validaciones');
 
 // GET /api/movimientos - Obtener todos los movimientos con filtros
 router.get('/', async (req, res) => {
@@ -28,17 +32,17 @@ router.post('/', async (req, res) => {
   try {
     const { id_joya, tipo_movimiento, cantidad, motivo, usuario } = req.body;
 
-    // Validaciones
-    if (!id_joya) {
-      return res.status(400).json({ error: 'El ID de la joya es obligatorio' });
+    // Validaciones mejoradas
+    if (!esEnteroPositivo(id_joya)) {
+      return res.status(400).json({ error: 'El ID de la joya es obligatorio y debe ser un número válido' });
     }
 
-    if (!tipo_movimiento || !['Entrada', 'Salida', 'Ajuste'].includes(tipo_movimiento)) {
-      return res.status(400).json({ error: 'Tipo de movimiento inválido' });
+    if (!validarTipoMovimiento(tipo_movimiento)) {
+      return res.status(400).json({ error: 'Tipo de movimiento inválido. Debe ser: Entrada, Salida o Ajuste' });
     }
 
-    if (!cantidad || cantidad <= 0) {
-      return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
+    if (!esEnteroPositivo(cantidad) || cantidad === 0) {
+      return res.status(400).json({ error: 'La cantidad debe ser un número entero mayor a 0' });
     }
 
     // Obtener la joya
