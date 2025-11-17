@@ -4,6 +4,13 @@ Sistema completo de control de inventario para joyerías con interfaz gráfica m
 
 ## 📋 Características
 
+### Autenticación y Usuarios
+- 🔐 Sistema de login con autenticación segura
+- 👥 Gestión completa de usuarios (solo administradores)
+- 🔑 Dos niveles de acceso: Administrador y Dependiente
+- 🛡️ Encriptación de contraseñas con bcrypt
+- ⚙️ Control de acceso basado en roles
+
 ### Gestión de Joyas (CRUD Completo)
 - ✅ Crear, leer, actualizar y eliminar joyas
 - ✅ Validaciones completas de datos
@@ -20,6 +27,12 @@ Sistema completo de control de inventario para joyerías con interfaz gráfica m
 - 📈 Historial completo de movimientos
 - ✅ Validación de stock (no permite valores negativos)
 - 👤 Registro de usuario responsable
+
+### Módulo de Ventas
+- 💰 Registro de ventas con búsqueda de productos
+- 📊 Historial completo de ventas
+- 🧾 Detalle de cada venta
+- 👤 Accesible para todos los usuarios
 
 ### Alertas de Stock
 - ⚠️ Resaltado visual de joyas con stock bajo
@@ -46,13 +59,19 @@ sistemajoyeria/
 ├── backend/                 # Servidor Node.js + Express
 │   ├── models/             # Modelos de datos
 │   │   ├── Joya.js
+│   │   ├── Usuario.js
+│   │   ├── Venta.js
+│   │   ├── ItemVenta.js
 │   │   └── MovimientoInventario.js
 │   ├── routes/             # Rutas de la API
+│   │   ├── auth.js
 │   │   ├── joyas.js
 │   │   ├── movimientos.js
+│   │   ├── ventas.js
 │   │   └── reportes.js
 │   ├── database.js         # Configuración de SQLite
-│   ├── seed.js             # Datos de ejemplo
+│   ├── init-users.js       # Inicialización de usuarios
+│   ├── load-sample-data.js # Datos de ejemplo (opcional)
 │   ├── server.js           # Servidor principal
 │   └── package.json
 │
@@ -61,16 +80,23 @@ sistemajoyeria/
 │   │   └── index.html
 │   ├── src/
 │   │   ├── components/     # Componentes React
+│   │   │   ├── Login.js
+│   │   │   ├── Usuarios.js
+│   │   │   ├── FormularioUsuario.js
 │   │   │   ├── ListadoJoyas.js
 │   │   │   ├── FormularioJoya.js
 │   │   │   ├── DetalleJoya.js
+│   │   │   ├── Ventas.js
+│   │   │   ├── HistorialVentas.js
+│   │   │   ├── DetalleVenta.js
 │   │   │   ├── Movimientos.js
 │   │   │   ├── StockBajo.js
 │   │   │   └── Reportes.js
+│   │   ├── context/        # Contextos React
+│   │   │   └── AuthContext.js
 │   │   ├── services/       # Servicios API
 │   │   │   └── api.js
 │   │   ├── styles/         # Estilos CSS
-│   │   │   └── App.css
 │   │   ├── App.js          # Componente principal
 │   │   └── index.js        # Punto de entrada
 │   └── package.json
@@ -79,6 +105,18 @@ sistemajoyeria/
 ```
 
 ## 🗄️ Modelo de Datos
+
+### Tabla: usuarios
+Contiene la información de los usuarios del sistema:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | INTEGER | ID único autoincremental |
+| username | TEXT | Nombre de usuario único |
+| password_hash | TEXT | Hash de la contraseña (bcrypt) |
+| role | TEXT | administrador o dependiente |
+| full_name | TEXT | Nombre completo del usuario |
+| fecha_creacion | DATETIME | Fecha de creación |
 
 ### Tabla: joyas
 Contiene toda la información de las joyas del inventario:
@@ -202,6 +240,17 @@ Los datos de ejemplo incluyen 10 joyas:
 - `GET /` - Información de la API y endpoints disponibles
 - `GET /health` - Estado del servidor
 
+### Autenticación
+- `POST /api/auth/login` - Iniciar sesión
+- `POST /api/auth/logout` - Cerrar sesión
+- `GET /api/auth/session` - Verificar sesión activa
+
+### Usuarios (Solo Administradores)
+- `GET /api/auth` - Obtener todos los usuarios
+- `POST /api/auth` - Crear nuevo usuario
+- `PUT /api/auth/:id` - Actualizar usuario
+- `DELETE /api/auth/:id` - Eliminar usuario
+
 ### Joyas
 - `GET /api/joyas` - Obtener todas las joyas (con filtros y paginación)
 - `GET /api/joyas/:id` - Obtener una joya específica
@@ -224,31 +273,51 @@ Los datos de ejemplo incluyen 10 joyas:
 
 ### Secciones Principales
 
-1. **Inventario**
+**Acceso para todos los usuarios:**
+
+1. **Nueva Venta**
+   - Búsqueda de productos en tiempo real
+   - Carrito de compras
+   - Registro de ventas
+
+2. **Historial de Ventas**
+   - Listado completo de ventas
+   - Detalle de cada venta
+   - Información del vendedor
+
+**Solo para Administradores:**
+
+3. **Inventario**
    - Listado completo de joyas
    - Búsqueda y filtros avanzados
    - Acciones: Ver, Editar, Eliminar
    - Resaltado de alertas de stock
 
-2. **Nueva Joya**
+4. **Nueva Joya**
    - Formulario completo con todos los campos
    - Validaciones en tiempo real
    - Mensajes de error claros
 
-3. **Movimientos**
+5. **Movimientos**
    - Registro de entrada/salida/ajuste
    - Búsqueda de joyas en tiempo real
    - Historial completo de movimientos
 
-4. **Stock Bajo**
+6. **Stock Bajo**
    - Vista dedicada a alertas
    - Estadísticas de unidades faltantes
    - Acceso rápido a registro de entradas
 
-5. **Reportes**
+7. **Reportes**
    - Reporte de inventario actual
    - Reporte de stock bajo
    - Exportación a CSV
+
+8. **Usuarios**
+   - Listado de usuarios del sistema
+   - Crear nuevos usuarios
+   - Editar y eliminar usuarios
+   - Asignación de roles
 
 ### Paleta de Colores
 - **Principal**: Azul marino (#1a237e)
@@ -260,6 +329,10 @@ Los datos de ejemplo incluyen 10 joyas:
 
 ## 🔒 Seguridad
 
+- ✅ Sistema de autenticación con sesiones
+- ✅ Encriptación de contraseñas con bcrypt
+- ✅ Control de acceso basado en roles
+- ✅ Protección contra CSRF con cookies de sesión
 - ✅ Validaciones en backend y frontend
 - ✅ Prevención de inyección SQL (uso de parámetros preparados)
 - ✅ Validación de códigos únicos
@@ -272,12 +345,15 @@ Los datos de ejemplo incluyen 10 joyas:
 - **Node.js** - Runtime de JavaScript
 - **Express** - Framework web
 - **SQLite3** - Base de datos
+- **bcryptjs** - Encriptación de contraseñas
+- **express-session** - Gestión de sesiones
 - **CORS** - Manejo de peticiones cross-origin
 - **Body-parser** - Parseo de JSON
 
 ### Frontend
 - **React 18** - Librería de UI
 - **React Router 6** - Navegación
+- **React Context API** - Gestión de estado de autenticación
 - **Axios** - Cliente HTTP
 - **CSS3** - Estilos
 
@@ -289,6 +365,12 @@ El sistema está configurado para iniciar con una base de datos vacía, lista pa
 cd backend
 npm start
 ```
+
+**Usuarios iniciales creados automáticamente:**
+- **Administrador**: `admin` / `admin123`
+- **Dependiente**: `dependiente` / `dependiente123`
+
+⚠️ **IMPORTANTE**: Cambia las contraseñas de los usuarios por defecto antes de usar en producción.
 
 ### Cargar Datos de Ejemplo (Desarrollo/Pruebas)
 Si necesitas datos de prueba:
@@ -320,14 +402,14 @@ cp backend/joyeria.db.backup backend/joyeria.db
 
 ## 📊 Funcionalidades Futuras (Opcionales)
 
-- 🔐 Sistema de autenticación y usuarios
 - 📸 Carga de imágenes de joyas
 - 📱 Aplicación móvil
 - 🖨️ Impresión de etiquetas con códigos de barras
 - 📧 Notificaciones por email de stock bajo
 - 📈 Gráficos y estadísticas avanzadas
-- 💳 Módulo de ventas y facturación
 - 👥 Gestión de clientes
+- 💼 Gestión de proveedores
+- 📅 Agendamiento de citas
 
 ## 🐛 Solución de Problemas
 
