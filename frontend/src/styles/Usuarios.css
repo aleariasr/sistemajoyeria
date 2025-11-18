@@ -68,6 +68,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 .usuarios-table thead {
@@ -82,12 +83,15 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.9rem;
+  vertical-align: middle;
 }
 
 .usuarios-table td {
   padding: 1.2rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   color: #334155;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .usuarios-table tbody tr {

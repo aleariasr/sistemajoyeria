@@ -117,6 +117,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 .tabla-ventas th {
@@ -128,12 +129,15 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.9rem;
+  vertical-align: middle;
 }
 
 .tabla-ventas td {
-  padding: 16px 18px;
+  padding: 18px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   color: #334155;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .tabla-ventas tr:last-child td {
