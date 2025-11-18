@@ -230,3 +230,26 @@
   box-shadow: none;
   transform: none;
 }
+
+@media (max-width: 768px) {
+  .historial-container {
+    padding: 15px;
+  }
+
+  .filtros-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tabla-ventas th,
+  .tabla-ventas td {
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+
+  .btn-ver {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
+
