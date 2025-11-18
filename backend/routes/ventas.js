@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
+const VentaDia = require('../models/VentaDia');
+const ItemVentaDia = require('../models/ItemVentaDia');
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
 
@@ -44,7 +46,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    // Crear la venta
+    // Crear la venta EN LA BASE DE DATOS DEL DÍA
     const ventaData = {
       id_usuario: req.session.userId,
       metodo_pago,
@@ -56,14 +58,14 @@ router.post('/', requireAuth, async (req, res) => {
       notas
     };
 
-    const resultadoVenta = await Venta.crear(ventaData);
+    const resultadoVenta = await VentaDia.crear(ventaData);
     const idVenta = resultadoVenta.id;
 
     // Crear items de venta y actualizar stock
     for (const item of items) {
-      // Crear item de venta
-      await ItemVenta.crear({
-        id_venta: idVenta,
+      // Crear item de venta en la base de datos del día
+      await ItemVentaDia.crear({
+        id_venta_dia: idVenta,
         id_joya: item.id_joya,
         cantidad: item.cantidad,
         precio_unitario: item.precio_unitario,
@@ -93,7 +95,7 @@ router.post('/', requireAuth, async (req, res) => {
         id_joya: item.id_joya,
         tipo_movimiento: 'Salida',
         cantidad: item.cantidad,
-        motivo: `Venta #${idVenta}`,
+        motivo: `Venta del día #${idVenta}`,
         usuario: req.session.username,
         stock_antes: joya.stock_actual,
         stock_despues: nuevoStock

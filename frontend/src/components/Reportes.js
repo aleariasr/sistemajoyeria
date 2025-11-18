@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { obtenerReporteInventario, obtenerReporteStockBajo } from '../services/api';
 
 function Reportes() {
+  const navigate = useNavigate();
   const [reporteActivo, setReporteActivo] = useState('inventario');
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -104,6 +106,12 @@ function Reportes() {
               onClick={() => setReporteActivo('stock-bajo')}
             >
               ⚠️ Stock Bajo
+            </button>
+            <button
+              className="btn btn-warning"
+              onClick={() => navigate('/stock-bajo')}
+            >
+              🔍 Ver Alertas Stock
             </button>
           </div>
           <button

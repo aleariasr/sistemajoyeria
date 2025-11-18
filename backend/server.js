@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const { initDatabase } = require('./database');
+const { initDatabaseDia } = require('./database-dia');
 const { crearUsuariosIniciales } = require('./init-users');
 
 const app = express();
@@ -43,12 +44,14 @@ const movimientosRoutes = require('./routes/movimientos');
 const reportesRoutes = require('./routes/reportes');
 const authRoutes = require('./routes/auth');
 const ventasRoutes = require('./routes/ventas');
+const cierreCajaRoutes = require('./routes/cierrecaja');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
+app.use('/api/cierrecaja', cierreCajaRoutes);
 
 // Ruta de salud del servidor
 app.get('/health', (req, res) => {
@@ -108,7 +111,7 @@ process.on('SIGTERM', () => {
 
 // Inicializar base de datos y servidor
 let server;
-initDatabase()
+Promise.all([initDatabase(), initDatabaseDia()])
   .then(() => crearUsuariosIniciales())
   .then(() => {
     server = app.listen(PORT, () => {
