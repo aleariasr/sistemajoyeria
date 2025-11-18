@@ -37,10 +37,7 @@
 
 .page-header h1 {
   font-size: 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   margin: 0;
   font-weight: 800;
 }
@@ -74,9 +71,7 @@
 }
 
 .usuarios-table thead {
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.9) 0%, 
-    rgba(118, 75, 162, 0.9) 100%);
+  background: #667eea;
   color: white;
 }
 
@@ -107,7 +102,7 @@
   top: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   transform: scaleY(0);
   transition: transform 0.3s ease;
 }
@@ -136,12 +131,12 @@
 }
 
 .role-badge.administrador {
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  background: #fda085;
   color: #78350f;
 }
 
 .role-badge.dependiente {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #4facfe;
   color: white;
 }
 
@@ -162,7 +157,7 @@
 }
 
 .btn-edit {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #4facfe;
   color: white;
   box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
 }
@@ -173,7 +168,7 @@
 }
 
 .btn-delete {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #f5576c;
   color: white;
   box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
 }
@@ -184,7 +179,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   padding: 0.9rem 1.8rem;
   border: none;
@@ -206,9 +201,7 @@
 }
 
 .error-message {
-  background: linear-gradient(135deg, 
-    rgba(240, 147, 251, 0.15) 0%, 
-    rgba(245, 87, 108, 0.15) 100%);
+  background: rgba(245, 87, 108, 0.15);
   color: #881337;
   padding: 1.2rem;
   border-radius: 14px;

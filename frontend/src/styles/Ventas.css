@@ -32,10 +32,7 @@
 
 .page-header h1 {
   font-size: 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   margin: 0 0 10px 0;
   font-weight: 800;
 }
@@ -58,17 +55,13 @@
 }
 
 .mensaje.success {
-  background: linear-gradient(135deg, 
-    rgba(79, 172, 254, 0.15) 0%, 
-    rgba(0, 242, 254, 0.15) 100%);
+  background: rgba(79, 172, 254, 0.15);
   color: #0c4a6e;
   border-left: 4px solid #4facfe;
 }
 
 .mensaje.error {
-  background: linear-gradient(135deg, 
-    rgba(240, 147, 251, 0.15) 0%, 
-    rgba(245, 87, 108, 0.15) 100%);
+  background: rgba(245, 87, 108, 0.15);
   color: #881337;
   border-left: 4px solid #f5576c;
 }
@@ -112,10 +105,7 @@
 .busqueda-section h2,
 .carrito-section h2 {
   margin: 0 0 25px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   font-size: 1.4rem;
   font-weight: 700;
 }
@@ -186,17 +176,14 @@
 
 .resultado-precio {
   font-weight: 700;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4facfe;
   min-width: 100px;
   text-align: right;
   font-size: 1.1rem;
 }
 
 .btn-agregar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   padding: 10px 18px;
@@ -217,7 +204,7 @@
 }
 
 .btn-agregar:disabled {
-  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  background: #cbd5e1;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -278,7 +265,7 @@
 }
 
 .btn-cantidad {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: rgba(102, 126, 234, 0.1);
   border: 2px solid rgba(102, 126, 234, 0.2);
   width: 36px;
   height: 36px;
@@ -290,7 +277,7 @@
 }
 
 .btn-cantidad:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   transform: scale(1.1);
 }
@@ -315,15 +302,12 @@
   min-width: 100px;
   text-align: right;
   font-weight: 700;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4facfe;
   font-size: 1.05rem;
 }
 
 .btn-eliminar {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: #f5576c;
   color: white;
   border: none;
   width: 36px;
@@ -341,9 +325,7 @@
 }
 
 .carrito-resumen {
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.05) 0%, 
-    rgba(118, 75, 162, 0.05) 100%);
+  background: rgba(102, 126, 234, 0.05);
   backdrop-filter: blur(10px);
   padding: 20px;
   border-radius: 16px;
@@ -367,10 +349,7 @@
 .resumen-linea.total {
   font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   padding-top: 15px;
   margin-top: 5px;
 }
@@ -393,7 +372,7 @@
 
 .btn-continuar {
   width: 100%;
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  background: #fda085;
   color: #78350f;
   border: none;
   padding: 16px;
@@ -455,9 +434,7 @@
 }
 
 .cambio-info {
-  background: linear-gradient(135deg, 
-    rgba(79, 172, 254, 0.15) 0%, 
-    rgba(0, 242, 254, 0.15) 100%);
+  background: rgba(79, 172, 254, 0.15);
   color: #0c4a6e;
   padding: 16px;
   border-radius: 14px;
@@ -480,7 +457,7 @@
 
 .btn-procesar {
   width: 100%;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: #4facfe;
   color: white;
   border: none;
   padding: 16px;
@@ -502,7 +479,7 @@
 }
 
 .btn-procesar:disabled {
-  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  background: #cbd5e1;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
