@@ -92,28 +92,12 @@
 
 .usuarios-table tbody tr {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.usuarios-table tbody tr::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 4px;
-  height: 100%;
-  background: #667eea;
-  transform: scaleY(0);
-  transition: transform 0.3s ease;
+  border-left: 4px solid transparent;
 }
 
 .usuarios-table tbody tr:hover {
   background: rgba(102, 126, 234, 0.05);
-  transform: scale(1.01);
-}
-
-.usuarios-table tbody tr:hover::before {
-  transform: scaleY(1);
+  border-left-color: #667eea;
 }
 
 .role-badge {
