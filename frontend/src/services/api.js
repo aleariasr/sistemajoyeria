@@ -76,3 +76,15 @@ export const obtenerReporteStockBajo = () => {
   return api.get('/reportes/stock-bajo');
 };
 
+// Cierre de Caja
+export const obtenerVentasDia = () => {
+  return api.get('/cierrecaja/ventas-dia');
+};
+
+export const obtenerResumenDia = () => {
+  return api.get('/cierrecaja/resumen-dia');
+};
+
+export const cerrarCaja = () => {
+  return api.post('/cierrecaja/cerrar-caja');
+};

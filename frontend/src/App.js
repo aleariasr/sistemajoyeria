@@ -13,6 +13,7 @@ import DetalleJoya from './components/DetalleJoya';
 import Movimientos from './components/Movimientos';
 import Reportes from './components/Reportes';
 import StockBajo from './components/StockBajo';
+import CierreCaja from './components/CierreCaja';
 import Ventas from './components/Ventas';
 import HistorialVentas from './components/HistorialVentas';
 import DetalleVenta from './components/DetalleVenta';
@@ -83,9 +84,9 @@ function Sidebar() {
               </Link>
             </li>
             <li>
-              <Link to="/stock-bajo" className={isActive('/stock-bajo')}>
-                <span className="icon">⚠️</span>
-                <span>Stock Bajo</span>
+              <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
+                <span className="icon">💰</span>
+                <span>Cierre de Caja</span>
               </Link>
             </li>
             <li>
@@ -165,6 +166,7 @@ function AppContent() {
           <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/joya/:id" element={<ProtectedRoute adminOnly={true}><DetalleJoya /></ProtectedRoute>} />
           <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
+          <Route path="/cierre-caja" element={<ProtectedRoute adminOnly={true}><CierreCaja /></ProtectedRoute>} />
           <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
           <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />
           <Route path="/usuarios" element={<ProtectedRoute adminOnly={true}><Usuarios /></ProtectedRoute>} />
