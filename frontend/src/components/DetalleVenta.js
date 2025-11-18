@@ -104,7 +104,7 @@ function DetalleVenta() {
               </div>
               <div className="info-linea">
                 <span className="label">Cambio:</span>
-                <span>₡{venta.cambio.toFixed(2)}</span>
+                <span>₡{(venta.cambio || 0).toFixed(2)}</span>
               </div>
             </>
           )}
