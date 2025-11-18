@@ -117,7 +117,6 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 }
 
 .tabla-ventas th {
@@ -129,15 +128,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.9rem;
-  vertical-align: middle;
 }
 
 .tabla-ventas td {
-  padding: 18px;
+  padding: 16px 18px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   color: #334155;
-  text-align: left;
-  vertical-align: middle;
 }
 
 .tabla-ventas tr:last-child td {
@@ -230,26 +226,3 @@
   box-shadow: none;
   transform: none;
 }
-
-@media (max-width: 768px) {
-  .historial-container {
-    padding: 15px;
-  }
-
-  .filtros-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .tabla-ventas th,
-  .tabla-ventas td {
-    padding: 12px;
-    font-size: 0.85rem;
-  }
-
-  .btn-ver {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-  }
-}
-

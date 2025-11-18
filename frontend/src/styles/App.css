@@ -544,7 +544,6 @@ table {
   border-collapse: separate;
   border-spacing: 0;
   background: transparent;
-  table-layout: fixed;
 }
 
 table thead {
@@ -561,7 +560,6 @@ table th {
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  vertical-align: middle;
 }
 
 table td {
@@ -569,8 +567,6 @@ table td {
   border-bottom: 1px solid var(--gray-200);
   color: var(--gray-700);
   font-size: 0.9rem;
-  vertical-align: middle;
-  text-align: left;
 }
 
 table tbody tr {

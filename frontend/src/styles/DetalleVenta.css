@@ -182,7 +182,6 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 }
 
 .items-tabla th {
@@ -194,15 +193,12 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 0.85rem;
-  vertical-align: middle;
 }
 
 .items-tabla td {
   padding: 14px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   color: #334155;
-  text-align: left;
-  vertical-align: middle;
 }
 
 .items-tabla tbody tr {
@@ -230,31 +226,3 @@
   color: #64748b;
   animation: fadeIn 0.5s ease-out;
 }
-
-@media (max-width: 768px) {
-  .detalle-venta-container {
-    padding: 15px;
-  }
-
-  .detalle-venta-container .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .venta-info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .items-tabla th,
-  .items-tabla td {
-    padding: 10px;
-    font-size: 0.85rem;
-  }
-
-  .info-card,
-  .items-section {
-    padding: 20px;
-  }
-}
-
