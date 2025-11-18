@@ -33,7 +33,6 @@ function Login() {
       <div className="login-box">
         <div className="login-header">
           <h1>Cuero & Perla</h1>
-          <p>Sistema de Joyería</p>
         </div>
         
         <form onSubmit={handleSubmit} className="login-form">
@@ -68,12 +67,6 @@ function Login() {
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
-
-        <div className="login-info">
-          <p><strong>Usuarios de prueba:</strong></p>
-          <p>👨‍💼 Administrador: <code>admin / admin123</code></p>
-          <p>👤 Dependiente: <code>dependiente / dependiente123</code></p>
-        </div>
       </div>
     </div>
   );
