@@ -139,6 +139,9 @@ body {
 
 .sidebar-header h1 span:first-child {
   font-size: 1.75rem;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: 400;
 }
 
 .user-info {
@@ -167,6 +170,12 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.user-info small::before {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: 400;
 }
 
 .sidebar-nav {
@@ -258,6 +267,9 @@ body {
 .sidebar-nav .icon {
   font-size: 1.25rem;
   transition: var(--transition-smooth);
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: 400;
 }
 
 /* Main Content with Modern Design */
@@ -280,6 +292,12 @@ body {
   margin-bottom: 8px;
   font-weight: 700;
   letter-spacing: -0.5px;
+}
+
+.page-header h2 span {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: 400;
 }
 
 .page-header p {

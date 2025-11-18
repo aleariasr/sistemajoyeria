@@ -34,7 +34,7 @@
 }
 
 .btn-volver {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  background: #a8edea;
   color: #334155;
   border: none;
   padding: 12px 24px;
@@ -87,10 +87,7 @@
 
 .info-card h3 {
   margin: 0 0 20px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   font-size: 1.3rem;
   font-weight: 700;
   border-bottom: 2px solid rgba(102, 126, 234, 0.2);
@@ -132,20 +129,14 @@
 .info-linea.total {
   font-size: 1.3rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   margin-top: 15px;
   padding-top: 20px;
   border-top: 2px solid rgba(102, 126, 234, 0.2);
 }
 
 .descuento {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #f5576c;
   font-weight: 700;
 }
 
@@ -163,10 +154,7 @@
 
 .items-section h3 {
   margin: 0 0 25px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
   font-size: 1.3rem;
   font-weight: 700;
 }
@@ -197,9 +185,7 @@
 }
 
 .items-tabla th {
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.1) 0%, 
-    rgba(118, 75, 162, 0.1) 100%);
+  background: rgba(102, 126, 234, 0.1);
   color: #475569;
   padding: 14px;
   text-align: left;
@@ -229,10 +215,7 @@
 
 .items-tabla .subtotal {
   font-weight: 700;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4facfe;
   font-size: 1.05rem;
 }
 
