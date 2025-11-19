@@ -1,273 +1,120 @@
 # Sistema de Inventario de Joyería 💎
 
-Sistema completo de control de inventario para joyerías con interfaz gráfica moderna, bonita y fácil de usar, diseñado para usuarios no técnicos.
+Sistema completo de control de inventario para joyerías con interfaz gráfica moderna y fácil de usar, diseñado para usuarios no técnicos.
 
-## 📋 Características
+## 📋 Características Principales
 
-### Autenticación y Usuarios
-- 🔐 Sistema de login con autenticación segura
-- 👥 Gestión completa de usuarios (solo administradores)
-- 🔑 Dos niveles de acceso: Administrador y Dependiente
-- 🛡️ Encriptación de contraseñas con bcrypt
-- ⚙️ Control de acceso basado en roles
-
-### Gestión de Joyas (CRUD Completo)
-- ✅ Crear, leer, actualizar y eliminar joyas
-- ✅ Validaciones completas de datos
-- ✅ Códigos únicos por joya
-- ✅ Gestión de 21 campos de información detallada
-
-### Búsqueda y Filtros Avanzados
-- 🔍 Búsqueda rápida por código, nombre, descripción, categoría, tipo de metal y proveedor
-- 🎯 Filtros combinables: categoría, tipo de metal, rango de precios, stock bajo, sin stock, estado
-- 📊 Paginación automática (20 registros por página)
-
-### Gestión de Inventario
-- 📦 Registro de movimientos: Entrada, Salida, Ajuste
-- 📈 Historial completo de movimientos
-- ✅ Validación de stock (no permite valores negativos)
-- 👤 Registro de usuario responsable
-
-### Módulo de Ventas
-- 💰 Registro de ventas con búsqueda de productos
-- 📊 Historial completo de ventas
-- 🧾 Detalle de cada venta
-- 👤 Accesible para todos los usuarios
-
-### Alertas de Stock
-- ⚠️ Resaltado visual de joyas con stock bajo
-- 🔴 Identificación de joyas agotadas
-- 📊 Vista específica de alertas de inventario
-
-### Reportes
-- 📋 Reporte de inventario actual completo
-- ⚠️ Reporte de stock bajo
-- 📥 Exportación a CSV/Excel
-- 💰 Cálculo de valores totales
-
-### Interfaz Moderna
-- 🎨 Diseño elegante con paleta de colores profesional
-- 📱 Responsive (adaptable a diferentes pantallas)
-- 💡 Iconos intuitivos
-- ✨ Mensajes de confirmación y error claros
-- 🔄 Loaders durante operaciones
-
-## 🏗️ Arquitectura del Proyecto
-
-```
-sistemajoyeria/
-├── backend/                 # Servidor Node.js + Express
-│   ├── models/             # Modelos de datos
-│   │   ├── Joya.js
-│   │   ├── Usuario.js
-│   │   ├── Venta.js
-│   │   ├── ItemVenta.js
-│   │   └── MovimientoInventario.js
-│   ├── routes/             # Rutas de la API
-│   │   ├── auth.js
-│   │   ├── joyas.js
-│   │   ├── movimientos.js
-│   │   ├── ventas.js
-│   │   └── reportes.js
-│   ├── database.js         # Configuración de SQLite
-│   ├── init-users.js       # Inicialización de usuarios
-│   ├── load-sample-data.js # Datos de ejemplo (opcional)
-│   ├── server.js           # Servidor principal
-│   └── package.json
-│
-├── frontend/               # Aplicación React
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── components/     # Componentes React
-│   │   │   ├── Login.js
-│   │   │   ├── Usuarios.js
-│   │   │   ├── FormularioUsuario.js
-│   │   │   ├── ListadoJoyas.js
-│   │   │   ├── FormularioJoya.js
-│   │   │   ├── DetalleJoya.js
-│   │   │   ├── Ventas.js
-│   │   │   ├── HistorialVentas.js
-│   │   │   ├── DetalleVenta.js
-│   │   │   ├── Movimientos.js
-│   │   │   ├── StockBajo.js
-│   │   │   └── Reportes.js
-│   │   ├── context/        # Contextos React
-│   │   │   └── AuthContext.js
-│   │   ├── services/       # Servicios API
-│   │   │   └── api.js
-│   │   ├── styles/         # Estilos CSS
-│   │   ├── App.js          # Componente principal
-│   │   └── index.js        # Punto de entrada
-│   └── package.json
-│
-└── README.md
-```
+- 🔐 **Autenticación y control de acceso**: Sistema de login seguro con dos roles (Administrador y Dependiente)
+- 💎 **Gestión de joyas**: CRUD completo con 21 campos de información detallada y códigos únicos
+- 🔍 **Búsqueda avanzada**: Filtros combinables por categoría, tipo de metal, precio, stock y estado
+- 📦 **Control de inventario**: Registro de movimientos (entrada/salida/ajuste) con historial completo
+- 💰 **Sistema de ventas**: Múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto, crédito)
+- 💳 **Cuentas por cobrar**: Gestión de ventas a crédito con registro de abonos
+- 📊 **Reportes y cierre de caja**: Reportes financieros completos con exportación a CSV
+- ⚠️ **Alertas**: Notificaciones visuales para productos con stock bajo o agotado
+- 🎨 **Interfaz moderna**: Diseño responsive con paleta de colores profesional
 
 ## 🗄️ Modelo de Datos
 
-### Tabla: usuarios
-Contiene la información de los usuarios del sistema:
+### Tablas Principales
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | INTEGER | ID único autoincremental |
-| username | TEXT | Nombre de usuario único |
-| password_hash | TEXT | Hash de la contraseña (bcrypt) |
-| role | TEXT | administrador o dependiente |
-| full_name | TEXT | Nombre completo del usuario |
-| fecha_creacion | DATETIME | Fecha de creación |
+**usuarios** - Gestión de usuarios del sistema
+- Campos: id, username, password_hash, role, full_name, fecha_creacion
+- Roles: administrador, dependiente
 
-### Tabla: joyas
-Contiene toda la información de las joyas del inventario:
+**joyas** - Inventario de productos
+- 21 campos incluyendo: código único, nombre, descripción, categoría, tipo de metal, peso, precio, stock, ubicación
+- Validación de códigos únicos y stock mínimo
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | INTEGER | ID único autoincremental |
-| codigo | TEXT | Código único (ej: AN-0001) |
-| nombre | TEXT | Nombre de la joya |
-| descripcion | TEXT | Descripción detallada |
-| categoria | TEXT | Anillo, Aretes, Collar, etc. |
-| tipo_metal | TEXT | Oro 10k, 14k, 18k, Plata 925, etc. |
-| color_metal | TEXT | dorado, plateado, rosado, etc. |
-| piedras | TEXT | circonia, diamante, perla, etc. |
-| peso_gramos | REAL | Peso en gramos |
-| talla | TEXT | Talla o medida |
-| coleccion | TEXT | Nombre de la colección |
-| proveedor | TEXT | Nombre del proveedor |
-| costo | REAL | Costo de compra |
-| precio_venta | REAL | Precio de venta |
-| moneda | TEXT | CRC o USD |
-| stock_actual | INTEGER | Cantidad disponible |
-| stock_minimo | INTEGER | Umbral de alerta |
-| ubicacion | TEXT | Ubicación física |
-| estado | TEXT | Activo, Descontinuado, Agotado |
-| fecha_creacion | DATETIME | Fecha de creación |
-| fecha_ultima_modificacion | DATETIME | Última modificación |
+**ventas** - Registro de transacciones
+- Soporte para múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto)
+- Ventas de contado y a crédito
 
-### Tabla: movimientos_inventario
-Registra todos los movimientos de inventario:
+**cuentas_por_cobrar** - Control de créditos
+- Gestión de saldos pendientes
+- Registro de abonos por método de pago
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | INTEGER | ID único autoincremental |
-| id_joya | INTEGER | Relación con tabla joyas |
-| tipo_movimiento | TEXT | Entrada, Salida, Ajuste |
-| cantidad | INTEGER | Cantidad del movimiento |
-| motivo | TEXT | Razón del movimiento |
-| fecha_movimiento | DATETIME | Fecha del movimiento |
-| usuario | TEXT | Usuario que realizó el movimiento |
-| stock_antes | INTEGER | Stock antes del movimiento |
-| stock_despues | INTEGER | Stock después del movimiento |
+**movimientos_inventario** - Historial de cambios
+- Registro de entradas, salidas y ajustes
+- Trazabilidad completa de stock
 
 ## 🚀 Instalación y Ejecución
 
-### Requisitos Previos
+### Requisitos
 - Node.js (versión 14 o superior)
-- npm (viene con Node.js)
+- npm (incluido con Node.js)
 
-### Instalación
+### Instalación Rápida
 
-1. **Clonar el repositorio**
+1. **Clonar e instalar dependencias**
 ```bash
 git clone <url-del-repositorio>
 cd sistemajoyeria
+
+# Backend
+cd backend && npm install
+
+# Frontend
+cd ../frontend && npm install
 ```
 
-2. **Instalar dependencias del backend**
+2. **Ejecutar el sistema**
 ```bash
-cd backend
-npm install
+# Terminal 1 - Backend (http://localhost:3001)
+cd backend && npm start
+
+# Terminal 2 - Frontend (http://localhost:3000)
+cd frontend && npm start
 ```
 
-3. **Instalar dependencias del frontend**
-```bash
-cd ../frontend
-npm install
-```
+**Usuarios por defecto:**
+- Administrador: `admin` / `admin123`
+- Dependiente: `dependiente` / `dependiente123`
 
-### Ejecución
-
-#### Opción 1: Ejecución Manual (Recomendada para Desarrollo)
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm start
-```
-El servidor backend estará disponible en: `http://localhost:3001`
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm start
-```
-La aplicación frontend se abrirá automáticamente en: `http://localhost:3000`
-
-#### Opción 2: Ejecución con nodemon (desarrollo)
-
-**Backend con auto-reload:**
-```bash
-cd backend
-npm run dev
-```
+⚠️ **Cambiar contraseñas antes de usar en producción**
 
 ### Datos de Ejemplo (Opcional)
-
-Por defecto, el sistema inicia con una base de datos vacía y lista para producción.
-
-Si deseas cargar datos de ejemplo para pruebas o desarrollo, ejecuta:
-
 ```bash
 cd backend
 node load-sample-data.js
 ```
 
-Los datos de ejemplo incluyen 10 joyas:
-- Anillos de oro y plata
-- Aretes con perlas
-- Collares de oro
-- Pulseras
-- Dijes
-- Relojes
-- Sets de joyería
-
-**Nota**: Los datos de ejemplo solo se cargarán si la base de datos está vacía.
-
 ## 📝 API Endpoints
-
-### Sistema
-- `GET /` - Información de la API y endpoints disponibles
-- `GET /health` - Estado del servidor
 
 ### Autenticación
 - `POST /api/auth/login` - Iniciar sesión
+- `GET /api/auth/session` - Verificar sesión
 - `POST /api/auth/logout` - Cerrar sesión
-- `GET /api/auth/session` - Verificar sesión activa
 
 ### Usuarios (Solo Administradores)
-- `GET /api/auth` - Obtener todos los usuarios
-- `POST /api/auth` - Crear nuevo usuario
+- `GET /api/auth` - Listar usuarios
+- `POST /api/auth` - Crear usuario
 - `PUT /api/auth/:id` - Actualizar usuario
 - `DELETE /api/auth/:id` - Eliminar usuario
 
 ### Joyas
-- `GET /api/joyas` - Obtener todas las joyas (con filtros y paginación)
-- `GET /api/joyas/:id` - Obtener una joya específica
-- `POST /api/joyas` - Crear nueva joya
+- `GET /api/joyas` - Listar con filtros y paginación
+- `GET /api/joyas/:id` - Obtener detalle
+- `POST /api/joyas` - Crear joya
 - `PUT /api/joyas/:id` - Actualizar joya
-- `DELETE /api/joyas/:id` - Eliminar joya (marca como descontinuada)
-- `GET /api/joyas/categorias` - Obtener categorías únicas
-- `GET /api/joyas/tipos-metal` - Obtener tipos de metal únicos
-- `GET /api/joyas/stock-bajo` - Obtener joyas con stock bajo
+- `DELETE /api/joyas/:id` - Eliminar joya
+- `GET /api/joyas/stock-bajo` - Alertas de stock
 
-### Movimientos
-- `GET /api/movimientos` - Obtener movimientos (con filtros y paginación)
-- `POST /api/movimientos` - Crear nuevo movimiento
+### Ventas y Caja
+- `POST /api/ventas` - Registrar venta (contado o crédito)
+- `GET /api/ventas` - Historial de ventas
+- `GET /api/cierrecaja/resumen-dia` - Resumen del día
+- `POST /api/cierrecaja/cerrar-caja` - Procesar cierre
+
+### Cuentas por Cobrar
+- `GET /api/cuentas-por-cobrar` - Listar cuentas
+- `POST /api/cuentas-por-cobrar/:id/abonos` - Registrar pago
 
 ### Reportes
-- `GET /api/reportes/inventario` - Reporte de inventario completo
-- `GET /api/reportes/stock-bajo` - Reporte de stock bajo
+- `GET /api/reportes/inventario` - Inventario completo
+- `GET /api/reportes/stock-bajo` - Productos con stock bajo
+- `GET /api/reportes/movimientos-financieros` - Reporte financiero
+- `GET /api/reportes/historial-completo` - Historial unificado
 
 ## 🎨 Interfaz de Usuario
 
@@ -339,112 +186,52 @@ Los datos de ejemplo incluyen 10 joyas:
 - ✅ Manejo de errores robusto
 - ✅ Validación de stock (no permite valores negativos)
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Tecnologías
 
-### Backend
-- **Node.js** - Runtime de JavaScript
-- **Express** - Framework web
-- **SQLite3** - Base de datos
-- **bcryptjs** - Encriptación de contraseñas
-- **express-session** - Gestión de sesiones
-- **CORS** - Manejo de peticiones cross-origin
-- **Body-parser** - Parseo de JSON
-
-### Frontend
-- **React 18** - Librería de UI
-- **React Router 6** - Navegación
-- **React Context API** - Gestión de estado de autenticación
-- **Axios** - Cliente HTTP
-- **CSS3** - Estilos
+**Backend:** Node.js, Express, SQLite3, bcryptjs, express-session  
+**Frontend:** React 18, React Router 6, Axios, CSS3  
+**Seguridad:** Autenticación con sesiones, encriptación bcrypt, parámetros preparados SQL
 
 ## 🗄️ Gestión de Base de Datos
 
-### Iniciar con Base de Datos Limpia (Producción)
-El sistema está configurado para iniciar con una base de datos vacía, lista para usar en producción:
+### Inicio con Base de Datos Limpia
 ```bash
-cd backend
-npm start
+cd backend && npm start
 ```
+**Usuarios iniciales:** admin/admin123 y dependiente/dependiente123
 
-**Usuarios iniciales creados automáticamente:**
-- **Administrador**: `admin` / `admin123`
-- **Dependiente**: `dependiente` / `dependiente123`
-
-⚠️ **IMPORTANTE**: Cambia las contraseñas de los usuarios por defecto antes de usar en producción.
-
-### Cargar Datos de Ejemplo (Desarrollo/Pruebas)
-Si necesitas datos de prueba:
+### Backup y Restauración
 ```bash
-cd backend
-node load-sample-data.js
-```
-
-### Limpiar la Base de Datos
-Para comenzar desde cero:
-```bash
-cd backend
-rm joyeria.db
-npm start
-```
-
-### Backup de la Base de Datos
-La base de datos se encuentra en: `backend/joyeria.db`
-
-Para hacer un backup:
-```bash
+# Backup
 cp backend/joyeria.db backend/joyeria.db.backup
-```
+cp backend/ventas_dia.db backend/ventas_dia.db.backup
 
-Para restaurar:
-```bash
+# Restaurar
 cp backend/joyeria.db.backup backend/joyeria.db
+cp backend/ventas_dia.db.backup backend/ventas_dia.db
+
+# Reiniciar desde cero
+rm backend/joyeria.db backend/ventas_dia.db
+npm start
 ```
-
-## 📊 Funcionalidades Futuras (Opcionales)
-
-- 📸 Carga de imágenes de joyas
-- 📱 Aplicación móvil
-- 🖨️ Impresión de etiquetas con códigos de barras
-- 📧 Notificaciones por email de stock bajo
-- 📈 Gráficos y estadísticas avanzadas
-- 👥 Gestión de clientes
-- 💼 Gestión de proveedores
-- 📅 Agendamiento de citas
 
 ## 🐛 Solución de Problemas
 
-### El backend no inicia
-- Verificar que el puerto 3001 esté disponible
-- Revisar que las dependencias estén instaladas: `npm install`
+**El backend no inicia**: Verificar puerto 3001 disponible y dependencias instaladas
 
-### El frontend no se conecta al backend
-- Verificar que el backend esté corriendo
-- Revisar la URL de la API en `frontend/src/services/api.js`
+**Frontend no conecta**: Verificar que backend esté corriendo en http://localhost:3001
 
-### Error de base de datos
-- Si experimentas problemas con la base de datos, elimina el archivo `backend/joyeria.db` y reinicia el backend
-- El sistema creará automáticamente una base de datos nueva y limpia
+**Error de base de datos**: Eliminar archivos .db y reiniciar el servidor
 
-### La aplicación está lenta
-- Verifica la cantidad de datos en la base de datos
-- Los filtros y búsquedas están optimizados, pero con grandes volúmenes considera agregar índices
-- En producción, considera usar PostgreSQL o MySQL en lugar de SQLite
+**Aplicación lenta**: Verificar cantidad de datos. Para producción considerar PostgreSQL/MySQL
 
-### Datos de ejemplo no aparecen
-- El sistema ya NO carga datos de ejemplo automáticamente
-- Para cargar datos de prueba: `cd backend && node load-sample-data.js`
-- Verifica que no haya errores en la consola del backend
+**Datos de ejemplo no aparecen**: Ejecutar manualmente `node load-sample-data.js`
 
 ## 📄 Licencia
 
 MIT License - Libre para uso personal y comercial
 
-## 👨‍💻 Autor
-
-Sistema desarrollado para gestión de inventarios de joyerías
-
 ---
 
-**¡Listo para usar!** 🚀
-
-Para cualquier duda o problema, consulta la documentación o revisa los logs del backend y frontend.
+**Sistema desarrollado para gestión de inventarios de joyerías**  
+Para más detalles, consultar el CHANGELOG.md
