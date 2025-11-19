@@ -62,7 +62,7 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
 });
 
 // Cerrar caja (transferir ventas del día a la base de datos principal)
-router.post('/cerrar-caja', requireAdmin, async (req, res) => {
+router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
     // Obtener todas las ventas del día
     const ventasDia = await VentaDia.obtenerTodas();
