@@ -30,8 +30,8 @@ function CierreCaja() {
   };
 
   const realizarCierre = async () => {
-    if (ventasDia.length === 0) {
-      setError('No hay ventas para cerrar');
+    if (ventasDia.length === 0 && abonosDia.length === 0) {
+      setError('No hay ventas ni abonos para cerrar');
       return;
     }
 
@@ -66,6 +66,7 @@ function CierreCaja() {
 
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-CR', {
+      timeZone: 'America/Costa_Rica',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -328,7 +329,7 @@ function CierreCaja() {
                     className="btn btn-danger"
                     style={{ fontSize: '1.2rem', padding: '15px 40px' }}
                     onClick={realizarCierre}
-                    disabled={procesando || ventasDia.length === 0}
+                    disabled={procesando || (ventasDia.length === 0 && abonosDia.length === 0)}
                   >
                     {procesando ? '🔄 Procesando...' : '🔒 Realizar Cierre de Caja'}
                   </button>

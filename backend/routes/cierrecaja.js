@@ -6,6 +6,7 @@ const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
 const Abono = require('../models/Abono');
 const { db } = require('../database');
+const { obtenerFechaActualCR, obtenerRangoDia } = require('../utils/timezone');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -56,10 +57,10 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
 
     // Obtener abonos del día (pagos de cuentas por cobrar)
-    const hoy = new Date().toISOString().split('T')[0];
+    const rangoHoy = obtenerRangoDia();
     const abonosDelDia = await Abono.obtenerTodos({
-      fecha_desde: hoy + ' 00:00:00',
-      fecha_hasta: hoy + ' 23:59:59'
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
     });
 
     // Calcular total de abonos del día
@@ -112,8 +113,16 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
 
-    if (ventasContado.length === 0) {
-      return res.status(400).json({ error: 'No hay ventas para cerrar' });
+    // Obtener abonos del día para validar si hay actividad
+    const rangoHoy = obtenerRangoDia();
+    const abonosDelDia = await Abono.obtenerTodos({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
+
+    // Validar que haya al menos ventas o abonos
+    if (ventasContado.length === 0 && abonosDelDia.total === 0) {
+      return res.status(400).json({ error: 'No hay ventas ni abonos para cerrar' });
     }
 
     // Transferir cada venta de contado a la base de datos principal
