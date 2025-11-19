@@ -59,6 +59,13 @@ function Sidebar() {
           </Link>
         </li>
 
+        <li>
+          <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
+            <span className="icon">💰</span>
+            <span>Cierre de Caja</span>
+          </Link>
+        </li>
+
         {/* Separador */}
         {isAdmin() && <li className="separator"></li>}
 
@@ -81,12 +88,6 @@ function Sidebar() {
               <Link to="/movimientos" className={isActive('/movimientos')}>
                 <span className="icon">📦</span>
                 <span>Movimientos</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
-                <span className="icon">💰</span>
-                <span>Cierre de Caja</span>
               </Link>
             </li>
             <li>
@@ -159,6 +160,7 @@ function AppContent() {
           <Route path="/ventas" element={<ProtectedRoute><Ventas /></ProtectedRoute>} />
           <Route path="/historial-ventas" element={<ProtectedRoute><HistorialVentas /></ProtectedRoute>} />
           <Route path="/venta/:id" element={<ProtectedRoute><DetalleVenta /></ProtectedRoute>} />
+          <Route path="/cierre-caja" element={<ProtectedRoute><CierreCaja /></ProtectedRoute>} />
 
           {/* Rutas administrativas - Solo administradores */}
           <Route path="/" element={<ProtectedRoute adminOnly={true}><ListadoJoyas /></ProtectedRoute>} />
@@ -166,7 +168,6 @@ function AppContent() {
           <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/joya/:id" element={<ProtectedRoute adminOnly={true}><DetalleJoya /></ProtectedRoute>} />
           <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
-          <Route path="/cierre-caja" element={<ProtectedRoute adminOnly={true}><CierreCaja /></ProtectedRoute>} />
           <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
           <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />
           <Route path="/usuarios" element={<ProtectedRoute adminOnly={true}><Usuarios /></ProtectedRoute>} />
