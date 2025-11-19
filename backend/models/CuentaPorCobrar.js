@@ -70,7 +70,7 @@ class CuentaPorCobrar {
         if (err) {
           reject(err);
         } else {
-          const total = row.total;
+          const total = row ? row.total : 0;
           const offset = (pagina - 1) * por_pagina;
 
           // Obtener registros con paginación
@@ -226,7 +226,16 @@ class CuentaPorCobrar {
         if (err) {
           reject(err);
         } else {
-          resolve(row);
+          resolve(row || {
+            total_cuentas: 0,
+            cuentas_pendientes: 0,
+            cuentas_pagadas: 0,
+            monto_total_general: 0,
+            monto_pagado_general: 0,
+            saldo_pendiente_general: 0,
+            cuentas_vencidas: 0,
+            monto_vencido: 0
+          });
         }
       });
     });
