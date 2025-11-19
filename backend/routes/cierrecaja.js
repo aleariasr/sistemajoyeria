@@ -4,6 +4,7 @@ const VentaDia = require('../models/VentaDia');
 const ItemVentaDia = require('../models/ItemVentaDia');
 const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
+const Abono = require('../models/Abono');
 const { db } = require('../database');
 
 // Middleware para verificar autenticación
@@ -50,10 +51,51 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
   try {
     const resumen = await VentaDia.obtenerResumen();
     const ventas = await VentaDia.obtenerTodas();
+    
+    // Filtrar solo ventas de contado para la vista
+    const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
+
+    // Obtener abonos del día (pagos de cuentas por cobrar)
+    const hoy = new Date().toISOString().split('T')[0];
+    const abonosDelDia = await Abono.obtenerTodos({
+      fecha_desde: hoy + ' 00:00:00',
+      fecha_hasta: hoy + ' 23:59:59'
+    });
+
+    // Calcular total de abonos del día
+    const totalAbonos = abonosDelDia.abonos.reduce((sum, abono) => sum + abono.monto, 0);
+    
+    // Agrupar abonos por método de pago
+    const abonosEfectivo = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Efectivo');
+    const abonosTransferencia = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Transferencia');
+    const abonosTarjeta = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Tarjeta');
+
+    const totalAbonosEfectivo = abonosEfectivo.reduce((sum, a) => sum + a.monto, 0);
+    const totalAbonosTransferencia = abonosTransferencia.reduce((sum, a) => sum + a.monto, 0);
+    const totalAbonosTarjeta = abonosTarjeta.reduce((sum, a) => sum + a.monto, 0);
+
+    // Incluir abonos en el resumen
+    const resumenCompleto = {
+      ...resumen,
+      total_abonos: abonosDelDia.total,
+      monto_total_abonos: totalAbonos,
+      abonos_efectivo: abonosEfectivo.length,
+      monto_abonos_efectivo: totalAbonosEfectivo,
+      abonos_transferencia: abonosTransferencia.length,
+      monto_abonos_transferencia: totalAbonosTransferencia,
+      abonos_tarjeta: abonosTarjeta.length,
+      monto_abonos_tarjeta: totalAbonosTarjeta,
+      // Totales combinados (ventas + abonos)
+      total_efectivo_combinado: (resumen.total_efectivo || 0) + totalAbonosEfectivo,
+      total_transferencia_combinado: (resumen.total_transferencia || 0) + totalAbonosTransferencia,
+      total_tarjeta_combinado: (resumen.total_tarjeta || 0) + totalAbonosTarjeta,
+      total_ingresos_combinado: (resumen.total_ingresos || 0) + totalAbonos
+    };
 
     res.json({
-      resumen,
-      ventas
+      resumen: resumenCompleto,
+      ventas: ventasContado,
+      abonos: abonosDelDia.abonos
     });
   } catch (error) {
     console.error('Error al obtener resumen del día:', error);
@@ -61,21 +103,24 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
   }
 });
 
-// Cerrar caja (transferir ventas del día a la base de datos principal)
+// Cerrar caja (transferir ventas de contado del día a la base de datos principal)
 router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
-    // Obtener todas las ventas del día
+    // Obtener todas las ventas del día (solo ventas de contado)
     const ventasDia = await VentaDia.obtenerTodas();
 
-    if (ventasDia.length === 0) {
+    // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
+    const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
+
+    if (ventasContado.length === 0) {
       return res.status(400).json({ error: 'No hay ventas para cerrar' });
     }
 
-    // Transferir cada venta a la base de datos principal
+    // Transferir cada venta de contado a la base de datos principal
     const ventasTransferidas = [];
     
-    for (const ventaDia of ventasDia) {
-      // Crear venta en la base de datos principal
+    for (const ventaDia of ventasContado) {
+      // Crear venta en la base de datos principal con TODOS los campos
       const ventaData = {
         id_usuario: ventaDia.id_usuario,
         metodo_pago: ventaDia.metodo_pago,
@@ -84,7 +129,9 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
         total: ventaDia.total,
         efectivo_recibido: ventaDia.efectivo_recibido,
         cambio: ventaDia.cambio,
-        notas: ventaDia.notas
+        notas: ventaDia.notas,
+        tipo_venta: ventaDia.tipo_venta || 'Contado',
+        id_cliente: ventaDia.id_cliente
       };
 
       const resultadoVenta = await Venta.crear(ventaData);
@@ -119,7 +166,8 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       ventasTransferidas.push({
         id_original: ventaDia.id,
         id_nueva: idVentaPrincipal,
-        total: ventaDia.total
+        total: ventaDia.total,
+        metodo_pago: ventaDia.metodo_pago
       });
     }
 

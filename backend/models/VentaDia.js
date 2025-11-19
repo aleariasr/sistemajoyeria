@@ -62,7 +62,7 @@ class VentaDia {
     });
   }
 
-  // Obtener resumen de ventas del día
+  // Obtener resumen de ventas del día (solo ventas de contado)
   static obtenerResumen() {
     return new Promise((resolve, reject) => {
       const sql = `
@@ -71,9 +71,12 @@ class VentaDia {
           SUM(total) as total_ingresos,
           SUM(CASE WHEN metodo_pago = 'Efectivo' THEN total ELSE 0 END) as total_efectivo,
           SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END) as total_transferencia,
+          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN total ELSE 0 END) as total_tarjeta,
           COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as ventas_efectivo,
-          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia
+          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia,
+          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta
         FROM ventas_dia
+        WHERE tipo_venta = 'Contado' OR tipo_venta IS NULL
       `;
 
       dbDia.get(sql, [], (err, row) => {
