@@ -69,6 +69,13 @@ function HistorialVentas() {
     return `${iconos[metodo] || ''} ${metodo}`;
   };
 
+  const formatearTipoVenta = (tipo) => {
+    if (tipo === 'Credito') {
+      return '📝 Crédito';
+    }
+    return '💰 Contado';
+  };
+
   return (
     <div className="historial-container">
       <div className="page-header">
@@ -129,6 +136,7 @@ function HistorialVentas() {
                   <th>#</th>
                   <th>Fecha</th>
                   {isAdmin() && <th>Usuario</th>}
+                  <th>Tipo</th>
                   <th>Método de Pago</th>
                   <th>Total</th>
                   <th>Acciones</th>
@@ -140,6 +148,17 @@ function HistorialVentas() {
                     <td>{venta.id}</td>
                     <td>{formatearFecha(venta.fecha_venta)}</td>
                     {isAdmin() && <td>{venta.nombre_usuario || venta.usuario}</td>}
+                    <td>
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: venta.tipo_venta === 'Credito' ? '#fff3cd' : '#d4edda',
+                        color: '#000',
+                        fontSize: '0.85em'
+                      }}>
+                        {formatearTipoVenta(venta.tipo_venta)}
+                      </span>
+                    </td>
                     <td>{formatearMetodoPago(venta.metodo_pago)}</td>
                     <td className="precio">₡{venta.total.toFixed(2)}</td>
                     <td>

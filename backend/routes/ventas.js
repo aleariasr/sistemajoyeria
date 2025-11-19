@@ -61,7 +61,7 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    // Crear la venta EN LA BASE DE DATOS DEL DÍA
+    // Preparar datos de la venta
     const ventaData = {
       id_usuario: req.session.userId,
       metodo_pago,
@@ -75,19 +75,42 @@ router.post('/', requireAuth, async (req, res) => {
       id_cliente: id_cliente || null
     };
 
-    const resultadoVenta = await VentaDia.crear(ventaData);
-    const idVenta = resultadoVenta.id;
+    // Si es venta a crédito, guardar directamente en la base de datos principal
+    // Si es venta de contado, guardar en la base de datos del día
+    let resultadoVenta;
+    let idVenta;
+    let esVentaCredito = tipo_venta === 'Credito';
+
+    if (esVentaCredito) {
+      // Ventas a crédito van directamente a la DB principal
+      resultadoVenta = await Venta.crear(ventaData);
+      idVenta = resultadoVenta.id;
+    } else {
+      // Ventas de contado van a la DB del día
+      resultadoVenta = await VentaDia.crear(ventaData);
+      idVenta = resultadoVenta.id;
+    }
 
     // Crear items de venta y actualizar stock
     for (const item of items) {
-      // Crear item de venta en la base de datos del día
-      await ItemVentaDia.crear({
-        id_venta_dia: idVenta,
-        id_joya: item.id_joya,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario,
-        subtotal: item.precio_unitario * item.cantidad
-      });
+      // Crear item de venta en la base de datos correspondiente
+      if (esVentaCredito) {
+        await ItemVenta.crear({
+          id_venta: idVenta,
+          id_joya: item.id_joya,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio_unitario,
+          subtotal: item.precio_unitario * item.cantidad
+        });
+      } else {
+        await ItemVentaDia.crear({
+          id_venta_dia: idVenta,
+          id_joya: item.id_joya,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio_unitario,
+          subtotal: item.precio_unitario * item.cantidad
+        });
+      }
 
       // Obtener joya actual
       const joya = await Joya.obtenerPorId(item.id_joya);
@@ -108,11 +131,12 @@ router.post('/', requireAuth, async (req, res) => {
       await Joya.actualizarStock(item.id_joya, nuevoStock);
 
       // Registrar movimiento de inventario
+      const motivoVenta = esVentaCredito ? `Venta a crédito #${idVenta}` : `Venta del día #${idVenta}`;
       await MovimientoInventario.crear({
         id_joya: item.id_joya,
         tipo_movimiento: 'Salida',
         cantidad: item.cantidad,
-        motivo: `Venta del día #${idVenta}`,
+        motivo: motivoVenta,
         usuario: req.session.username,
         stock_antes: joya.stock_actual,
         stock_despues: nuevoStock
@@ -121,7 +145,7 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Si es venta a crédito, crear cuenta por cobrar
     let idCuentaPorCobrar = null;
-    if (tipo_venta === 'Credito') {
+    if (esVentaCredito) {
       const cuentaData = {
         id_venta: idVenta,
         id_cliente: id_cliente,

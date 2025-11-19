@@ -69,6 +69,17 @@ function DetalleVenta() {
             <span>{venta.nombre_usuario || venta.usuario}</span>
           </div>
           <div className="info-linea">
+            <span className="label">Tipo de Venta:</span>
+            <span style={{
+              padding: '4px 8px',
+              borderRadius: '4px',
+              backgroundColor: venta.tipo_venta === 'Credito' ? '#fff3cd' : '#d4edda',
+              color: '#000'
+            }}>
+              {venta.tipo_venta === 'Credito' ? '📝 Crédito' : '💰 Contado'}
+            </span>
+          </div>
+          <div className="info-linea">
             <span className="label">Método de Pago:</span>
             <span>{venta.metodo_pago}</span>
           </div>
