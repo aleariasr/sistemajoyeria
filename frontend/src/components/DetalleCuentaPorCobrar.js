@@ -18,7 +18,7 @@ function DetalleCuentaPorCobrar() {
 
   useEffect(() => {
     cargarCuenta();
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cargarCuenta = async () => {
     try {

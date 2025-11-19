@@ -14,7 +14,7 @@ function Clientes() {
 
   useEffect(() => {
     cargarClientes();
-  }, [paginaActual, busqueda]);
+  }, [paginaActual, busqueda]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cargarClientes = async () => {
     try {

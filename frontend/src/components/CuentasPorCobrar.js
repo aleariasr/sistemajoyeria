@@ -16,7 +16,7 @@ function CuentasPorCobrar() {
 
   useEffect(() => {
     cargarDatos();
-  }, [paginaActual, filtroEstado, searchParams]);
+  }, [paginaActual, filtroEstado, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cargarDatos = async () => {
     try {

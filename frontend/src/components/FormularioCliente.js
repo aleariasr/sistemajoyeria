@@ -23,7 +23,7 @@ function FormularioCliente() {
     if (esEdicion) {
       cargarCliente();
     }
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cargarCliente = async () => {
     try {
