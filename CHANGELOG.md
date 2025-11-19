@@ -1,5 +1,75 @@
 # Changelog
 
+## [3.0.0] - 2025-11-19 - Pagos Mixtos y Correcciones de Zona Horaria
+
+### 🎯 Cambios Principales
+- Sistema completo de pagos mixtos implementado
+- Corrección crítica de zona horaria (Costa Rica UTC-6)
+- Permitir cierre de caja con solo abonos
+- Sincronización correcta entre ventas a crédito y cierre de caja
+
+### ✨ Agregado
+- **Pagos Mixtos**:
+  - Interfaz para desglose de efectivo, tarjeta y transferencia
+  - Auto-cálculo de montos restantes
+  - Cálculo de cambio para componente de efectivo
+  - Validación en tiempo real de totales
+  - Desglose completo en cierre de caja y reportes
+
+- **Módulo de Zona Horaria**:
+  - `backend/utils/timezone.js` para manejo de fechas en Costa Rica
+  - Funciones: `obtenerFechaActualCR()`, `obtenerRangoDia()`, `formatearFechaSQL()`
+  - Todas las fechas ahora usan zona horaria de Costa Rica (UTC-6)
+
+- **Nuevos Reportes**:
+  - `GET /api/reportes/movimientos-financieros` - Reporte completo de ventas y abonos
+  - `GET /api/reportes/historial-completo` - Historial unificado de todas las transacciones
+
+- **Migraciones de Base de Datos**:
+  - Columnas `monto_efectivo`, `monto_tarjeta`, `monto_transferencia` en `ventas` y `ventas_dia`
+  - Migración automática al iniciar el servidor
+
+### 🔧 Mejorado
+- **Cierre de Caja**:
+  - Permite cierre con solo abonos (sin ventas)
+  - Muestra ventas mixtas con desglose detallado
+  - Totales combinados (ventas + abonos) por método de pago
+  - Filtrado correcto de ventas a crédito (no incluidas en cierre de caja del día)
+
+- **Ventas a Crédito**:
+  - Van directamente a base de datos principal (no a `ventas_dia`)
+  - No se incluyen en totales de cierre de caja
+  - Preservación de campos `tipo_venta` y `id_cliente`
+
+- **Abonos**:
+  - Ahora aparecen correctamente en cierre de caja
+  - Incluidos en totales por método de pago
+  - Desglose separado de ventas
+
+- **Formato de Fechas**:
+  - Frontend muestra fechas con `timeZone: 'America/Costa_Rica'`
+  - Backend usa funciones de zona horaria para todas las fechas
+  - Consistencia entre base de datos y reportes
+
+### 🐛 Corregido
+- **Problema Crítico**: Abonos no aparecían en cierre de caja debido a desajuste de zona horaria
+- **Problema**: Ventas a crédito se incluían incorrectamente en cierre de caja
+- **Problema**: Pagos mixtos no se integraban con ventas ni cierre de caja
+- **Problema**: Pérdida de datos (`tipo_venta`, `id_cliente`) durante transferencia en cierre de caja
+- **Problema**: No se podía cerrar caja con solo abonos (sin ventas del día)
+
+### 🔒 Seguridad
+- CodeQL scan: **0 vulnerabilidades**
+- Validación de pagos mixtos (suma debe coincidir con total)
+- Mantiene todos los estándares de seguridad previos
+
+### 🧪 Testing
+- Suite completa de pruebas E2E ejecutada exitosamente
+- Pruebas de validación de casos borde
+- Verificación de integridad de datos
+- Todos los flujos de negocio validados
+- Stock y cálculos financieros verificados
+
 ## [2.0.0] - 2025-11-17 - Autenticación y Gestión de Usuarios
 
 ### 🎯 Cambios Principales
