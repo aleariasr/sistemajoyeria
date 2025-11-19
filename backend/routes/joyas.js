@@ -177,6 +177,26 @@ router.put('/:id', async (req, res) => {
       }
     }
 
+    // Registrar movimiento de inventario si el stock cambió
+    const stockAnterior = joyaExistente.stock_actual;
+    const stockNuevo = joyaData.stock_actual;
+    
+    if (stockNuevo !== stockAnterior) {
+      const diferencia = stockNuevo - stockAnterior;
+      const tipoMovimiento = diferencia > 0 ? 'Entrada' : diferencia < 0 ? 'Salida' : 'Ajuste';
+      const cantidad = Math.abs(diferencia);
+      
+      await MovimientoInventario.crear({
+        id_joya: req.params.id,
+        tipo_movimiento: tipoMovimiento,
+        cantidad: cantidad,
+        motivo: 'Ajuste de inventario por modificación',
+        usuario: req.session?.username || 'Sistema',
+        stock_antes: stockAnterior,
+        stock_despues: stockNuevo
+      });
+    }
+
     await Joya.actualizar(req.params.id, joyaData);
     res.json({ mensaje: 'Joya actualizada correctamente' });
   } catch (error) {

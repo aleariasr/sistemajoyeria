@@ -71,6 +71,13 @@ function Sidebar() {
         </li>
 
         <li>
+          <Link to="/clientes" className={isActive('/clientes')}>
+            <span className="icon">👥</span>
+            <span>Clientes</span>
+          </Link>
+        </li>
+
+        <li>
           <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
             <span className="icon">💰</span>
             <span>Cierre de Caja</span>
@@ -93,12 +100,6 @@ function Sidebar() {
               <Link to="/nueva-joya" className={isActive('/nueva-joya')}>
                 <span className="icon">➕</span>
                 <span>Nueva Joya</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/clientes" className={isActive('/clientes')}>
-                <span className="icon">👥</span>
-                <span>Clientes</span>
               </Link>
             </li>
             <li>
@@ -180,15 +181,15 @@ function AppContent() {
           <Route path="/cuentas-por-cobrar" element={<ProtectedRoute><CuentasPorCobrar /></ProtectedRoute>} />
           <Route path="/cuenta-por-cobrar/:id" element={<ProtectedRoute><DetalleCuentaPorCobrar /></ProtectedRoute>} />
           <Route path="/cierre-caja" element={<ProtectedRoute><CierreCaja /></ProtectedRoute>} />
+          <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
+          <Route path="/nuevo-cliente" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />
+          <Route path="/editar-cliente/:id" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />
 
           {/* Rutas administrativas - Solo administradores */}
           <Route path="/" element={<ProtectedRoute adminOnly={true}><ListadoJoyas /></ProtectedRoute>} />
           <Route path="/nueva-joya" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/joya/:id" element={<ProtectedRoute adminOnly={true}><DetalleJoya /></ProtectedRoute>} />
-          <Route path="/clientes" element={<ProtectedRoute adminOnly={true}><Clientes /></ProtectedRoute>} />
-          <Route path="/nuevo-cliente" element={<ProtectedRoute adminOnly={true}><FormularioCliente /></ProtectedRoute>} />
-          <Route path="/editar-cliente/:id" element={<ProtectedRoute adminOnly={true}><FormularioCliente /></ProtectedRoute>} />
           <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
           <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
           <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />

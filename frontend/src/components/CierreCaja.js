@@ -79,11 +79,6 @@ function CierreCaja() {
   const ventasTransferencia = ventasDia.filter(v => v.metodo_pago === 'Transferencia');
   const ventasTarjeta = ventasDia.filter(v => v.metodo_pago === 'Tarjeta');
 
-  // Separar abonos por método de pago
-  const abonosEfectivo = abonosDia.filter(a => a.metodo_pago === 'Efectivo');
-  const abonosTransferencia = abonosDia.filter(a => a.metodo_pago === 'Transferencia');
-  const abonosTarjeta = abonosDia.filter(a => a.metodo_pago === 'Tarjeta');
-
   return (
     <div>
       <div className="page-header">
