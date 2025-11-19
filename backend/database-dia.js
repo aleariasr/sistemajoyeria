@@ -27,6 +27,8 @@ const initDatabaseDia = () => {
           efectivo_recibido REAL,
           cambio REAL,
           notas TEXT,
+          tipo_venta TEXT DEFAULT 'Contado',
+          id_cliente INTEGER,
           fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `, (err) => {
@@ -35,6 +37,41 @@ const initDatabaseDia = () => {
           reject(err);
         } else {
           console.log('Tabla ventas_dia creada o ya existe.');
+          
+          // Migrar tabla ventas_dia existente si no tiene las columnas nuevas
+          dbDia.all("PRAGMA table_info(ventas_dia)", [], (err, columns) => {
+            if (err) {
+              console.error('Error al verificar columnas de ventas_dia:', err.message);
+              return;
+            }
+            
+            const columnNames = columns.map(col => col.name);
+            const needsMigration = !columnNames.includes('tipo_venta') || !columnNames.includes('id_cliente');
+            
+            if (needsMigration) {
+              console.log('Migrando tabla ventas_dia para soporte de ventas a crédito...');
+              
+              if (!columnNames.includes('tipo_venta')) {
+                dbDia.run(`ALTER TABLE ventas_dia ADD COLUMN tipo_venta TEXT DEFAULT 'Contado'`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna tipo_venta a ventas_dia:', err.message);
+                  } else {
+                    console.log('✅ Columna tipo_venta agregada a ventas_dia.');
+                  }
+                });
+              }
+              
+              if (!columnNames.includes('id_cliente')) {
+                dbDia.run(`ALTER TABLE ventas_dia ADD COLUMN id_cliente INTEGER`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna id_cliente a ventas_dia:', err.message);
+                  } else {
+                    console.log('✅ Columna id_cliente agregada a ventas_dia.');
+                  }
+                });
+              }
+            }
+          });
         }
       });
 

@@ -6,6 +6,8 @@ const VentaDia = require('../models/VentaDia');
 const ItemVentaDia = require('../models/ItemVentaDia');
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const CuentaPorCobrar = require('../models/CuentaPorCobrar');
+const Cliente = require('../models/Cliente');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -18,7 +20,7 @@ const requireAuth = (req, res, next) => {
 // Crear nueva venta
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { items, metodo_pago, descuento, efectivo_recibido, notas } = req.body;
+    const { items, metodo_pago, descuento, efectivo_recibido, notas, tipo_venta, id_cliente, fecha_vencimiento } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'La venta debe tener al menos un producto' });
@@ -26,6 +28,19 @@ router.post('/', requireAuth, async (req, res) => {
 
     if (!metodo_pago) {
       return res.status(400).json({ error: 'El método de pago es requerido' });
+    }
+
+    // Validar venta a crédito
+    if (tipo_venta === 'Credito') {
+      if (!id_cliente) {
+        return res.status(400).json({ error: 'Para venta a crédito debe seleccionar un cliente' });
+      }
+      
+      // Verificar que el cliente existe
+      const cliente = await Cliente.obtenerPorId(id_cliente);
+      if (!cliente) {
+        return res.status(404).json({ error: 'Cliente no encontrado' });
+      }
     }
 
     // Calcular subtotal y total
@@ -55,7 +70,9 @@ router.post('/', requireAuth, async (req, res) => {
       total,
       efectivo_recibido: efectivo_recibido || null,
       cambio,
-      notas
+      notas,
+      tipo_venta: tipo_venta || 'Contado',
+      id_cliente: id_cliente || null
     };
 
     const resultadoVenta = await VentaDia.crear(ventaData);
@@ -102,11 +119,30 @@ router.post('/', requireAuth, async (req, res) => {
       });
     }
 
+    // Si es venta a crédito, crear cuenta por cobrar
+    let idCuentaPorCobrar = null;
+    if (tipo_venta === 'Credito') {
+      const cuentaData = {
+        id_venta: idVenta,
+        id_cliente: id_cliente,
+        monto_total: total,
+        monto_pagado: 0,
+        saldo_pendiente: total,
+        estado: 'Pendiente',
+        fecha_vencimiento: fecha_vencimiento || null
+      };
+      
+      const resultadoCuenta = await CuentaPorCobrar.crear(cuentaData);
+      idCuentaPorCobrar = resultadoCuenta.id;
+    }
+
     res.status(201).json({
       mensaje: 'Venta creada exitosamente',
       id: idVenta,
       total,
-      cambio
+      cambio,
+      tipo_venta: tipo_venta || 'Contado',
+      id_cuenta_por_cobrar: idCuentaPorCobrar
     });
   } catch (error) {
     console.error('Error al crear venta:', error);

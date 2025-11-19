@@ -179,8 +179,11 @@ const initDatabase = () => {
           efectivo_recibido REAL,
           cambio REAL,
           notas TEXT,
+          tipo_venta TEXT DEFAULT 'Contado',
+          id_cliente INTEGER,
           fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
+          FOREIGN KEY (id_usuario) REFERENCES usuarios(id),
+          FOREIGN KEY (id_cliente) REFERENCES clientes(id)
         )
       `, (err) => {
         if (err) {
@@ -188,6 +191,41 @@ const initDatabase = () => {
           reject(err);
         } else {
           console.log('Tabla ventas creada o ya existe.');
+          
+          // Migrar tabla ventas existente si no tiene las columnas nuevas
+          db.all("PRAGMA table_info(ventas)", [], (err, columns) => {
+            if (err) {
+              console.error('Error al verificar columnas de ventas:', err.message);
+              return;
+            }
+            
+            const columnNames = columns.map(col => col.name);
+            const needsMigration = !columnNames.includes('tipo_venta') || !columnNames.includes('id_cliente');
+            
+            if (needsMigration) {
+              console.log('Migrando tabla ventas para soporte de ventas a crédito...');
+              
+              if (!columnNames.includes('tipo_venta')) {
+                db.run(`ALTER TABLE ventas ADD COLUMN tipo_venta TEXT DEFAULT 'Contado'`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna tipo_venta:', err.message);
+                  } else {
+                    console.log('✅ Columna tipo_venta agregada.');
+                  }
+                });
+              }
+              
+              if (!columnNames.includes('id_cliente')) {
+                db.run(`ALTER TABLE ventas ADD COLUMN id_cliente INTEGER`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna id_cliente:', err.message);
+                  } else {
+                    console.log('✅ Columna id_cliente agregada.');
+                  }
+                });
+              }
+            }
+          });
         }
       });
 
@@ -209,6 +247,74 @@ const initDatabase = () => {
           reject(err);
         } else {
           console.log('Tabla items_venta creada o ya existe.');
+        }
+      });
+
+      // Tabla de Clientes
+      db.run(`
+        CREATE TABLE IF NOT EXISTS clientes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL,
+          telefono TEXT NOT NULL,
+          cedula TEXT UNIQUE NOT NULL,
+          direccion TEXT,
+          email TEXT,
+          notas TEXT,
+          fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+          fecha_ultima_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `, (err) => {
+        if (err) {
+          console.error('Error al crear tabla clientes:', err.message);
+          reject(err);
+        } else {
+          console.log('Tabla clientes creada o ya existe.');
+        }
+      });
+
+      // Tabla de Cuentas por Cobrar
+      db.run(`
+        CREATE TABLE IF NOT EXISTS cuentas_por_cobrar (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id_venta INTEGER NOT NULL,
+          id_cliente INTEGER NOT NULL,
+          monto_total REAL NOT NULL,
+          monto_pagado REAL DEFAULT 0,
+          saldo_pendiente REAL NOT NULL,
+          estado TEXT DEFAULT 'Pendiente',
+          fecha_vencimiento DATE,
+          fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+          fecha_ultima_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (id_venta) REFERENCES ventas(id),
+          FOREIGN KEY (id_cliente) REFERENCES clientes(id)
+        )
+      `, (err) => {
+        if (err) {
+          console.error('Error al crear tabla cuentas_por_cobrar:', err.message);
+          reject(err);
+        } else {
+          console.log('Tabla cuentas_por_cobrar creada o ya existe.');
+        }
+      });
+
+      // Tabla de Abonos
+      db.run(`
+        CREATE TABLE IF NOT EXISTS abonos (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id_cuenta_por_cobrar INTEGER NOT NULL,
+          monto REAL NOT NULL,
+          metodo_pago TEXT NOT NULL,
+          notas TEXT,
+          fecha_abono DATETIME DEFAULT CURRENT_TIMESTAMP,
+          usuario TEXT,
+          FOREIGN KEY (id_cuenta_por_cobrar) REFERENCES cuentas_por_cobrar(id)
+        )
+      `, (err) => {
+        if (err) {
+          console.error('Error al crear tabla abonos:', err.message);
+          reject(err);
+        } else {
+          console.log('Tabla abonos creada o ya existe.');
           console.log('Base de datos lista. Comienza con una base limpia (sin datos de prueba).');
           console.log('Nota: Para cargar datos de ejemplo, ejecuta: SEED=true npm start');
           resolve();

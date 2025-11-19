@@ -45,6 +45,8 @@ const reportesRoutes = require('./routes/reportes');
 const authRoutes = require('./routes/auth');
 const ventasRoutes = require('./routes/ventas');
 const cierreCajaRoutes = require('./routes/cierrecaja');
+const clientesRoutes = require('./routes/clientes');
+const cuentasPorCobrarRoutes = require('./routes/cuentas-por-cobrar');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -52,6 +54,8 @@ app.use('/api/reportes', reportesRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/cierrecaja', cierreCajaRoutes);
+app.use('/api/clientes', clientesRoutes);
+app.use('/api/cuentas-por-cobrar', cuentasPorCobrarRoutes);
 
 // Ruta de salud del servidor
 app.get('/health', (req, res) => {
