@@ -1,0 +1,259 @@
+.cuentas-container {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.cuentas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title-section h2 {
+  margin: 0;
+  color: #1a237e;
+  font-size: 2rem;
+}
+
+.title-section p {
+  margin: 0.5rem 0 0 0;
+  color: #666;
+}
+
+.resumen-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.resumen-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  transition: transform 0.3s;
+}
+
+.resumen-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.resumen-card.pendiente {
+  border-left: 4px solid #f57c00;
+}
+
+.resumen-card.pagada {
+  border-left: 4px solid #2e7d32;
+}
+
+.resumen-card.vencida {
+  border-left: 4px solid #c62828;
+}
+
+.resumen-icon {
+  font-size: 2.5rem;
+}
+
+.resumen-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.resumen-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.resumen-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #1a237e;
+}
+
+.resumen-monto {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.filters-bar {
+  margin-bottom: 1.5rem;
+}
+
+.filters-bar select {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.cuentas-table {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.cuentas-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1000px;
+}
+
+.cuentas-table th {
+  background: #f5f5f5;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #1a237e;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.cuentas-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cuentas-table tbody tr:hover {
+  background: #f8f8f8;
+}
+
+.cuentas-table tbody tr.vencida {
+  background: #ffebee;
+}
+
+.cuentas-table tbody tr.vencida:hover {
+  background: #ffcdd2;
+}
+
+.cuentas-table small {
+  display: block;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.monto {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.monto.pagado {
+  color: #2e7d32;
+}
+
+.monto.saldo {
+  color: #f57c00;
+  font-weight: bold;
+}
+
+.badge-estado {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-estado.estado-pendiente {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge-estado.estado-pagada {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-vencida {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: #c62828;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.btn-view:hover {
+  background: #e3f2fd;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination button {
+  background: white;
+  border: 2px solid #1a237e;
+  color: #1a237e;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #1a237e;
+  color: white;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #c62828;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+}

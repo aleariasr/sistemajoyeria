@@ -88,3 +88,49 @@ export const obtenerResumenDia = () => {
 export const cerrarCaja = () => {
   return api.post('/cierrecaja/cerrar-caja');
 };
+
+// Clientes
+export const obtenerClientes = (filtros = {}) => {
+  return api.get('/clientes', { params: filtros });
+};
+
+export const obtenerCliente = (id) => {
+  return api.get(`/clientes/${id}`);
+};
+
+export const buscarClientes = (termino) => {
+  return api.get('/clientes/buscar', { params: { q: termino } });
+};
+
+export const crearCliente = (clienteData) => {
+  return api.post('/clientes', clienteData);
+};
+
+export const actualizarCliente = (id, clienteData) => {
+  return api.put(`/clientes/${id}`, clienteData);
+};
+
+export const eliminarCliente = (id) => {
+  return api.delete(`/clientes/${id}`);
+};
+
+// Cuentas por Cobrar
+export const obtenerCuentasPorCobrar = (filtros = {}) => {
+  return api.get('/cuentas-por-cobrar', { params: filtros });
+};
+
+export const obtenerCuentaPorCobrar = (id) => {
+  return api.get(`/cuentas-por-cobrar/${id}`);
+};
+
+export const obtenerResumenCuentasPorCobrar = () => {
+  return api.get('/cuentas-por-cobrar/resumen');
+};
+
+export const obtenerCuentasPorCliente = (id_cliente) => {
+  return api.get(`/cuentas-por-cobrar/cliente/${id_cliente}`);
+};
+
+export const registrarAbono = (id_cuenta, abonoData) => {
+  return api.post(`/cuentas-por-cobrar/${id_cuenta}/abonos`, abonoData);
+};

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import api, { buscarClientes } from '../services/api';
 import '../styles/Ventas.css';
 
 function Ventas() {
@@ -9,6 +9,11 @@ function Ventas() {
   const [busqueda, setBusqueda] = useState('');
   const [carrito, setCarrito] = useState([]);
   const [metodoPago, setMetodoPago] = useState('Efectivo');
+  const [tipoVenta, setTipoVenta] = useState('Contado');
+  const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [clientesEncontrados, setClientesEncontrados] = useState([]);
+  const [fechaVencimiento, setFechaVencimiento] = useState('');
   const [descuento, setDescuento] = useState(0);
   const [efectivoRecibido, setEfectivoRecibido] = useState('');
   const [notas, setNotas] = useState('');
@@ -27,6 +32,19 @@ function Ventas() {
     }
   }, [busqueda]);
 
+  const buscarClientesFunc = useCallback(async () => {
+    if (busquedaCliente.length < 2) {
+      setClientesEncontrados([]);
+      return;
+    }
+    try {
+      const response = await buscarClientes(busquedaCliente);
+      setClientesEncontrados(response.data || []);
+    } catch (error) {
+      console.error('Error al buscar clientes:', error);
+    }
+  }, [busquedaCliente]);
+
   useEffect(() => {
     if (busqueda.length >= 2) {
       buscarJoyas();
@@ -34,6 +52,21 @@ function Ventas() {
       setJoyas([]);
     }
   }, [busqueda, buscarJoyas]);
+
+  useEffect(() => {
+    buscarClientesFunc();
+  }, [busquedaCliente, buscarClientesFunc]);
+
+  const seleccionarCliente = (cliente) => {
+    setClienteSeleccionado(cliente);
+    setBusquedaCliente('');
+    setClientesEncontrados([]);
+  };
+
+  const limpiarCliente = () => {
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
+  };
 
   const agregarAlCarrito = (joya) => {
     const itemExistente = carrito.find(item => item.id === joya.id);
@@ -120,7 +153,12 @@ function Ventas() {
       return;
     }
 
-    if (metodoPago === 'Efectivo' && parseFloat(efectivoRecibido) < calcularTotal()) {
+    if (tipoVenta === 'Credito' && !clienteSeleccionado) {
+      setMensaje({ tipo: 'error', texto: 'Debe seleccionar un cliente para venta a crédito' });
+      return;
+    }
+
+    if (metodoPago === 'Efectivo' && tipoVenta === 'Contado' && parseFloat(efectivoRecibido) < calcularTotal()) {
       setMensaje({ tipo: 'error', texto: 'El efectivo recibido es insuficiente' });
       return;
     }
@@ -133,15 +171,23 @@ function Ventas() {
         items: carrito,
         metodo_pago: metodoPago,
         descuento: descuento,
-        efectivo_recibido: metodoPago === 'Efectivo' ? parseFloat(efectivoRecibido) : null,
-        notas: notas
+        efectivo_recibido: metodoPago === 'Efectivo' && tipoVenta === 'Contado' ? parseFloat(efectivoRecibido) : null,
+        notas: notas,
+        tipo_venta: tipoVenta,
+        id_cliente: tipoVenta === 'Credito' ? clienteSeleccionado.id : null,
+        fecha_vencimiento: tipoVenta === 'Credito' && fechaVencimiento ? fechaVencimiento : null
       };
 
       const response = await api.post('/ventas', ventaData);
       
+      let mensajeTexto = `Venta #${response.data.id} realizada exitosamente. Total: ${calcularTotal().toFixed(2)}`;
+      if (tipoVenta === 'Credito') {
+        mensajeTexto += ` - Cuenta por cobrar creada para ${clienteSeleccionado.nombre}`;
+      }
+      
       setMensaje({ 
         tipo: 'success', 
-        texto: `Venta #${response.data.id} realizada exitosamente. Total: ${calcularTotal().toFixed(2)}` 
+        texto: mensajeTexto
       });
       
       // Limpiar formulario
@@ -150,6 +196,9 @@ function Ventas() {
       setEfectivoRecibido('');
       setNotas('');
       setMetodoPago('Efectivo');
+      setTipoVenta('Contado');
+      setClienteSeleccionado(null);
+      setFechaVencimiento('');
       setMostrarFormulario(false);
       
       setTimeout(() => setMensaje({ tipo: '', texto: '' }), 5000);
@@ -302,6 +351,82 @@ function Ventas() {
               {mostrarFormulario && (
                 <form onSubmit={procesarVenta} className="pago-form">
                   <div className="form-group">
+                    <label>Tipo de Venta</label>
+                    <select 
+                      value={tipoVenta} 
+                      onChange={(e) => {
+                        setTipoVenta(e.target.value);
+                        if (e.target.value === 'Contado') {
+                          setClienteSeleccionado(null);
+                          setFechaVencimiento('');
+                        }
+                      }}
+                      required
+                    >
+                      <option value="Contado">Contado</option>
+                      <option value="Credito">Crédito</option>
+                    </select>
+                  </div>
+
+                  {tipoVenta === 'Credito' && (
+                    <div className="credito-section">
+                      <div className="form-group">
+                        <label>Cliente *</label>
+                        {clienteSeleccionado ? (
+                          <div className="cliente-seleccionado">
+                            <div>
+                              <strong>{clienteSeleccionado.nombre}</strong>
+                              <br />
+                              <small>Cédula: {clienteSeleccionado.cedula} | Tel: {clienteSeleccionado.telefono}</small>
+                            </div>
+                            <button 
+                              type="button"
+                              onClick={limpiarCliente}
+                              className="btn-limpiar-cliente"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <input
+                              type="text"
+                              value={busquedaCliente}
+                              onChange={(e) => setBusquedaCliente(e.target.value)}
+                              placeholder="Buscar cliente por nombre, cédula o teléfono..."
+                            />
+                            {clientesEncontrados.length > 0 && (
+                              <div className="clientes-encontrados">
+                                {clientesEncontrados.map(cliente => (
+                                  <div 
+                                    key={cliente.id}
+                                    className="cliente-item"
+                                    onClick={() => seleccionarCliente(cliente)}
+                                  >
+                                    <strong>{cliente.nombre}</strong>
+                                    <br />
+                                    <small>Cédula: {cliente.cedula} | Tel: {cliente.telefono}</small>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label>Fecha de Vencimiento (opcional)</label>
+                        <input
+                          type="date"
+                          value={fechaVencimiento}
+                          onChange={(e) => setFechaVencimiento(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-group">
                     <label>Método de Pago</label>
                     <select 
                       value={metodoPago} 
@@ -315,7 +440,7 @@ function Ventas() {
                     </select>
                   </div>
 
-                  {metodoPago === 'Efectivo' && (
+                  {metodoPago === 'Efectivo' && tipoVenta === 'Contado' && (
                     <>
                       <div className="form-group">
                         <label>Efectivo Recibido</label>
@@ -351,7 +476,7 @@ function Ventas() {
                     className="btn-procesar"
                     disabled={loading}
                   >
-                    {loading ? 'Procesando...' : 'Procesar Venta'}
+                    {loading ? 'Procesando...' : tipoVenta === 'Credito' ? 'Procesar Venta a Crédito' : 'Procesar Venta'}
                   </button>
                 </form>
               )}
