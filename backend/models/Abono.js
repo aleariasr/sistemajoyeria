@@ -102,7 +102,7 @@ class Abono {
         if (err) {
           reject(err);
         } else {
-          const total = row.total;
+          const total = row ? row.total : 0;
           const offset = (pagina - 1) * por_pagina;
 
           // Obtener registros con paginación
