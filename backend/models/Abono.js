@@ -95,8 +95,8 @@ class Abono {
 
       // Contar total de registros
       const countSql = sql.replace(
-        'SELECT a.*, c.id_cliente, c.monto_total as monto_cuenta, c.saldo_pendiente, cl.nombre as nombre_cliente, cl.cedula as cedula_cliente, v.id as id_venta',
-        'SELECT COUNT(*) as total'
+        /SELECT\s+a\.\*,[\s\S]*?FROM/i,
+        'SELECT COUNT(*) as total FROM'
       );
       db.get(countSql, params, (err, row) => {
         if (err) {
