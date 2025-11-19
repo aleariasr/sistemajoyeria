@@ -6,6 +6,7 @@ const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
 const Abono = require('../models/Abono');
 const { db } = require('../database');
+const { obtenerFechaActualCR, obtenerRangoDia } = require('../utils/timezone');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -56,10 +57,10 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
 
     // Obtener abonos del día (pagos de cuentas por cobrar)
-    const hoy = new Date().toISOString().split('T')[0];
+    const rangoHoy = obtenerRangoDia();
     const abonosDelDia = await Abono.obtenerTodos({
-      fecha_desde: hoy + ' 00:00:00',
-      fecha_hasta: hoy + ' 23:59:59'
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
     });
 
     // Calcular total de abonos del día
@@ -85,10 +86,10 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
       monto_abonos_transferencia: totalAbonosTransferencia,
       abonos_tarjeta: abonosTarjeta.length,
       monto_abonos_tarjeta: totalAbonosTarjeta,
-      // Totales combinados (ventas + abonos)
-      total_efectivo_combinado: (resumen.total_efectivo || 0) + totalAbonosEfectivo,
-      total_transferencia_combinado: (resumen.total_transferencia || 0) + totalAbonosTransferencia,
-      total_tarjeta_combinado: (resumen.total_tarjeta || 0) + totalAbonosTarjeta,
+      // Totales combinados (ventas + abonos) - usar totales finales que ya incluyen mixtos
+      total_efectivo_combinado: (resumen.total_efectivo_final || resumen.total_efectivo || 0) + totalAbonosEfectivo,
+      total_transferencia_combinado: (resumen.total_transferencia_final || resumen.total_transferencia || 0) + totalAbonosTransferencia,
+      total_tarjeta_combinado: (resumen.total_tarjeta_final || resumen.total_tarjeta || 0) + totalAbonosTarjeta,
       total_ingresos_combinado: (resumen.total_ingresos || 0) + totalAbonos
     };
 
@@ -112,8 +113,16 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
 
-    if (ventasContado.length === 0) {
-      return res.status(400).json({ error: 'No hay ventas para cerrar' });
+    // Obtener abonos del día para validar si hay actividad
+    const rangoHoy = obtenerRangoDia();
+    const abonosDelDia = await Abono.obtenerTodos({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
+
+    // Validar que haya al menos ventas o abonos
+    if (ventasContado.length === 0 && abonosDelDia.total === 0) {
+      return res.status(400).json({ error: 'No hay ventas ni abonos para cerrar' });
     }
 
     // Transferir cada venta de contado a la base de datos principal
@@ -131,7 +140,10 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
         cambio: ventaDia.cambio,
         notas: ventaDia.notas,
         tipo_venta: ventaDia.tipo_venta || 'Contado',
-        id_cliente: ventaDia.id_cliente
+        id_cliente: ventaDia.id_cliente,
+        monto_efectivo: ventaDia.monto_efectivo || 0,
+        monto_tarjeta: ventaDia.monto_tarjeta || 0,
+        monto_transferencia: ventaDia.monto_transferencia || 0
       };
 
       const resultadoVenta = await Venta.crear(ventaData);

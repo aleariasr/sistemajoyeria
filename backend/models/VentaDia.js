@@ -6,20 +6,23 @@ class VentaDia {
     return new Promise((resolve, reject) => {
       const {
         id_usuario, metodo_pago, subtotal, descuento, total,
-        efectivo_recibido, cambio, notas, tipo_venta, id_cliente
+        efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+        monto_efectivo, monto_tarjeta, monto_transferencia
       } = ventaData;
 
       const sql = `
         INSERT INTO ventas_dia (
           id_usuario, metodo_pago, subtotal, descuento, total,
-          efectivo_recibido, cambio, notas, tipo_venta, id_cliente
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+          monto_efectivo, monto_tarjeta, monto_transferencia
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       dbDia.run(sql, [
         id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
         efectivo_recibido || null, cambio || null, notas || null,
-        tipo_venta || 'Contado', id_cliente || null
+        tipo_venta || 'Contado', id_cliente || null,
+        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0
       ], function(err) {
         if (err) {
           reject(err);
@@ -72,9 +75,13 @@ class VentaDia {
           SUM(CASE WHEN metodo_pago = 'Efectivo' THEN total ELSE 0 END) as total_efectivo,
           SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END) as total_transferencia,
           SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN total ELSE 0 END) as total_tarjeta,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_efectivo ELSE 0 END) as total_efectivo_mixto,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_tarjeta ELSE 0 END) as total_tarjeta_mixto,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_transferencia ELSE 0 END) as total_transferencia_mixto,
           COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as ventas_efectivo,
           COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia,
-          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta
+          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta,
+          COUNT(CASE WHEN metodo_pago = 'Mixto' THEN 1 END) as ventas_mixto
         FROM ventas_dia
         WHERE tipo_venta = 'Contado' OR tipo_venta IS NULL
       `;
@@ -83,7 +90,14 @@ class VentaDia {
         if (err) {
           reject(err);
         } else {
-          resolve(row);
+          // Combinar totales de pagos simples y mixtos
+          const resultado = {
+            ...row,
+            total_efectivo_final: (row.total_efectivo || 0) + (row.total_efectivo_mixto || 0),
+            total_tarjeta_final: (row.total_tarjeta || 0) + (row.total_tarjeta_mixto || 0),
+            total_transferencia_final: (row.total_transferencia || 0) + (row.total_transferencia_mixto || 0)
+          };
+          resolve(resultado);
         }
       });
     });
