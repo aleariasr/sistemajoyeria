@@ -86,10 +86,10 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
       monto_abonos_transferencia: totalAbonosTransferencia,
       abonos_tarjeta: abonosTarjeta.length,
       monto_abonos_tarjeta: totalAbonosTarjeta,
-      // Totales combinados (ventas + abonos)
-      total_efectivo_combinado: (resumen.total_efectivo || 0) + totalAbonosEfectivo,
-      total_transferencia_combinado: (resumen.total_transferencia || 0) + totalAbonosTransferencia,
-      total_tarjeta_combinado: (resumen.total_tarjeta || 0) + totalAbonosTarjeta,
+      // Totales combinados (ventas + abonos) - usar totales finales que ya incluyen mixtos
+      total_efectivo_combinado: (resumen.total_efectivo_final || resumen.total_efectivo || 0) + totalAbonosEfectivo,
+      total_transferencia_combinado: (resumen.total_transferencia_final || resumen.total_transferencia || 0) + totalAbonosTransferencia,
+      total_tarjeta_combinado: (resumen.total_tarjeta_final || resumen.total_tarjeta || 0) + totalAbonosTarjeta,
       total_ingresos_combinado: (resumen.total_ingresos || 0) + totalAbonos
     };
 
@@ -140,7 +140,10 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
         cambio: ventaDia.cambio,
         notas: ventaDia.notas,
         tipo_venta: ventaDia.tipo_venta || 'Contado',
-        id_cliente: ventaDia.id_cliente
+        id_cliente: ventaDia.id_cliente,
+        monto_efectivo: ventaDia.monto_efectivo || 0,
+        monto_tarjeta: ventaDia.monto_tarjeta || 0,
+        monto_transferencia: ventaDia.monto_transferencia || 0
       };
 
       const resultadoVenta = await Venta.crear(ventaData);

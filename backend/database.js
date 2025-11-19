@@ -200,10 +200,12 @@ const initDatabase = () => {
             }
             
             const columnNames = columns.map(col => col.name);
-            const needsMigration = !columnNames.includes('tipo_venta') || !columnNames.includes('id_cliente');
+            const needsMigration = !columnNames.includes('tipo_venta') || !columnNames.includes('id_cliente') ||
+                                   !columnNames.includes('monto_efectivo') || !columnNames.includes('monto_tarjeta') || 
+                                   !columnNames.includes('monto_transferencia');
             
             if (needsMigration) {
-              console.log('Migrando tabla ventas para soporte de ventas a crédito...');
+              console.log('Migrando tabla ventas...');
               
               if (!columnNames.includes('tipo_venta')) {
                 db.run(`ALTER TABLE ventas ADD COLUMN tipo_venta TEXT DEFAULT 'Contado'`, (err) => {
@@ -221,6 +223,37 @@ const initDatabase = () => {
                     console.error('Error al agregar columna id_cliente:', err.message);
                   } else {
                     console.log('✅ Columna id_cliente agregada.');
+                  }
+                });
+              }
+              
+              // Agregar columnas para pagos mixtos
+              if (!columnNames.includes('monto_efectivo')) {
+                db.run(`ALTER TABLE ventas ADD COLUMN monto_efectivo REAL DEFAULT 0`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna monto_efectivo:', err.message);
+                  } else {
+                    console.log('✅ Columna monto_efectivo agregada para pagos mixtos.');
+                  }
+                });
+              }
+              
+              if (!columnNames.includes('monto_tarjeta')) {
+                db.run(`ALTER TABLE ventas ADD COLUMN monto_tarjeta REAL DEFAULT 0`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna monto_tarjeta:', err.message);
+                  } else {
+                    console.log('✅ Columna monto_tarjeta agregada para pagos mixtos.');
+                  }
+                });
+              }
+              
+              if (!columnNames.includes('monto_transferencia')) {
+                db.run(`ALTER TABLE ventas ADD COLUMN monto_transferencia REAL DEFAULT 0`, (err) => {
+                  if (err) {
+                    console.error('Error al agregar columna monto_transferencia:', err.message);
+                  } else {
+                    console.log('✅ Columna monto_transferencia agregada para pagos mixtos.');
                   }
                 });
               }

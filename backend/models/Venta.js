@@ -6,19 +6,23 @@ class Venta {
     return new Promise((resolve, reject) => {
       const {
         id_usuario, metodo_pago, subtotal, descuento, total,
-        efectivo_recibido, cambio, notas
+        efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+        monto_efectivo, monto_tarjeta, monto_transferencia
       } = ventaData;
 
       const sql = `
         INSERT INTO ventas (
           id_usuario, metodo_pago, subtotal, descuento, total,
-          efectivo_recibido, cambio, notas
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+          monto_efectivo, monto_tarjeta, monto_transferencia
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.run(sql, [
         id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
-        efectivo_recibido || null, cambio || null, notas || null
+        efectivo_recibido || null, cambio || null, notas || null,
+        tipo_venta || 'Contado', id_cliente || null,
+        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0
       ], function(err) {
         if (err) {
           reject(err);

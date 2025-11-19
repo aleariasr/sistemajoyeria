@@ -20,6 +20,11 @@ function Ventas() {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  
+  // Estados para pago mixto
+  const [montoEfectivo, setMontoEfectivo] = useState('');
+  const [montoTarjeta, setMontoTarjeta] = useState('');
+  const [montoTransferencia, setMontoTransferencia] = useState('');
 
   const buscarJoyas = useCallback(async () => {
     try {
@@ -142,7 +147,21 @@ function Ventas() {
       const cambio = parseFloat(efectivoRecibido) - calcularTotal();
       return cambio >= 0 ? cambio : 0;
     }
+    if (metodoPago === 'Mixto' && efectivoRecibido && montoEfectivo) {
+      const cambio = parseFloat(efectivoRecibido) - parseFloat(montoEfectivo || 0);
+      return cambio >= 0 ? cambio : 0;
+    }
     return 0;
+  };
+  
+  const calcularTotalMixto = () => {
+    return (parseFloat(montoEfectivo) || 0) + (parseFloat(montoTarjeta) || 0) + (parseFloat(montoTransferencia) || 0);
+  };
+  
+  const calcularMontoRestante = () => {
+    const total = calcularTotal();
+    const pagado = calcularTotalMixto();
+    return total - pagado;
   };
 
   const procesarVenta = async (e) => {
@@ -162,6 +181,20 @@ function Ventas() {
       setMensaje({ tipo: 'error', texto: 'El efectivo recibido es insuficiente' });
       return;
     }
+    
+    if (metodoPago === 'Mixto') {
+      const totalMixto = calcularTotalMixto();
+      const total = calcularTotal();
+      if (Math.abs(totalMixto - total) > 0.01) {
+        setMensaje({ tipo: 'error', texto: `El total del pago mixto (${totalMixto.toFixed(2)}) debe ser igual al total (${total.toFixed(2)})` });
+        return;
+      }
+      
+      if (montoEfectivo && parseFloat(efectivoRecibido) < parseFloat(montoEfectivo)) {
+        setMensaje({ tipo: 'error', texto: 'El efectivo recibido es insuficiente para cubrir el monto en efectivo' });
+        return;
+      }
+    }
 
     setLoading(true);
     setMensaje({ tipo: '', texto: '' });
@@ -171,11 +204,14 @@ function Ventas() {
         items: carrito,
         metodo_pago: metodoPago,
         descuento: descuento,
-        efectivo_recibido: metodoPago === 'Efectivo' && tipoVenta === 'Contado' ? parseFloat(efectivoRecibido) : null,
+        efectivo_recibido: (metodoPago === 'Efectivo' || metodoPago === 'Mixto') && tipoVenta === 'Contado' ? parseFloat(efectivoRecibido) : null,
         notas: notas,
         tipo_venta: tipoVenta,
         id_cliente: tipoVenta === 'Credito' ? clienteSeleccionado.id : null,
-        fecha_vencimiento: tipoVenta === 'Credito' && fechaVencimiento ? fechaVencimiento : null
+        fecha_vencimiento: tipoVenta === 'Credito' && fechaVencimiento ? fechaVencimiento : null,
+        monto_efectivo: metodoPago === 'Mixto' ? parseFloat(montoEfectivo) || 0 : 0,
+        monto_tarjeta: metodoPago === 'Mixto' ? parseFloat(montoTarjeta) || 0 : 0,
+        monto_transferencia: metodoPago === 'Mixto' ? parseFloat(montoTransferencia) || 0 : 0
       };
 
       const response = await api.post('/ventas', ventaData);
@@ -200,6 +236,9 @@ function Ventas() {
       setClienteSeleccionado(null);
       setFechaVencimiento('');
       setMostrarFormulario(false);
+      setMontoEfectivo('');
+      setMontoTarjeta('');
+      setMontoTransferencia('');
       
       setTimeout(() => setMensaje({ tipo: '', texto: '' }), 5000);
     } catch (error) {
@@ -430,15 +469,121 @@ function Ventas() {
                     <label>Método de Pago</label>
                     <select 
                       value={metodoPago} 
-                      onChange={(e) => setMetodoPago(e.target.value)}
+                      onChange={(e) => {
+                        setMetodoPago(e.target.value);
+                        // Limpiar campos al cambiar método de pago
+                        if (e.target.value !== 'Mixto') {
+                          setMontoEfectivo('');
+                          setMontoTarjeta('');
+                          setMontoTransferencia('');
+                        }
+                        if (e.target.value !== 'Efectivo' && e.target.value !== 'Mixto') {
+                          setEfectivoRecibido('');
+                        }
+                      }}
                       required
                     >
                       <option value="Efectivo">Efectivo</option>
                       <option value="Tarjeta">Tarjeta</option>
                       <option value="Transferencia">Transferencia</option>
-                      <option value="Mixto">Mixto</option>
+                      <option value="Mixto">Mixto (Efectivo + Tarjeta/Transferencia)</option>
                     </select>
                   </div>
+
+                  {metodoPago === 'Mixto' && tipoVenta === 'Contado' && (
+                    <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+                      <h4 style={{ marginTop: 0, marginBottom: '15px', color: '#333' }}>💰 Desglose de Pago Mixto</h4>
+                      
+                      <div className="form-group">
+                        <label>Monto en Efectivo</label>
+                        <input
+                          type="number"
+                          value={montoEfectivo}
+                          onChange={(e) => {
+                            const valor = parseFloat(e.target.value) || 0;
+                            setMontoEfectivo(e.target.value);
+                            // Auto-calcular el resto en tarjeta si hay tarjeta y no hay transferencia
+                            if (!montoTransferencia || parseFloat(montoTransferencia) === 0) {
+                              const resto = calcularTotal() - valor;
+                              if (resto > 0) {
+                                setMontoTarjeta(resto.toFixed(2));
+                              }
+                            }
+                          }}
+                          step="0.01"
+                          min="0"
+                          max={calcularTotal()}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Monto en Tarjeta</label>
+                        <input
+                          type="number"
+                          value={montoTarjeta}
+                          onChange={(e) => {
+                            setMontoTarjeta(e.target.value);
+                          }}
+                          step="0.01"
+                          min="0"
+                          max={calcularTotal()}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Monto en Transferencia</label>
+                        <input
+                          type="number"
+                          value={montoTransferencia}
+                          onChange={(e) => {
+                            setMontoTransferencia(e.target.value);
+                          }}
+                          step="0.01"
+                          min="0"
+                          max={calcularTotal()}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      
+                      <div style={{ 
+                        padding: '10px', 
+                        backgroundColor: calcularMontoRestante() === 0 ? '#d4edda' : '#fff3cd', 
+                        borderRadius: '4px',
+                        marginTop: '10px'
+                      }}>
+                        <strong>Total del pago mixto:</strong> ₡{calcularTotalMixto().toFixed(2)}<br />
+                        <strong>Total de la venta:</strong> ₡{calcularTotal().toFixed(2)}<br />
+                        <strong style={{ color: calcularMontoRestante() === 0 ? '#155724' : '#856404' }}>
+                          {calcularMontoRestante() === 0 
+                            ? '✓ Monto completo' 
+                            : `Restante: ₡${calcularMontoRestante().toFixed(2)}`
+                          }
+                        </strong>
+                      </div>
+                      
+                      {montoEfectivo && parseFloat(montoEfectivo) > 0 && (
+                        <div className="form-group" style={{ marginTop: '15px' }}>
+                          <label>Efectivo Recibido</label>
+                          <input
+                            type="number"
+                            value={efectivoRecibido}
+                            onChange={(e) => setEfectivoRecibido(e.target.value)}
+                            step="0.01"
+                            min={montoEfectivo}
+                            required
+                            placeholder={`Mínimo: ${montoEfectivo}`}
+                          />
+                          {efectivoRecibido && (
+                            <div className="cambio-info">
+                              Cambio: ₡{calcularCambio().toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {metodoPago === 'Efectivo' && tipoVenta === 'Contado' && (
                     <>

@@ -20,7 +20,8 @@ const requireAuth = (req, res, next) => {
 // Crear nueva venta
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { items, metodo_pago, descuento, efectivo_recibido, notas, tipo_venta, id_cliente, fecha_vencimiento } = req.body;
+    const { items, metodo_pago, descuento, efectivo_recibido, notas, tipo_venta, id_cliente, fecha_vencimiento,
+            monto_efectivo, monto_tarjeta, monto_transferencia } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'La venta debe tener al menos un producto' });
@@ -52,12 +53,30 @@ router.post('/', requireAuth, async (req, res) => {
     const descuentoAplicado = descuento || 0;
     const total = subtotal - descuentoAplicado;
 
-    // Calcular cambio si es pago en efectivo
+    // Validar pago mixto
+    if (metodo_pago === 'Mixto') {
+      const totalMixto = (monto_efectivo || 0) + (monto_tarjeta || 0) + (monto_transferencia || 0);
+      if (Math.abs(totalMixto - total) > 0.01) { // Tolerancia de 1 centavo por redondeo
+        return res.status(400).json({ 
+          error: `El total de los montos del pago mixto (${totalMixto.toFixed(2)}) no coincide con el total de la venta (${total.toFixed(2)})` 
+        });
+      }
+    }
+
+    // Calcular cambio si es pago en efectivo (simple)
     let cambio = null;
     if (metodo_pago === 'Efectivo' && efectivo_recibido) {
       cambio = efectivo_recibido - total;
       if (cambio < 0) {
         return res.status(400).json({ error: 'El efectivo recibido es insuficiente' });
+      }
+    }
+    
+    // Calcular cambio si es pago mixto con efectivo
+    if (metodo_pago === 'Mixto' && efectivo_recibido && monto_efectivo) {
+      cambio = efectivo_recibido - monto_efectivo;
+      if (cambio < 0) {
+        return res.status(400).json({ error: 'El efectivo recibido es insuficiente para el monto en efectivo' });
       }
     }
 
@@ -72,7 +91,10 @@ router.post('/', requireAuth, async (req, res) => {
       cambio,
       notas,
       tipo_venta: tipo_venta || 'Contado',
-      id_cliente: id_cliente || null
+      id_cliente: id_cliente || null,
+      monto_efectivo: monto_efectivo || 0,
+      monto_tarjeta: monto_tarjeta || 0,
+      monto_transferencia: monto_transferencia || 0
     };
 
     // Si es venta a crédito, guardar directamente en la base de datos principal
