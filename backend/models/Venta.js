@@ -1,4 +1,5 @@
 const { db } = require('../database');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class Venta {
   // Crear nueva venta
@@ -10,19 +11,23 @@ class Venta {
         monto_efectivo, monto_tarjeta, monto_transferencia
       } = ventaData;
 
+      // Usar fecha de Costa Rica para el registro
+      const fechaVenta = formatearFechaSQL();
+
       const sql = `
         INSERT INTO ventas (
           id_usuario, metodo_pago, subtotal, descuento, total,
           efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-          monto_efectivo, monto_tarjeta, monto_transferencia
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          monto_efectivo, monto_tarjeta, monto_transferencia, fecha_venta
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.run(sql, [
         id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
         efectivo_recibido || null, cambio || null, notas || null,
         tipo_venta || 'Contado', id_cliente || null,
-        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0
+        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0,
+        fechaVenta
       ], function(err) {
         if (err) {
           reject(err);
@@ -159,11 +164,18 @@ class Venta {
           COUNT(*) as total_ventas,
           SUM(total) as total_ingresos,
           AVG(total) as promedio_venta,
-          metodo_pago,
           COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as ventas_efectivo,
           COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta,
           COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia,
-          COUNT(CASE WHEN metodo_pago = 'Mixto' THEN 1 END) as ventas_mixto
+          COUNT(CASE WHEN metodo_pago = 'Mixto' THEN 1 END) as ventas_mixto,
+          SUM(CASE WHEN metodo_pago = 'Efectivo' THEN total ELSE 0 END) as monto_efectivo,
+          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN total ELSE 0 END) as monto_tarjeta,
+          SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END) as monto_transferencia,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_efectivo ELSE 0 END) as monto_mixto_efectivo,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_tarjeta ELSE 0 END) as monto_mixto_tarjeta,
+          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_transferencia ELSE 0 END) as monto_mixto_transferencia,
+          COUNT(CASE WHEN tipo_venta = 'Contado' OR tipo_venta IS NULL THEN 1 END) as ventas_contado,
+          COUNT(CASE WHEN tipo_venta = 'Credito' THEN 1 END) as ventas_credito
         FROM ventas
         WHERE 1=1
       `;

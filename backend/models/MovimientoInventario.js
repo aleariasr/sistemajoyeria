@@ -1,4 +1,5 @@
 const { db } = require('../database');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class MovimientoInventario {
   // Crear nuevo movimiento
@@ -9,16 +10,19 @@ class MovimientoInventario {
         usuario, stock_antes, stock_despues
       } = movimientoData;
 
+      // Usar fecha de Costa Rica para el registro
+      const fechaMovimiento = formatearFechaSQL();
+
       const sql = `
         INSERT INTO movimientos_inventario (
           id_joya, tipo_movimiento, cantidad, motivo,
-          usuario, stock_antes, stock_despues
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          usuario, stock_antes, stock_despues, fecha_movimiento
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       db.run(sql, [
         id_joya, tipo_movimiento, cantidad, motivo,
-        usuario || 'Sistema', stock_antes, stock_despues
+        usuario || 'Sistema', stock_antes, stock_despues, fechaMovimiento
       ], function(err) {
         if (err) {
           reject(err);

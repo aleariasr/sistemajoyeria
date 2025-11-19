@@ -75,9 +75,16 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     const totalAbonosTransferencia = abonosTransferencia.reduce((sum, a) => sum + a.monto, 0);
     const totalAbonosTarjeta = abonosTarjeta.reduce((sum, a) => sum + a.monto, 0);
 
+    // Calcular totales de ventas (usando los totales finales que ya incluyen pagos mixtos)
+    const totalVentasEfectivo = resumen.total_efectivo_final || 0;
+    const totalVentasTransferencia = resumen.total_transferencia_final || 0;
+    const totalVentasTarjeta = resumen.total_tarjeta_final || 0;
+    const totalVentas = resumen.total_ingresos || 0;
+
     // Incluir abonos en el resumen
     const resumenCompleto = {
       ...resumen,
+      // Abonos
       total_abonos: abonosDelDia.total,
       monto_total_abonos: totalAbonos,
       abonos_efectivo: abonosEfectivo.length,
@@ -86,11 +93,11 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
       monto_abonos_transferencia: totalAbonosTransferencia,
       abonos_tarjeta: abonosTarjeta.length,
       monto_abonos_tarjeta: totalAbonosTarjeta,
-      // Totales combinados (ventas + abonos) - usar totales finales que ya incluyen mixtos
-      total_efectivo_combinado: (resumen.total_efectivo_final || resumen.total_efectivo || 0) + totalAbonosEfectivo,
-      total_transferencia_combinado: (resumen.total_transferencia_final || resumen.total_transferencia || 0) + totalAbonosTransferencia,
-      total_tarjeta_combinado: (resumen.total_tarjeta_final || resumen.total_tarjeta || 0) + totalAbonosTarjeta,
-      total_ingresos_combinado: (resumen.total_ingresos || 0) + totalAbonos
+      // Totales combinados (ventas + abonos)
+      total_efectivo_combinado: totalVentasEfectivo + totalAbonosEfectivo,
+      total_transferencia_combinado: totalVentasTransferencia + totalAbonosTransferencia,
+      total_tarjeta_combinado: totalVentasTarjeta + totalAbonosTarjeta,
+      total_ingresos_combinado: totalVentas + totalAbonos
     };
 
     res.json({

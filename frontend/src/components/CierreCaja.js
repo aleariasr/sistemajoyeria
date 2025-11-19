@@ -108,42 +108,42 @@ function CierreCaja() {
             <div className="stat-card success">
               <h4>Efectivo en Caja</h4>
               <div className="value" style={{ fontSize: '1.5rem' }}>
-                {formatearMoneda(resumen?.total_efectivo_combinado || resumen?.total_efectivo_final || resumen?.total_efectivo || 0)}
+                {formatearMoneda(resumen?.total_efectivo_combinado || 0)}
               </div>
               <small>
-                Ventas: {resumen?.ventas_efectivo || 0}
-                {resumen?.ventas_mixto > 0 && ` + ${resumen?.ventas_mixto} mixtas`} | Abonos: {resumen?.abonos_efectivo || 0}
+                Ventas: {formatearMoneda(resumen?.total_efectivo_final || 0)} | 
+                Abonos: {formatearMoneda(resumen?.monto_abonos_efectivo || 0)}
               </small>
             </div>
             
             <div className="stat-card info">
               <h4>Transferencias</h4>
               <div className="value" style={{ fontSize: '1.5rem' }}>
-                {formatearMoneda(resumen?.total_transferencia_combinado || resumen?.total_transferencia_final || resumen?.total_transferencia || 0)}
+                {formatearMoneda(resumen?.total_transferencia_combinado || 0)}
               </div>
               <small>
-                Ventas: {resumen?.ventas_transferencia || 0}
-                {resumen?.total_transferencia_mixto > 0 && ' + mixtas'} | Abonos: {resumen?.abonos_transferencia || 0}
+                Ventas: {formatearMoneda(resumen?.total_transferencia_final || 0)} | 
+                Abonos: {formatearMoneda(resumen?.monto_abonos_transferencia || 0)}
               </small>
             </div>
 
             <div className="stat-card warning">
               <h4>Tarjeta</h4>
               <div className="value" style={{ fontSize: '1.5rem' }}>
-                {formatearMoneda(resumen?.total_tarjeta_combinado || resumen?.total_tarjeta_final || resumen?.total_tarjeta || 0)}
+                {formatearMoneda(resumen?.total_tarjeta_combinado || 0)}
               </div>
               <small>
-                Ventas: {resumen?.ventas_tarjeta || 0}
-                {resumen?.total_tarjeta_mixto > 0 && ' + mixtas'} | Abonos: {resumen?.abonos_tarjeta || 0}
+                Ventas: {formatearMoneda(resumen?.total_tarjeta_final || 0)} | 
+                Abonos: {formatearMoneda(resumen?.monto_abonos_tarjeta || 0)}
               </small>
             </div>
 
             <div className="stat-card primary">
               <h4>Total Ingresos del Día</h4>
               <div className="value" style={{ fontSize: '1.5rem' }}>
-                {formatearMoneda(resumen?.total_ingresos_combinado || resumen?.total_ingresos || 0)}
+                {formatearMoneda(resumen?.total_ingresos_combinado || 0)}
               </div>
-              <small>Ventas + Abonos</small>
+              <small>Ventas: {formatearMoneda(resumen?.total_ingresos || 0)} + Abonos: {formatearMoneda(resumen?.monto_total_abonos || 0)}</small>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 const { dbDia } = require('../database-dia');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class VentaDia {
   // Crear nueva venta del día
@@ -10,19 +11,23 @@ class VentaDia {
         monto_efectivo, monto_tarjeta, monto_transferencia
       } = ventaData;
 
+      // Usar fecha de Costa Rica para el registro
+      const fechaVenta = formatearFechaSQL();
+
       const sql = `
         INSERT INTO ventas_dia (
           id_usuario, metodo_pago, subtotal, descuento, total,
           efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-          monto_efectivo, monto_tarjeta, monto_transferencia
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          monto_efectivo, monto_tarjeta, monto_transferencia, fecha_venta
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       dbDia.run(sql, [
         id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
         efectivo_recibido || null, cambio || null, notas || null,
         tipo_venta || 'Contado', id_cliente || null,
-        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0
+        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0,
+        fechaVenta
       ], function(err) {
         if (err) {
           reject(err);

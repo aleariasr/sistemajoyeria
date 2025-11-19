@@ -1,4 +1,5 @@
 const { db } = require('../database');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class Abono {
   // Crear nuevo abono
@@ -6,12 +7,15 @@ class Abono {
     return new Promise((resolve, reject) => {
       const { id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario } = abonoData;
 
+      // Usar fecha de Costa Rica para el registro
+      const fechaAbono = formatearFechaSQL();
+
       const sql = `
-        INSERT INTO abonos (id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO abonos (id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario, fecha_abono)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      db.run(sql, [id_cuenta_por_cobrar, monto, metodo_pago, notas || null, usuario || null], function(err) {
+      db.run(sql, [id_cuenta_por_cobrar, monto, metodo_pago, notas || null, usuario || null, fechaAbono], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -137,10 +141,12 @@ class Abono {
           COUNT(*) as total_abonos,
           SUM(monto) as monto_total_abonos,
           AVG(monto) as promedio_abono,
-          metodo_pago,
           COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as abonos_efectivo,
           COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as abonos_tarjeta,
-          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as abonos_transferencia
+          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as abonos_transferencia,
+          SUM(CASE WHEN metodo_pago = 'Efectivo' THEN monto ELSE 0 END) as monto_abonos_efectivo,
+          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN monto ELSE 0 END) as monto_abonos_tarjeta,
+          SUM(CASE WHEN metodo_pago = 'Transferencia' THEN monto ELSE 0 END) as monto_abonos_transferencia
         FROM abonos
         WHERE 1=1
       `;
