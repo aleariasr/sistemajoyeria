@@ -1,4 +1,5 @@
 const { db } = require('../database');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class Abono {
   // Crear nuevo abono
@@ -6,12 +7,15 @@ class Abono {
     return new Promise((resolve, reject) => {
       const { id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario } = abonoData;
 
+      // Usar fecha de Costa Rica para el registro
+      const fechaAbono = formatearFechaSQL();
+
       const sql = `
-        INSERT INTO abonos (id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO abonos (id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario, fecha_abono)
+        VALUES (?, ?, ?, ?, ?, ?)
       `;
 
-      db.run(sql, [id_cuenta_por_cobrar, monto, metodo_pago, notas || null, usuario || null], function(err) {
+      db.run(sql, [id_cuenta_por_cobrar, monto, metodo_pago, notas || null, usuario || null, fechaAbono], function(err) {
         if (err) {
           reject(err);
         } else {
