@@ -19,6 +19,10 @@ import HistorialVentas from './components/HistorialVentas';
 import DetalleVenta from './components/DetalleVenta';
 import Usuarios from './components/Usuarios';
 import FormularioUsuario from './components/FormularioUsuario';
+import Clientes from './components/Clientes';
+import FormularioCliente from './components/FormularioCliente';
+import CuentasPorCobrar from './components/CuentasPorCobrar';
+import DetalleCuentaPorCobrar from './components/DetalleCuentaPorCobrar';
 
 function Sidebar() {
   const location = useLocation();
@@ -60,6 +64,13 @@ function Sidebar() {
         </li>
 
         <li>
+          <Link to="/cuentas-por-cobrar" className={isActive('/cuentas-por-cobrar')}>
+            <span className="icon">💳</span>
+            <span>Cuentas por Cobrar</span>
+          </Link>
+        </li>
+
+        <li>
           <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
             <span className="icon">💰</span>
             <span>Cierre de Caja</span>
@@ -85,6 +96,12 @@ function Sidebar() {
               </Link>
             </li>
             <li>
+              <Link to="/clientes" className={isActive('/clientes')}>
+                <span className="icon">👥</span>
+                <span>Clientes</span>
+              </Link>
+            </li>
+            <li>
               <Link to="/movimientos" className={isActive('/movimientos')}>
                 <span className="icon">📦</span>
                 <span>Movimientos</span>
@@ -98,7 +115,7 @@ function Sidebar() {
             </li>
             <li>
               <Link to="/usuarios" className={isActive('/usuarios')}>
-                <span className="icon">👥</span>
+                <span className="icon">👤</span>
                 <span>Usuarios</span>
               </Link>
             </li>
@@ -160,6 +177,8 @@ function AppContent() {
           <Route path="/ventas" element={<ProtectedRoute><Ventas /></ProtectedRoute>} />
           <Route path="/historial-ventas" element={<ProtectedRoute><HistorialVentas /></ProtectedRoute>} />
           <Route path="/venta/:id" element={<ProtectedRoute><DetalleVenta /></ProtectedRoute>} />
+          <Route path="/cuentas-por-cobrar" element={<ProtectedRoute><CuentasPorCobrar /></ProtectedRoute>} />
+          <Route path="/cuenta-por-cobrar/:id" element={<ProtectedRoute><DetalleCuentaPorCobrar /></ProtectedRoute>} />
           <Route path="/cierre-caja" element={<ProtectedRoute><CierreCaja /></ProtectedRoute>} />
 
           {/* Rutas administrativas - Solo administradores */}
@@ -167,6 +186,9 @@ function AppContent() {
           <Route path="/nueva-joya" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/joya/:id" element={<ProtectedRoute adminOnly={true}><DetalleJoya /></ProtectedRoute>} />
+          <Route path="/clientes" element={<ProtectedRoute adminOnly={true}><Clientes /></ProtectedRoute>} />
+          <Route path="/nuevo-cliente" element={<ProtectedRoute adminOnly={true}><FormularioCliente /></ProtectedRoute>} />
+          <Route path="/editar-cliente/:id" element={<ProtectedRoute adminOnly={true}><FormularioCliente /></ProtectedRoute>} />
           <Route path="/movimientos" element={<ProtectedRoute adminOnly={true}><Movimientos /></ProtectedRoute>} />
           <Route path="/stock-bajo" element={<ProtectedRoute adminOnly={true}><StockBajo /></ProtectedRoute>} />
           <Route path="/reportes" element={<ProtectedRoute adminOnly={true}><Reportes /></ProtectedRoute>} />

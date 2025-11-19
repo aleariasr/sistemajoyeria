@@ -495,3 +495,72 @@
     padding: 25px;
   }
 }
+
+/* Styles for credit sales */
+.credito-section {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.cliente-seleccionado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #2e7d32;
+}
+
+.btn-limpiar-cliente {
+  background: #ffebee;
+  color: #c62828;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.btn-limpiar-cliente:hover {
+  background: #ffcdd2;
+}
+
+.clientes-encontrados {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cliente-item {
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cliente-item:hover {
+  background: #f8f9fa;
+}
+
+.cliente-item:last-child {
+  border-bottom: none;
+}
+
+.form-group {
+  position: relative;
+}
