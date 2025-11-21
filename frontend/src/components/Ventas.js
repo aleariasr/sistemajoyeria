@@ -178,7 +178,7 @@ function Ventas() {
   });
 
   const imprimirTicket = () => {
-    if (handlePrint && ticketRef.current) {
+    if (ticketRef.current) {
       handlePrint();
     }
   };
