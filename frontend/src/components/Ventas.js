@@ -173,14 +173,12 @@ function Ventas() {
 
   // Manejador de impresión
   const handlePrint = useReactToPrint({
-    content: () => ticketRef.current,
+    contentRef: ticketRef,
     documentTitle: `Ticket-Venta-${ultimaVenta?.id || 'N/A'}`,
   });
 
   const imprimirTicket = () => {
-    if (ticketRef.current) {
-      handlePrint();
-    }
+    handlePrint();
   };
 
   const procesarVenta = async (e) => {
