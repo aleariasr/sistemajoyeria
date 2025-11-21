@@ -54,9 +54,9 @@ Las nuevas instalaciones automáticamente tendrán la foreign key correcta al ej
 **IMPORTANTE:** Debes ejecutar el script de migración en tu base de datos de Supabase:
 
 1. Abre el SQL Editor de Supabase:
-   ```
-   https://mvujkbpbqyihixkbzthe.supabase.co/project/_/sql
-   ```
+   - Ve a tu Dashboard de Supabase
+   - Haz clic en "SQL Editor" en el menú lateral
+   - Haz clic en "New Query"
 
 2. Copia y pega el contenido del archivo `backend/fix-items-venta-dia-fkey.sql`
 

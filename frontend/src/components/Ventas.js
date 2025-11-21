@@ -183,6 +183,8 @@ function Ventas() {
   };
   
   // Trigger print when ticket is shown
+  // Note: handlePrint from useReactToPrint is already a stable function,
+  // so it doesn't need to be in the dependency array
   useEffect(() => {
     if (mostrarTicket && ultimaVenta) {
       // Small delay to ensure component is mounted

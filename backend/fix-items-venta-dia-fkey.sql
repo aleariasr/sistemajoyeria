@@ -4,8 +4,9 @@
 -- This script adds the missing foreign key relationship between
 -- items_venta_dia and joyas tables.
 --
--- Run this in Supabase SQL Editor:
--- https://mvujkbpbqyihixkbzthe.supabase.co/project/_/sql
+-- Run this in your Supabase SQL Editor:
+-- Go to: Supabase Dashboard > SQL Editor > New Query
+-- Then paste and execute this script
 --
 -- This fixes the error:
 -- "Could not find a relationship between 'items_venta_dia' and 'joyas' in the schema cache"
