@@ -73,15 +73,26 @@ Deberías ver:
 🔐 Usuarios iniciales creados (si no existían)
 ```
 
-### Paso 4: Abrir el Frontend
+### Paso 4: Instalar Dependencias del Frontend
 
 En otra terminal:
 ```bash
 cd frontend
+npm install
+```
+
+**Nota:** Verás algunas advertencias de paquetes deprecados y posibles vulnerabilidades. Esto es normal en proyectos React. Para la mayoría de las vulnerabilidades puedes ejecutar:
+```bash
+npm audit fix
+```
+
+### Paso 5: Iniciar el Frontend
+
+```bash
 npm start
 ```
 
-**¡Listo!** El sistema está funcionando con Supabase.
+**¡Listo!** El sistema está funcionando con Supabase. El frontend se abrirá en http://localhost:3000
 
 ---
 
