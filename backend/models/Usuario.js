@@ -1,4 +1,4 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 const bcrypt = require('bcryptjs');
 
 class Usuario {
@@ -9,48 +9,52 @@ class Usuario {
     // Hash de la contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
-    return new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO usuarios (username, password_hash, role, full_name)
-        VALUES (?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('usuarios')
+      .insert([{
+        username,
+        password_hash: passwordHash,
+        role: role || 'dependiente',
+        full_name
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [username, passwordHash, role || 'dependiente', full_name], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener usuario por username
-  static obtenerPorUsername(username) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM usuarios WHERE username = ?';
-      db.get(sql, [username], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorUsername(username) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('username', username)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener usuario por ID
-  static obtenerPorId(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT id, username, role, full_name, fecha_creacion FROM usuarios WHERE id = ?';
-      db.get(sql, [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, username, role, full_name, fecha_creacion')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
   }
 
   // Verificar contraseña
@@ -59,67 +63,57 @@ class Usuario {
   }
 
   // Obtener todos los usuarios (sin contraseñas)
-  static obtenerTodos() {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT id, username, role, full_name, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC';
-      db.all(sql, [], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+  static async obtenerTodos() {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, username, role, full_name, fecha_creacion')
+      .order('fecha_creacion', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 
   // Actualizar usuario
   static async actualizar(id, usuarioData) {
     const { username, password, role, full_name } = usuarioData;
 
-    let sql, params;
+    let updateData = { username, role, full_name };
 
     if (password) {
       // Si se proporciona nueva contraseña, actualizarla
       const passwordHash = await bcrypt.hash(password, 10);
-      sql = `
-        UPDATE usuarios SET
-          username = ?, password_hash = ?, role = ?, full_name = ?
-        WHERE id = ?
-      `;
-      params = [username, passwordHash, role, full_name, id];
-    } else {
-      // Si no hay nueva contraseña, no actualizarla
-      sql = `
-        UPDATE usuarios SET
-          username = ?, role = ?, full_name = ?
-        WHERE id = ?
-      `;
-      params = [username, role, full_name, id];
+      updateData.password_hash = passwordHash;
     }
 
-    return new Promise((resolve, reject) => {
-      db.run(sql, params, function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+    const { data, error } = await supabase
+      .from('usuarios')
+      .update(updateData)
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return { changes: data.length };
   }
 
   // Eliminar usuario
-  static eliminar(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'DELETE FROM usuarios WHERE id = ?';
-      db.run(sql, [id], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+  static async eliminar(id) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return { changes: data.length };
   }
 }
 

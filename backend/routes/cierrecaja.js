@@ -5,7 +5,7 @@ const ItemVentaDia = require('../models/ItemVentaDia');
 const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
 const Abono = require('../models/Abono');
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 const { obtenerFechaActualCR, obtenerRangoDia } = require('../utils/timezone');
 
 // Middleware para verificar autenticación
@@ -171,16 +171,14 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       }
 
       // Actualizar fecha de venta para mantener la fecha original
-      await new Promise((resolve, reject) => {
-        db.run(
-          'UPDATE ventas SET fecha_venta = ? WHERE id = ?',
-          [ventaDia.fecha_venta, idVentaPrincipal],
-          (err) => {
-            if (err) reject(err);
-            else resolve();
-          }
-        );
-      });
+      const { error: updateError } = await supabase
+        .from('ventas')
+        .update({ fecha_venta: ventaDia.fecha_venta })
+        .eq('id', idVentaPrincipal);
+      
+      if (updateError) {
+        throw updateError;
+      }
 
       ventasTransferidas.push({
         id_original: ventaDia.id,

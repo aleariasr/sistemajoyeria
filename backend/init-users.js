@@ -1,4 +1,3 @@
-const { db } = require('./database');
 const Usuario = require('./models/Usuario');
 
 async function crearUsuariosIniciales() {
@@ -7,7 +6,7 @@ async function crearUsuariosIniciales() {
     const usuarios = await Usuario.obtenerTodos();
     
     if (usuarios.length === 0) {
-      console.log('Creando usuarios iniciales...');
+      console.log('📝 Creando usuarios iniciales...');
 
       // Crear usuario administrador
       await Usuario.crear({
@@ -16,7 +15,7 @@ async function crearUsuariosIniciales() {
         role: 'administrador',
         full_name: 'Administrador del Sistema'
       });
-      console.log('Usuario administrador creado: admin / admin123');
+      console.log('✅ Usuario administrador creado: admin / admin123');
 
       // Crear usuario dependiente
       await Usuario.crear({
@@ -25,14 +24,15 @@ async function crearUsuariosIniciales() {
         role: 'dependiente',
         full_name: 'Dependiente de Ventas'
       });
-      console.log('Usuario dependiente creado: dependiente / dependiente123');
+      console.log('✅ Usuario dependiente creado: dependiente / dependiente123');
 
-      console.log('Usuarios iniciales creados exitosamente');
+      console.log('✅ Usuarios iniciales creados exitosamente');
     } else {
-      console.log('Ya existen usuarios en la base de datos');
+      console.log('ℹ️  Ya existen usuarios en la base de datos');
     }
   } catch (error) {
-    console.error('Error al crear usuarios iniciales:', error);
+    console.error('❌ Error al crear usuarios iniciales:', error.message);
+    // No lanzar el error para permitir que el servidor continúe
   }
 }
 

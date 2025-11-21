@@ -1,154 +1,144 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 
 class Cliente {
   // Crear nuevo cliente
-  static crear(clienteData) {
-    return new Promise((resolve, reject) => {
-      const { nombre, telefono, cedula, direccion, email, notas } = clienteData;
+  static async crear(clienteData) {
+    const { nombre, telefono, cedula, direccion, email, notas } = clienteData;
 
-      const sql = `
-        INSERT INTO clientes (nombre, telefono, cedula, direccion, email, notas)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('clientes')
+      .insert([{
+        nombre,
+        telefono,
+        cedula,
+        direccion: direccion || null,
+        email: email || null,
+        notas: notas || null
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [nombre, telefono, cedula, direccion || null, email || null, notas || null], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener todos los clientes con filtros
-  static obtenerTodos(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const { busqueda, pagina = 1, por_pagina = 50 } = filtros;
+  static async obtenerTodos(filtros = {}) {
+    const { busqueda, pagina = 1, por_pagina = 50 } = filtros;
 
-      let sql = `SELECT * FROM clientes WHERE 1=1`;
-      const params = [];
+    let query = supabase.from('clientes').select('*', { count: 'exact' });
 
-      // Filtro de búsqueda por nombre, cédula o teléfono
-      if (busqueda) {
-        sql += ` AND (nombre LIKE ? OR cedula LIKE ? OR telefono LIKE ?)`;
-        const busquedaParam = `%${busqueda}%`;
-        params.push(busquedaParam, busquedaParam, busquedaParam);
-      }
+    // Filtro de búsqueda por nombre, cédula o teléfono
+    if (busqueda) {
+      query = query.or(`nombre.ilike.%${busqueda}%,cedula.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`);
+    }
 
-      // Contar total de registros
-      const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) as total');
-      db.get(countSql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          const total = row.total;
-          const offset = (pagina - 1) * por_pagina;
+    // Ordenar y paginar
+    const offset = (pagina - 1) * por_pagina;
+    query = query.order('nombre', { ascending: true })
+                 .range(offset, offset + por_pagina - 1);
 
-          // Obtener registros con paginación
-          sql += ' ORDER BY nombre ASC LIMIT ? OFFSET ?';
-          params.push(por_pagina, offset);
+    const { data, error, count } = await query;
 
-          db.all(sql, params, (err, rows) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve({
-                clientes: rows,
-                total: total,
-                pagina: parseInt(pagina),
-                por_pagina: parseInt(por_pagina),
-                total_paginas: Math.ceil(total / por_pagina)
-              });
-            }
-          });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return {
+      clientes: data,
+      total: count,
+      pagina: parseInt(pagina),
+      por_pagina: parseInt(por_pagina),
+      total_paginas: Math.ceil(count / por_pagina)
+    };
   }
 
   // Obtener un cliente por ID
-  static obtenerPorId(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM clientes WHERE id = ?';
-      db.get(sql, [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener un cliente por cédula
-  static obtenerPorCedula(cedula) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM clientes WHERE cedula = ?';
-      db.get(sql, [cedula], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorCedula(cedula) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .eq('cedula', cedula)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
   }
 
   // Actualizar cliente
-  static actualizar(id, clienteData) {
-    return new Promise((resolve, reject) => {
-      const { nombre, telefono, cedula, direccion, email, notas } = clienteData;
+  static async actualizar(id, clienteData) {
+    const { nombre, telefono, cedula, direccion, email, notas } = clienteData;
 
-      const sql = `
-        UPDATE clientes 
-        SET nombre = ?, telefono = ?, cedula = ?, direccion = ?, email = ?, notas = ?,
-            fecha_ultima_modificacion = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `;
+    const { data, error } = await supabase
+      .from('clientes')
+      .update({
+        nombre,
+        telefono,
+        cedula,
+        direccion,
+        email,
+        notas
+      })
+      .eq('id', id)
+      .select();
 
-      db.run(sql, [nombre, telefono, cedula, direccion, email, notas, id], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { changes: data.length };
   }
 
   // Eliminar cliente
-  static eliminar(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'DELETE FROM clientes WHERE id = ?';
-      db.run(sql, [id], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ changes: this.changes });
-        }
-      });
-    });
+  static async eliminar(id) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return { changes: data.length };
   }
 
   // Buscar clientes por nombre o cédula
-  static buscar(termino) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT * FROM clientes 
-        WHERE nombre LIKE ? OR cedula LIKE ? OR telefono LIKE ?
-        ORDER BY nombre ASC
-        LIMIT 10
-      `;
-      const param = `%${termino}%`;
-      db.all(sql, [param, param, param], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+  static async buscar(termino) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .or(`nombre.ilike.%${termino}%,cedula.ilike.%${termino}%,telefono.ilike.%${termino}%`)
+      .order('nombre', { ascending: true })
+      .limit(10);
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 }
 

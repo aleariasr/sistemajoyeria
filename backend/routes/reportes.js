@@ -4,7 +4,6 @@ const Joya = require('../models/Joya');
 const Venta = require('../models/Venta');
 const Abono = require('../models/Abono');
 const MovimientoInventario = require('../models/MovimientoInventario');
-const { db } = require('../database');
 
 // GET /api/reportes/inventario - Reporte de inventario actual
 router.get('/inventario', async (req, res) => {

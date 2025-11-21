@@ -1,83 +1,75 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 
 class ItemVenta {
   // Crear nuevo item de venta
-  static crear(itemData) {
-    return new Promise((resolve, reject) => {
-      const {
-        id_venta, id_joya, cantidad, precio_unitario, subtotal
-      } = itemData;
+  static async crear(itemData) {
+    const {
+      id_venta, id_joya, cantidad, precio_unitario, subtotal
+    } = itemData;
 
-      const sql = `
-        INSERT INTO items_venta (
-          id_venta, id_joya, cantidad, precio_unitario, subtotal
-        ) VALUES (?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('items_venta')
+      .insert([{
+        id_venta,
+        id_joya,
+        cantidad,
+        precio_unitario,
+        subtotal
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [
-        id_venta, id_joya, cantidad, precio_unitario, subtotal
-      ], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener items de una venta
-  static obtenerPorVenta(id_venta) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT iv.*, j.codigo, j.nombre, j.categoria
-        FROM items_venta iv
-        LEFT JOIN joyas j ON iv.id_joya = j.id
-        WHERE iv.id_venta = ?
-        ORDER BY iv.id ASC
-      `;
+  static async obtenerPorVenta(id_venta) {
+    const { data, error } = await supabase
+      .from('items_venta')
+      .select(`
+        *,
+        joyas!items_venta_id_joya_fkey (codigo, nombre, categoria)
+      `)
+      .eq('id_venta', id_venta)
+      .order('id', { ascending: true });
 
-      db.all(sql, [id_venta], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    // Formatear datos para mantener compatibilidad
+    return data.map(item => ({
+      ...item,
+      codigo: item.joyas?.codigo,
+      nombre: item.joyas?.nombre,
+      categoria: item.joyas?.categoria
+    }));
   }
 
   // Crear múltiples items de venta en una transacción
-  static crearMultiples(items) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        INSERT INTO items_venta (
-          id_venta, id_joya, cantidad, precio_unitario, subtotal
-        ) VALUES (?, ?, ?, ?, ?)
-      `;
+  static async crearMultiples(items) {
+    const itemsToInsert = items.map(item => ({
+      id_venta: item.id_venta,
+      id_joya: item.id_joya,
+      cantidad: item.cantidad,
+      precio_unitario: item.precio_unitario,
+      subtotal: item.subtotal
+    }));
 
-      db.serialize(() => {
-        const stmt = db.prepare(sql);
-        
-        items.forEach(item => {
-          stmt.run([
-            item.id_venta,
-            item.id_joya,
-            item.cantidad,
-            item.precio_unitario,
-            item.subtotal
-          ]);
-        });
+    const { data, error } = await supabase
+      .from('items_venta')
+      .insert(itemsToInsert)
+      .select();
 
-        stmt.finalize((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ count: items.length });
-          }
-        });
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { count: data.length };
   }
 }
 
