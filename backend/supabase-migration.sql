@@ -149,7 +149,9 @@ CREATE TABLE IF NOT EXISTS abonos (
   metodo_pago TEXT NOT NULL,
   notas TEXT,
   fecha_abono TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  usuario TEXT
+  usuario TEXT,
+  cerrado BOOLEAN NOT NULL DEFAULT false,
+  fecha_cierre TIMESTAMP WITH TIME ZONE
 );
 
 -- =========================================
@@ -252,6 +254,7 @@ CREATE INDEX IF NOT EXISTS idx_movimientos_fecha ON movimientos_inventario(fecha
 CREATE INDEX IF NOT EXISTS idx_cuentas_cliente ON cuentas_por_cobrar(id_cliente);
 CREATE INDEX IF NOT EXISTS idx_cuentas_estado ON cuentas_por_cobrar(estado);
 CREATE INDEX IF NOT EXISTS idx_abonos_cuenta ON abonos(id_cuenta_por_cobrar);
+CREATE INDEX IF NOT EXISTS idx_abonos_cerrado ON abonos(cerrado);
 CREATE INDEX IF NOT EXISTS idx_reservas_joya ON reservas_inventario(id_joya);
 CREATE INDEX IF NOT EXISTS idx_reservas_estado ON reservas_inventario(estado);
 CREATE INDEX IF NOT EXISTS idx_reservas_referencia ON reservas_inventario(referencia_externa);
