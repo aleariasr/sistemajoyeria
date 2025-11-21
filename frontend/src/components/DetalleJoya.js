@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { obtenerJoya } from '../services/api';
 
+// Constante para tamaño máximo de imagen en detalle
+const IMAGE_DETAIL_MAX_HEIGHT = '400px';
+
 function DetalleJoya() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -108,7 +111,7 @@ function DetalleJoya() {
               alt={joya.nombre} 
               style={{ 
                 maxWidth: '100%', 
-                maxHeight: '400px', 
+                maxHeight: IMAGE_DETAIL_MAX_HEIGHT, 
                 objectFit: 'contain',
                 borderRadius: '8px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'

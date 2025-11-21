@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 
+// Constantes para thumbnail de imagen
+const THUMBNAIL_SIZE = '50px';
+
 function ListadoJoyas() {
   const navigate = useNavigate();
   const [joyas, setJoyas] = useState([]);
@@ -259,8 +262,8 @@ function ListadoJoyas() {
                             src={joya.imagen_url} 
                             alt={joya.nombre}
                             style={{ 
-                              width: '50px', 
-                              height: '50px', 
+                              width: THUMBNAIL_SIZE, 
+                              height: THUMBNAIL_SIZE, 
                               objectFit: 'cover',
                               borderRadius: '4px',
                               border: '1px solid #ddd'
@@ -268,8 +271,8 @@ function ListadoJoyas() {
                           />
                         ) : (
                           <div style={{ 
-                            width: '50px', 
-                            height: '50px', 
+                            width: THUMBNAIL_SIZE, 
+                            height: THUMBNAIL_SIZE, 
                             background: '#f5f5f5',
                             borderRadius: '4px',
                             display: 'flex',

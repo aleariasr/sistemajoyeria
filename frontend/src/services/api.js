@@ -39,25 +39,15 @@ export const obtenerJoya = (id) => {
 };
 
 export const crearJoya = (joyaData) => {
-  // Si joyaData es FormData, configurar headers apropiados
-  const config = joyaData instanceof FormData ? {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  } : {};
-  
-  return api.post('/joyas', joyaData, config);
+  // No configurar Content-Type manualmente para FormData
+  // El navegador lo establece automáticamente con el boundary correcto
+  return api.post('/joyas', joyaData);
 };
 
 export const actualizarJoya = (id, joyaData) => {
-  // Si joyaData es FormData, configurar headers apropiados
-  const config = joyaData instanceof FormData ? {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  } : {};
-  
-  return api.put(`/joyas/${id}`, joyaData, config);
+  // No configurar Content-Type manualmente para FormData
+  // El navegador lo establece automáticamente con el boundary correcto
+  return api.put(`/joyas/${id}`, joyaData);
 };
 
 export const eliminarJoya = (id) => {

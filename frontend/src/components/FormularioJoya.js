@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crearJoya, actualizarJoya, obtenerJoya } from '../services/api';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
 const MONEDAS = ['CRC', 'USD'];
+
+// Constantes para tamaños de imagen
+const IMAGE_PREVIEW_MAX_SIZE = '300px';
+const IMAGE_DETAIL_MAX_HEIGHT = '400px';
 
 function FormularioJoya() {
   const navigate = useNavigate();
@@ -33,6 +37,7 @@ function FormularioJoya() {
   const [imagen, setImagen] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
   const [imagenActual, setImagenActual] = useState(null);
+  const fileInputRef = useRef(null);
 
   const cargarJoya = useCallback(async () => {
     try {
@@ -108,10 +113,9 @@ function FormularioJoya() {
   const handleEliminarImagen = () => {
     setImagen(null);
     setImagenPreview(null);
-    // Limpiar el input file
-    const fileInput = document.querySelector('input[type="file"]');
-    if (fileInput) {
-      fileInput.value = '';
+    // Limpiar el input file usando ref
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -189,7 +193,7 @@ function FormularioJoya() {
       {mensaje && <div className="alert alert-success">{mensaje}</div>}
 
       <div className="card">
-        <form onSubmit={handleSubmit}>
+        <form id="joya-form" onSubmit={handleSubmit}>
           <h3 style={{ marginBottom: '20px', color: '#1a237e' }}>Información Básica</h3>
           
           <div className="form-grid">
@@ -250,76 +254,6 @@ function FormularioJoya() {
               placeholder="Descripción detallada de la joya..."
               rows="3"
             />
-          </div>
-
-          <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Imagen del Producto</h3>
-
-          <div className="form-group">
-            <label>Imagen de la Joya</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImagenChange}
-              style={{ marginBottom: '10px' }}
-            />
-            <small style={{ color: '#666', display: 'block', marginBottom: '10px' }}>
-              Formatos permitidos: JPG, PNG, GIF, WebP. Tamaño máximo: 5MB
-            </small>
-            
-            {imagenPreview && (
-              <div style={{ marginTop: '10px' }}>
-                <p style={{ marginBottom: '8px', fontWeight: '500' }}>Vista previa:</p>
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <img 
-                    src={imagenPreview} 
-                    alt="Preview" 
-                    style={{ 
-                      maxWidth: '300px', 
-                      maxHeight: '300px', 
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }} 
-                  />
-                  <button
-                    type="button"
-                    onClick={handleEliminarImagen}
-                    style={{
-                      position: 'absolute',
-                      top: '5px',
-                      right: '5px',
-                      background: 'rgba(220, 53, 69, 0.9)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '5px 10px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    ✕ Eliminar
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {!imagenPreview && imagenActual && esEdicion && (
-              <div style={{ marginTop: '10px' }}>
-                <p style={{ marginBottom: '8px', fontWeight: '500' }}>Imagen actual:</p>
-                <img 
-                  src={imagenActual} 
-                  alt="Imagen actual" 
-                  style={{ 
-                    maxWidth: '300px', 
-                    maxHeight: '300px', 
-                    border: '1px solid #ddd',
-                    borderRadius: '4px'
-                  }} 
-                />
-                <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
-                  Selecciona una nueva imagen para reemplazarla
-                </p>
-              </div>
-            )}
           </div>
 
           <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Información Comercial</h3>
@@ -417,24 +351,100 @@ function FormularioJoya() {
               />
             </div>
           </div>
-
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate('/')}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : (esEdicion ? '💾 Guardar Cambios' : '➕ Agregar Joya')}
-            </button>
-          </div>
         </form>
+      </div>
+
+      {/* Card separada para la imagen */}
+      <div className="card" style={{ marginTop: '20px' }}>
+        <h3 style={{ marginBottom: '20px', color: '#1a237e' }}>📸 Imagen del Producto</h3>
+        
+        <div className="form-group">
+          <label>Imagen de la Joya</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImagenChange}
+            ref={fileInputRef}
+            style={{ marginBottom: '10px' }}
+          />
+          <small style={{ color: '#666', display: 'block', marginBottom: '10px' }}>
+            Formatos permitidos: JPG, PNG, GIF, WebP. Tamaño máximo: 5MB
+          </small>
+          
+          {imagenPreview && (
+            <div style={{ marginTop: '15px' }}>
+              <p style={{ marginBottom: '8px', fontWeight: '500' }}>Vista previa:</p>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img 
+                  src={imagenPreview} 
+                  alt="Preview" 
+                  style={{ 
+                    maxWidth: IMAGE_PREVIEW_MAX_SIZE, 
+                    maxHeight: IMAGE_PREVIEW_MAX_SIZE, 
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }} 
+                />
+                <button
+                  type="button"
+                  onClick={handleEliminarImagen}
+                  style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    background: 'rgba(220, 53, 69, 0.9)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '5px 10px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  ✕ Eliminar
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {!imagenPreview && imagenActual && esEdicion && (
+            <div style={{ marginTop: '15px' }}>
+              <p style={{ marginBottom: '8px', fontWeight: '500' }}>Imagen actual:</p>
+              <img 
+                src={imagenActual} 
+                alt="Imagen actual" 
+                style={{ 
+                  maxWidth: IMAGE_PREVIEW_MAX_SIZE, 
+                  maxHeight: IMAGE_PREVIEW_MAX_SIZE, 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px'
+                }} 
+              />
+              <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
+                Selecciona una nueva imagen para reemplazarla
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Botones de acción */}
+      <div className="modal-footer" style={{ marginTop: '20px' }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => navigate('/')}
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          form="joya-form"
+          className="btn btn-primary"
+          disabled={loading}
+        >
+          {loading ? 'Guardando...' : (esEdicion ? '💾 Guardar Cambios' : '➕ Agregar Joya')}
+        </button>
       </div>
     </div>
   );
