@@ -15,7 +15,7 @@
     "start:frontend": "npm start --workspace=frontend",
     "dev:backend": "npm run dev --workspace=backend",
     "build:frontend": "npm run build --workspace=frontend",
-    "test:backend": "cd backend/tests && node comprehensive-test.js",
+    "test:backend": "npm run test --workspace=backend",
     "audit:backend": "npm audit --workspace=backend",
     "audit:frontend": "npm audit --workspace=frontend",
     "start": "echo 'Please run backend and frontend separately:' && echo '  npm run start:backend' && echo '  npm run start:frontend'"
@@ -33,7 +33,7 @@
     "url": "https://github.com/aleariasr/sistemajoyeria.git"
   },
   "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=7.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

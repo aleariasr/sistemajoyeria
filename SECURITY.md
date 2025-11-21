@@ -4,7 +4,7 @@
 
 ### Frontend Development Dependencies
 
-The frontend currently has known vulnerabilities in development dependencies (as of 2024-11-21):
+The frontend currently has known vulnerabilities in development dependencies:
 
 - **9 vulnerabilities (3 moderate, 6 high)** reported by `npm audit`
 - All vulnerabilities are in **development-only dependencies** (transitive dependencies of `react-scripts@5.0.1`)
