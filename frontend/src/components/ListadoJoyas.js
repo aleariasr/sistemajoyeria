@@ -239,6 +239,7 @@ function ListadoJoyas() {
               <table>
                 <thead>
                   <tr>
+                    <th>Imagen</th>
                     <th>Código</th>
                     <th>Nombre</th>
                     <th>Categoría</th>
@@ -252,6 +253,35 @@ function ListadoJoyas() {
                 <tbody>
                   {joyas.map((joya) => (
                     <tr key={joya.id} className={getRowClass(joya)}>
+                      <td>
+                        {joya.imagen_url ? (
+                          <img 
+                            src={joya.imagen_url} 
+                            alt={joya.nombre}
+                            style={{ 
+                              width: '50px', 
+                              height: '50px', 
+                              objectFit: 'cover',
+                              borderRadius: '4px',
+                              border: '1px solid #ddd'
+                            }}
+                          />
+                        ) : (
+                          <div style={{ 
+                            width: '50px', 
+                            height: '50px', 
+                            background: '#f5f5f5',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#999',
+                            fontSize: '20px'
+                          }}>
+                            💎
+                          </div>
+                        )}
+                      </td>
                       <td><strong>{joya.codigo}</strong></td>
                       <td>{joya.nombre}</td>
                       <td>{joya.categoria}</td>

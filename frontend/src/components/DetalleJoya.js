@@ -101,6 +101,22 @@ function DetalleJoya() {
           <h3>Información General</h3>
         </div>
         
+        {joya.imagen_url && (
+          <div style={{ textAlign: 'center', padding: '20px', borderBottom: '1px solid #e0e0e0' }}>
+            <img 
+              src={joya.imagen_url} 
+              alt={joya.nombre} 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '400px', 
+                objectFit: 'contain',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }} 
+            />
+          </div>
+        )}
+        
         <div className="detail-grid">
           <div className="detail-item">
             <label>Código</label>

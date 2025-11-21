@@ -29,6 +29,10 @@ function FormularioJoya() {
     ubicacion: '',
     estado: 'Activo'
   });
+  
+  const [imagen, setImagen] = useState(null);
+  const [imagenPreview, setImagenPreview] = useState(null);
+  const [imagenActual, setImagenActual] = useState(null);
 
   const cargarJoya = useCallback(async () => {
     try {
@@ -49,6 +53,10 @@ function FormularioJoya() {
         ubicacion: joya.ubicacion || '',
         estado: joya.estado || 'Activo'
       });
+      // Cargar imagen actual si existe
+      if (joya.imagen_url) {
+        setImagenActual(joya.imagen_url);
+      }
     } catch (err) {
       setErrores(['Error al cargar la joya']);
       console.error(err);
@@ -71,6 +79,42 @@ function FormularioJoya() {
     });
   };
 
+  const handleImagenChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        setErrores(['Por favor seleccione un archivo de imagen válido']);
+        return;
+      }
+      
+      // Validar tamaño (5MB máximo)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrores(['La imagen no debe superar 5MB']);
+        return;
+      }
+      
+      setImagen(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagenPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEliminarImagen = () => {
+    setImagen(null);
+    setImagenPreview(null);
+    // Limpiar el input file
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrores([]);
@@ -79,11 +123,24 @@ function FormularioJoya() {
     try {
       setLoading(true);
       
+      // Crear FormData para enviar datos con archivo
+      const formDataToSend = new FormData();
+      
+      // Agregar todos los campos del formulario
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+      
+      // Agregar imagen si existe
+      if (imagen) {
+        formDataToSend.append('imagen', imagen);
+      }
+      
       if (esEdicion) {
-        await actualizarJoya(id, formData);
+        await actualizarJoya(id, formDataToSend);
         setMensaje('Joya actualizada correctamente');
       } else {
-        await crearJoya(formData);
+        await crearJoya(formDataToSend);
         setMensaje('Joya creada correctamente');
       }
 
@@ -193,6 +250,76 @@ function FormularioJoya() {
               placeholder="Descripción detallada de la joya..."
               rows="3"
             />
+          </div>
+
+          <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Imagen del Producto</h3>
+
+          <div className="form-group">
+            <label>Imagen de la Joya</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImagenChange}
+              style={{ marginBottom: '10px' }}
+            />
+            <small style={{ color: '#666', display: 'block', marginBottom: '10px' }}>
+              Formatos permitidos: JPG, PNG, GIF, WebP. Tamaño máximo: 5MB
+            </small>
+            
+            {imagenPreview && (
+              <div style={{ marginTop: '10px' }}>
+                <p style={{ marginBottom: '8px', fontWeight: '500' }}>Vista previa:</p>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img 
+                    src={imagenPreview} 
+                    alt="Preview" 
+                    style={{ 
+                      maxWidth: '300px', 
+                      maxHeight: '300px', 
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }} 
+                  />
+                  <button
+                    type="button"
+                    onClick={handleEliminarImagen}
+                    style={{
+                      position: 'absolute',
+                      top: '5px',
+                      right: '5px',
+                      background: 'rgba(220, 53, 69, 0.9)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '5px 10px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ✕ Eliminar
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {!imagenPreview && imagenActual && esEdicion && (
+              <div style={{ marginTop: '10px' }}>
+                <p style={{ marginBottom: '8px', fontWeight: '500' }}>Imagen actual:</p>
+                <img 
+                  src={imagenActual} 
+                  alt="Imagen actual" 
+                  style={{ 
+                    maxWidth: '300px', 
+                    maxHeight: '300px', 
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }} 
+                />
+                <p style={{ marginTop: '8px', color: '#666', fontSize: '14px' }}>
+                  Selecciona una nueva imagen para reemplazarla
+                </p>
+              </div>
+            )}
           </div>
 
           <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Información Comercial</h3>
