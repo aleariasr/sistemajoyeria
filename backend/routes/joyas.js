@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const { uploadMiddleware, cleanupTempFile } = require('../middleware/upload');
+const { uploadImage, deleteImage } = require('../cloudinary-config');
 const {
   esNumeroPositivo,
   esEnteroPositivo,
@@ -114,7 +116,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/joyas - Crear nueva joya
-router.post('/', async (req, res) => {
+router.post('/', uploadMiddleware, async (req, res) => {
   try {
     // Convert numeric fields from strings to numbers
     const joyaData = convertirCamposNumericos(req.body);
@@ -122,13 +124,37 @@ router.post('/', async (req, res) => {
     const errores = validarJoya(joyaData);
     
     if (errores.length > 0) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
+      }
       return res.status(400).json({ errores });
     }
 
     // Verificar que el código no exista
     const joyaExistente = await Joya.obtenerPorCodigo(joyaData.codigo);
     if (joyaExistente) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
+      }
       return res.status(400).json({ errores: ['El código ya existe'] });
+    }
+
+    // Subir imagen a Cloudinary si se proporcionó
+    if (req.file) {
+      try {
+        const resultadoImagen = await uploadImage(req.file.path, 'joyas');
+        joyaData.imagen_url = resultadoImagen.url;
+        joyaData.imagen_public_id = resultadoImagen.publicId;
+        
+        // Limpiar archivo temporal
+        cleanupTempFile(req.file.path);
+      } catch (error) {
+        console.error('Error al subir imagen:', error);
+        // Continuar sin imagen si falla la subida
+        cleanupTempFile(req.file.path);
+      }
     }
 
     const resultado = await Joya.crear(joyaData);
@@ -148,12 +174,16 @@ router.post('/', async (req, res) => {
     res.status(201).json({ mensaje: 'Joya creada correctamente', id: resultado.id });
   } catch (error) {
     console.error('Error al crear joya:', error);
+    // Limpiar archivo temporal si existe
+    if (req.file) {
+      cleanupTempFile(req.file.path);
+    }
     res.status(500).json({ error: 'Error al crear joya' });
   }
 });
 
 // PUT /api/joyas/:id - Actualizar joya
-router.put('/:id', async (req, res) => {
+router.put('/:id', uploadMiddleware, async (req, res) => {
   try {
     // Convert numeric fields from strings to numbers
     const joyaData = convertirCamposNumericos(req.body);
@@ -161,11 +191,19 @@ router.put('/:id', async (req, res) => {
     const errores = validarJoya(joyaData);
     
     if (errores.length > 0) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
+      }
       return res.status(400).json({ errores });
     }
 
     const joyaExistente = await Joya.obtenerPorId(req.params.id);
     if (!joyaExistente) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
+      }
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
@@ -173,7 +211,36 @@ router.put('/:id', async (req, res) => {
     if (joyaData.codigo !== joyaExistente.codigo) {
       const joyaConCodigo = await Joya.obtenerPorCodigo(joyaData.codigo);
       if (joyaConCodigo) {
+        // Limpiar archivo temporal si existe
+        if (req.file) {
+          cleanupTempFile(req.file.path);
+        }
         return res.status(400).json({ errores: ['El código ya existe'] });
+      }
+    }
+
+    // Subir nueva imagen a Cloudinary si se proporcionó
+    if (req.file) {
+      try {
+        const resultadoImagen = await uploadImage(req.file.path, 'joyas');
+        joyaData.imagen_url = resultadoImagen.url;
+        joyaData.imagen_public_id = resultadoImagen.publicId;
+        
+        // Eliminar imagen anterior de Cloudinary si existe
+        if (joyaExistente.imagen_public_id) {
+          try {
+            await deleteImage(joyaExistente.imagen_public_id);
+          } catch (err) {
+            console.error('Error al eliminar imagen anterior:', err);
+          }
+        }
+        
+        // Limpiar archivo temporal
+        cleanupTempFile(req.file.path);
+      } catch (error) {
+        console.error('Error al subir imagen:', error);
+        // Continuar sin actualizar imagen si falla la subida
+        cleanupTempFile(req.file.path);
       }
     }
 
@@ -201,6 +268,10 @@ router.put('/:id', async (req, res) => {
     res.json({ mensaje: 'Joya actualizada correctamente' });
   } catch (error) {
     console.error('Error al actualizar joya:', error);
+    // Limpiar archivo temporal si existe
+    if (req.file) {
+      cleanupTempFile(req.file.path);
+    }
     res.status(500).json({ error: 'Error al actualizar joya' });
   }
 });
@@ -211,6 +282,16 @@ router.delete('/:id', async (req, res) => {
     const joya = await Joya.obtenerPorId(req.params.id);
     if (!joya) {
       return res.status(404).json({ error: 'Joya no encontrada' });
+    }
+
+    // Opcional: Eliminar imagen de Cloudinary si existe
+    if (joya.imagen_public_id) {
+      try {
+        await deleteImage(joya.imagen_public_id);
+      } catch (err) {
+        console.error('Error al eliminar imagen de Cloudinary:', err);
+        // Continuar con la eliminación aunque falle borrar la imagen
+      }
     }
 
     await Joya.eliminar(req.params.id);
