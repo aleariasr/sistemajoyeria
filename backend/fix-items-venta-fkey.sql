@@ -13,7 +13,7 @@ BEGIN
     AND constraint_name LIKE '%id_joya%'
   ) THEN
     -- Obtener el nombre actual de la constraint
-    FOR constraint_rec IN 
+    FOR existing_constraint IN 
       SELECT constraint_name 
       FROM information_schema.table_constraints 
       WHERE table_name = 'items_venta' 
@@ -21,7 +21,7 @@ BEGIN
       AND constraint_name != 'items_venta_id_joya_fkey'
       AND constraint_name LIKE '%id_joya%'
     LOOP
-      EXECUTE 'ALTER TABLE items_venta DROP CONSTRAINT IF EXISTS ' || constraint_rec.constraint_name;
+      EXECUTE 'ALTER TABLE items_venta DROP CONSTRAINT IF EXISTS ' || existing_constraint.constraint_name;
     END LOOP;
   END IF;
 

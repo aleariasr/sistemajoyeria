@@ -178,7 +178,7 @@ class Abono {
       query = query.lte('fecha_abono', fecha_hasta);
     }
 
-    const { data, error } = await query.select();
+    const { data, error } = await query.select('id, monto, fecha_abono, fecha_cierre');
 
     if (error) {
       throw error;
