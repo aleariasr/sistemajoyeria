@@ -31,7 +31,6 @@ function Ventas() {
   // Estados para impresión de ticket
   const [ultimaVenta, setUltimaVenta] = useState(null);
   const [ultimosItems, setUltimosItems] = useState([]);
-  const [mostrarTicket, setMostrarTicket] = useState(false);
   const ticketRef = useRef();
 
   const buscarJoyas = useCallback(async () => {
@@ -179,22 +178,10 @@ function Ventas() {
   });
 
   const imprimirTicket = () => {
-    setMostrarTicket(true);
-  };
-  
-  // Trigger print when ticket is shown
-  // Note: handlePrint from useReactToPrint is already a stable function,
-  // so it doesn't need to be in the dependency array
-  useEffect(() => {
-    if (mostrarTicket && ultimaVenta) {
-      // Small delay to ensure component is mounted
-      const timer = setTimeout(() => {
-        handlePrint();
-      }, 100);
-      return () => clearTimeout(timer);
+    if (handlePrint && ticketRef.current) {
+      handlePrint();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mostrarTicket, ultimaVenta]);
+  };
 
   const procesarVenta = async (e) => {
     e.preventDefault();
@@ -697,7 +684,7 @@ function Ventas() {
       </div>
       
       {/* Componente de ticket oculto para impresión */}
-      {mostrarTicket && ultimaVenta && (
+      {ultimaVenta && (
         <div style={{ display: 'none' }}>
           <TicketPrint 
             ref={ticketRef} 
