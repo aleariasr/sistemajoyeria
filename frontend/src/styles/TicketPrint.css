@@ -1,0 +1,317 @@
+/* Ticket Print Styles - Elegant and Modern Design */
+
+.ticket-print {
+  width: 80mm;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 15mm 5mm;
+  font-family: 'Courier New', monospace;
+  background: white;
+  color: #000;
+  box-sizing: border-box;
+}
+
+/* Header Section */
+.ticket-header {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.ticket-logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.ticket-logo {
+  width: 60mm;
+  height: auto;
+  max-height: 50mm;
+  object-fit: contain;
+}
+
+.ticket-business-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 8px 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #000;
+}
+
+.ticket-business-location {
+  font-size: 14px;
+  margin: 2px 0;
+  font-weight: 600;
+}
+
+.ticket-business-info {
+  font-size: 12px;
+  margin: 2px 0;
+  color: #333;
+}
+
+/* Dividers */
+.ticket-divider {
+  border-top: 2px dashed #000;
+  margin: 10px 0;
+}
+
+.ticket-divider-thin {
+  border-top: 1px solid #ccc;
+  margin: 8px 0;
+}
+
+/* Info Section */
+.ticket-info-section {
+  margin: 12px 0;
+}
+
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.ticket-label {
+  font-weight: 600;
+  color: #000;
+}
+
+.ticket-value {
+  color: #333;
+  text-align: right;
+}
+
+.ticket-tipo-venta {
+  font-weight: 600;
+  color: #000;
+}
+
+/* Items Section */
+.ticket-items-section {
+  margin: 12px 0;
+}
+
+.ticket-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  margin: 8px 0;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.ticket-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.ticket-items-table thead {
+  border-bottom: 1px solid #000;
+}
+
+.ticket-items-table th,
+.ticket-items-table td {
+  padding: 4px 2px;
+}
+
+.ticket-th-left,
+.ticket-td-left {
+  text-align: left;
+  width: 40%;
+}
+
+.ticket-th-center,
+.ticket-td-center {
+  text-align: center;
+  width: 15%;
+}
+
+.ticket-th-right,
+.ticket-td-right {
+  text-align: right;
+  width: 22.5%;
+}
+
+.ticket-items-table th {
+  font-weight: bold;
+  padding-bottom: 6px;
+}
+
+.ticket-items-table tbody tr {
+  border-bottom: 1px dotted #ccc;
+}
+
+.ticket-item-name {
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #000;
+}
+
+.ticket-item-code {
+  font-size: 9px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Totals Section */
+.ticket-totals-section {
+  margin: 12px 0;
+}
+
+.ticket-total-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  font-size: 13px;
+}
+
+.ticket-total-label {
+  font-weight: 600;
+  color: #000;
+}
+
+.ticket-total-value {
+  color: #333;
+}
+
+.ticket-descuento {
+  color: #d9534f;
+  font-weight: 600;
+}
+
+.ticket-total-final {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 2px solid #000;
+}
+
+.ticket-total-label-final {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+}
+
+.ticket-total-value-final {
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* Payment Section */
+.ticket-payment-section {
+  margin-top: 8px;
+}
+
+.ticket-payment-detail {
+  font-size: 11px;
+  padding-left: 10px;
+}
+
+/* Notes Section */
+.ticket-notes-section {
+  margin: 10px 0;
+  font-size: 11px;
+}
+
+.ticket-notes-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #000;
+}
+
+.ticket-notes-text {
+  color: #333;
+  line-height: 1.4;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+/* Balance Section */
+.ticket-balance-section {
+  margin: 10px 0;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Footer Section */
+.ticket-footer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 11px;
+}
+
+.ticket-thanks {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 8px 0;
+  color: #000;
+}
+
+.ticket-contact {
+  margin: 4px 0;
+  color: #333;
+}
+
+.ticket-slogan {
+  font-style: italic;
+  margin: 6px 0 0 0;
+  color: #666;
+  font-size: 10px;
+}
+
+/* Print Styles */
+@media print {
+  .ticket-print {
+    width: 80mm;
+    padding: 5mm;
+    margin: 0;
+    page-break-after: auto;
+  }
+
+  .ticket-logo {
+    max-height: 40mm;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide everything except the ticket */
+  body * {
+    visibility: hidden;
+  }
+
+  .ticket-print,
+  .ticket-print * {
+    visibility: visible;
+  }
+
+  .ticket-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  /* Ensure proper colors in print */
+  .ticket-print {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Screen Preview Styles */
+@media screen {
+  .ticket-print {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 20px auto;
+    max-width: 90%;
+  }
+}

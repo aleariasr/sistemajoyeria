@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { useReactToPrint } from 'react-to-print';
+import TicketPrint from './TicketPrint';
 import '../styles/DetalleVenta.css';
 
 function DetalleVenta() {
@@ -8,6 +10,12 @@ function DetalleVenta() {
   const navigate = useNavigate();
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const ticketRef = useRef();
+
+  const handlePrint = useReactToPrint({
+    content: () => ticketRef.current,
+    documentTitle: `Ticket-Venta-${id}`,
+  });
 
   const cargarVenta = useCallback(async () => {
     try {
@@ -56,9 +64,14 @@ function DetalleVenta() {
           <h1>📄 Detalle de Venta #{venta.id}</h1>
           <p>{formatearFecha(venta.fecha_venta)}</p>
         </div>
-        <button onClick={() => navigate('/historial-ventas')} className="btn-volver">
-          ← Volver
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={handlePrint} className="btn-imprimir">
+            🖨️ Imprimir Ticket
+          </button>
+          <button onClick={() => navigate('/historial-ventas')} className="btn-volver">
+            ← Volver
+          </button>
+        </div>
       </div>
 
       <div className="venta-info-grid">
@@ -150,6 +163,16 @@ function DetalleVenta() {
             </tbody>
           </table>
         </div>
+      </div>
+      
+      {/* Componente de ticket oculto para impresión */}
+      <div style={{ display: 'none' }}>
+        <TicketPrint 
+          ref={ticketRef} 
+          venta={venta} 
+          items={venta.items || []}
+          tipo="venta"
+        />
       </div>
     </div>
   );
