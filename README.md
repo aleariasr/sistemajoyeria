@@ -72,6 +72,12 @@ Incluye:
 - Solución de problemas
 - Tests y verificación
 
+**Guía de acceso multi-dispositivo:** `GUIA_MULTI_DISPOSITIVO.md`
+- Configuración paso a paso para acceso desde celulares y tablets
+- Solución de problemas de conexión
+- Configuración de firewall
+- Verificación y testing
+
 **Otros documentos:**
 - `backend/AUDITORIA_COMPLETA.md` - Revisión de código completa
 - `backend/supabase-migration.sql` - Schema de base de datos
