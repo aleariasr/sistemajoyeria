@@ -13,7 +13,7 @@ function DetalleVenta() {
   const ticketRef = useRef();
 
   const handlePrint = useReactToPrint({
-    content: () => ticketRef.current,
+    contentRef: ticketRef,
     documentTitle: `Ticket-Venta-${id}`,
   });
 

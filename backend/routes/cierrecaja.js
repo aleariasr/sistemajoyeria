@@ -56,20 +56,47 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     // Filtrar solo ventas de contado para la vista
     const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
 
-    // Obtener abonos del día (pagos de cuentas por cobrar)
+    // Obtener abonos del día (pagos de cuentas por cobrar) que NO han sido cerrados
     const rangoHoy = obtenerRangoDia();
-    const abonosDelDia = await Abono.obtenerTodos({
-      fecha_desde: rangoHoy.fecha_desde,
-      fecha_hasta: rangoHoy.fecha_hasta
-    });
+    const { data: abonosData, error: abonosError } = await require('../supabase-db').supabase
+      .from('abonos')
+      .select(`
+        *,
+        cuentas_por_cobrar!abonos_id_cuenta_por_cobrar_fkey (
+          id_cliente,
+          monto_total,
+          saldo_pendiente,
+          id_venta,
+          clientes!cuentas_por_cobrar_id_cliente_fkey (nombre, cedula)
+        )
+      `)
+      .eq('cerrado', false)
+      .gte('fecha_abono', rangoHoy.fecha_desde)
+      .lte('fecha_abono', rangoHoy.fecha_hasta)
+      .order('fecha_abono', { ascending: false });
+
+    if (abonosError) {
+      throw abonosError;
+    }
+
+    // Formatear abonos
+    const abonosDelDia = (abonosData || []).map(abono => ({
+      ...abono,
+      id_cliente: abono.cuentas_por_cobrar?.id_cliente,
+      monto_cuenta: abono.cuentas_por_cobrar?.monto_total,
+      saldo_pendiente: abono.cuentas_por_cobrar?.saldo_pendiente,
+      id_venta: abono.cuentas_por_cobrar?.id_venta,
+      nombre_cliente: abono.cuentas_por_cobrar?.clientes?.nombre,
+      cedula_cliente: abono.cuentas_por_cobrar?.clientes?.cedula
+    }));
 
     // Calcular total de abonos del día
-    const totalAbonos = abonosDelDia.abonos.reduce((sum, abono) => sum + abono.monto, 0);
+    const totalAbonos = abonosDelDia.reduce((sum, abono) => sum + abono.monto, 0);
     
     // Agrupar abonos por método de pago
-    const abonosEfectivo = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Efectivo');
-    const abonosTransferencia = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Transferencia');
-    const abonosTarjeta = abonosDelDia.abonos.filter(a => a.metodo_pago === 'Tarjeta');
+    const abonosEfectivo = abonosDelDia.filter(a => a.metodo_pago === 'Efectivo');
+    const abonosTransferencia = abonosDelDia.filter(a => a.metodo_pago === 'Transferencia');
+    const abonosTarjeta = abonosDelDia.filter(a => a.metodo_pago === 'Tarjeta');
 
     const totalAbonosEfectivo = abonosEfectivo.reduce((sum, a) => sum + a.monto, 0);
     const totalAbonosTransferencia = abonosTransferencia.reduce((sum, a) => sum + a.monto, 0);
@@ -85,7 +112,7 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     const resumenCompleto = {
       ...resumen,
       // Abonos
-      total_abonos: abonosDelDia.total,
+      total_abonos: abonosDelDia.length,
       monto_total_abonos: totalAbonos,
       abonos_efectivo: abonosEfectivo.length,
       monto_abonos_efectivo: totalAbonosEfectivo,
@@ -103,7 +130,7 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     res.json({
       resumen: resumenCompleto,
       ventas: ventasContado,
-      abonos: abonosDelDia.abonos
+      abonos: abonosDelDia
     });
   } catch (error) {
     console.error('Error al obtener resumen del día:', error);
@@ -120,15 +147,23 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
 
-    // Obtener abonos del día para validar si hay actividad
+    // Obtener abonos del día que NO han sido cerrados
     const rangoHoy = obtenerRangoDia();
-    const abonosDelDia = await Abono.obtenerTodos({
-      fecha_desde: rangoHoy.fecha_desde,
-      fecha_hasta: rangoHoy.fecha_hasta
-    });
+    const { data: abonosDelDia, error: abonosError } = await supabase
+      .from('abonos')
+      .select('*')
+      .eq('cerrado', false)
+      .gte('fecha_abono', rangoHoy.fecha_desde)
+      .lte('fecha_abono', rangoHoy.fecha_hasta);
+
+    if (abonosError) {
+      throw abonosError;
+    }
+
+    const totalAbonos = abonosDelDia?.length || 0;
 
     // Validar que haya al menos ventas o abonos
-    if (ventasContado.length === 0 && abonosDelDia.total === 0) {
+    if (ventasContado.length === 0 && totalAbonos === 0) {
       return res.status(400).json({ error: 'No hay ventas ni abonos para cerrar' });
     }
 
@@ -188,13 +223,21 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       });
     }
 
+    // Marcar abonos del día como cerrados
+    const resultadoAbonos = await Abono.marcarComoCerrados({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
+
     // Limpiar la base de datos del día
     await VentaDia.limpiar();
 
     const resumen = {
       total_ventas: ventasTransferidas.length,
       total_ingresos: ventasTransferidas.reduce((sum, v) => sum + v.total, 0),
-      ventas_transferidas: ventasTransferidas
+      ventas_transferidas: ventasTransferidas,
+      total_abonos_cerrados: resultadoAbonos.count,
+      monto_abonos_cerrados: resultadoAbonos.abonos?.reduce((sum, a) => sum + (parseFloat(a.monto) || 0), 0) || 0
     };
 
     res.json({

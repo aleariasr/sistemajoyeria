@@ -156,6 +156,39 @@ class Abono {
 
     return resumen;
   }
+
+  // Marcar abonos como cerrados
+  static async marcarComoCerrados(filtros = {}) {
+    const { fecha_desde, fecha_hasta } = filtros;
+    const fechaCierre = formatearFechaSQL();
+
+    let query = supabase
+      .from('abonos')
+      .update({ 
+        cerrado: true, 
+        fecha_cierre: fechaCierre 
+      })
+      .eq('cerrado', false);
+
+    if (fecha_desde) {
+      query = query.gte('fecha_abono', fecha_desde);
+    }
+
+    if (fecha_hasta) {
+      query = query.lte('fecha_abono', fecha_hasta);
+    }
+
+    const { data, error } = await query.select('id, monto, fecha_abono, fecha_cierre');
+
+    if (error) {
+      throw error;
+    }
+
+    return { 
+      count: data?.length || 0,
+      abonos: data 
+    };
+  }
 }
 
 module.exports = Abono;

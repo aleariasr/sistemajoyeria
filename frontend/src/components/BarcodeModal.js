@@ -8,7 +8,7 @@ function BarcodeModal({ joya, onClose }) {
   const barcodeRef = useRef();
 
   const handlePrint = useReactToPrint({
-    content: () => barcodeRef.current,
+    contentRef: barcodeRef,
     documentTitle: `Codigos-Barras-${joya.codigo}`,
   });
 
