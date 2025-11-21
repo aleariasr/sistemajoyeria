@@ -7,6 +7,12 @@ const BarcodePrint = React.forwardRef(({ joya, cantidad = 1 }, ref) => {
 
   // Crear un array con la cantidad de etiquetas a imprimir
   const etiquetas = Array.from({ length: cantidad }, (_, index) => index);
+  
+  const handleImageError = (e) => {
+    console.error('Error loading barcode image:', e);
+    e.target.style.display = 'none';
+    e.target.parentElement.innerHTML = '<div style="text-align:center; color:#999; font-size:10px;">Error al cargar código de barras</div>';
+  };
 
   return (
     <div ref={ref} className="barcode-print-container">
@@ -22,6 +28,7 @@ const BarcodePrint = React.forwardRef(({ joya, cantidad = 1 }, ref) => {
               src={barcodeUrl} 
               alt={`Código de barras ${joya.codigo}`}
               className="barcode-image"
+              onError={handleImageError}
             />
           </div>
           <div className="barcode-price">

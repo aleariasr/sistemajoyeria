@@ -180,10 +180,18 @@ function Ventas() {
 
   const imprimirTicket = () => {
     setMostrarTicket(true);
-    setTimeout(() => {
-      handlePrint();
-    }, 100);
   };
+  
+  // Trigger print when ticket is shown
+  useEffect(() => {
+    if (mostrarTicket && ultimaVenta) {
+      // Small delay to ensure component is mounted
+      const timer = setTimeout(() => {
+        handlePrint();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mostrarTicket, ultimaVenta, handlePrint]);
 
   const procesarVenta = async (e) => {
     e.preventDefault();
