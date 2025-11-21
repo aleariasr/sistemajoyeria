@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const os = require('os');
 const { initDatabase, initDatabaseDia } = require('./supabase-db');
 const { crearUsuariosIniciales } = require('./init-users');
 
@@ -166,7 +167,6 @@ Promise.all([initDatabase(), initDatabaseDia()])
   .then(() => crearUsuariosIniciales())
   .then(() => {
     // Obtener las IPs de red local para mostrar cómo acceder desde otros dispositivos
-    const os = require('os');
     const networkInterfaces = os.networkInterfaces();
     const localIPs = [];
     

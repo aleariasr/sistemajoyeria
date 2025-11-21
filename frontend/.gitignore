@@ -33,3 +33,6 @@ Thumbs.db
 
 # Misc
 .eslintcache
+
+# Test files
+test-api-url-detection.js
