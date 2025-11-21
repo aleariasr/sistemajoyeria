@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { buscarClientes } from '../services/api';
+import { useReactToPrint } from 'react-to-print';
+import TicketPrint from './TicketPrint';
 import '../styles/Ventas.css';
 
 function Ventas() {
@@ -25,6 +27,12 @@ function Ventas() {
   const [montoEfectivo, setMontoEfectivo] = useState('');
   const [montoTarjeta, setMontoTarjeta] = useState('');
   const [montoTransferencia, setMontoTransferencia] = useState('');
+  
+  // Estados para impresión de ticket
+  const [ultimaVenta, setUltimaVenta] = useState(null);
+  const [ultimosItems, setUltimosItems] = useState([]);
+  const [mostrarTicket, setMostrarTicket] = useState(false);
+  const ticketRef = useRef();
 
   const buscarJoyas = useCallback(async () => {
     try {
@@ -164,6 +172,27 @@ function Ventas() {
     return total - pagado;
   };
 
+  // Manejador de impresión
+  const handlePrint = useReactToPrint({
+    content: () => ticketRef.current,
+    documentTitle: `Ticket-Venta-${ultimaVenta?.id || 'N/A'}`,
+  });
+
+  const imprimirTicket = () => {
+    setMostrarTicket(true);
+  };
+  
+  // Trigger print when ticket is shown
+  useEffect(() => {
+    if (mostrarTicket && ultimaVenta) {
+      // Small delay to ensure component is mounted
+      const timer = setTimeout(() => {
+        handlePrint();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [mostrarTicket, ultimaVenta, handlePrint]);
+
   const procesarVenta = async (e) => {
     e.preventDefault();
     
@@ -216,6 +245,31 @@ function Ventas() {
 
       const response = await api.post('/ventas', ventaData);
       
+      // Guardar items antes de limpiar el carrito
+      setUltimosItems([...carrito]);
+      
+      // Preparar datos para el ticket
+      const ventaParaTicket = {
+        id: response.data.id,
+        fecha_venta: new Date(),
+        tipo_venta: tipoVenta,
+        metodo_pago: metodoPago,
+        subtotal: calcularSubtotal(),
+        descuento: descuento,
+        total: response.data.total,
+        efectivo_recibido: ventaData.efectivo_recibido,
+        cambio: response.data.cambio,
+        monto_efectivo: ventaData.monto_efectivo,
+        monto_tarjeta: ventaData.monto_tarjeta,
+        monto_transferencia: ventaData.monto_transferencia,
+        notas: notas,
+        nombre_usuario: user?.full_name,
+        usuario: user?.username,
+        nombre_cliente: clienteSeleccionado?.nombre
+      };
+      
+      setUltimaVenta(ventaParaTicket);
+      
       let mensajeTexto = `Venta #${response.data.id} realizada exitosamente. Total: ${calcularTotal().toFixed(2)}`;
       if (tipoVenta === 'Credito') {
         mensajeTexto += ` - Cuenta por cobrar creada para ${clienteSeleccionado.nombre}`;
@@ -262,6 +316,15 @@ function Ventas() {
       {mensaje.texto && (
         <div className={`mensaje ${mensaje.tipo}`}>
           {mensaje.texto}
+          {mensaje.tipo === 'success' && ultimaVenta && (
+            <button 
+              onClick={imprimirTicket}
+              className="btn-imprimir-ticket"
+              style={{ marginLeft: '15px' }}
+            >
+              🖨️ Imprimir Ticket
+            </button>
+          )}
         </div>
       )}
 
@@ -629,6 +692,18 @@ function Ventas() {
           )}
         </div>
       </div>
+      
+      {/* Componente de ticket oculto para impresión */}
+      {mostrarTicket && ultimaVenta && (
+        <div style={{ display: 'none' }}>
+          <TicketPrint 
+            ref={ticketRef} 
+            venta={ultimaVenta} 
+            items={ultimosItems}
+            tipo="venta"
+          />
+        </div>
+      )}
     </div>
   );
 }

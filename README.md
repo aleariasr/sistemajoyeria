@@ -18,6 +18,8 @@ Sistema completo de gestión para joyerías con base de datos en la nube, soport
 - 🔍 **Búsqueda avanzada**: Filtros por categoría, precio, stock y estado
 - 📦 **Control de inventario**: Registro automático y manual de movimientos
 - 💰 **Sistema de ventas**: Múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto, crédito)
+- 🎫 **Impresión de tickets**: Tickets profesionales para todas las ventas
+- 🏷️ **Códigos de barras**: Generación e impresión de etiquetas con códigos de barras
 - 💳 **Cuentas por cobrar**: Gestión de créditos con registro de abonos
 - 📊 **Reportes y cierre de caja**: Reportes financieros completos
 - ⚠️ **Alertas de stock**: Notificaciones para productos con stock bajo
@@ -77,6 +79,12 @@ Incluye:
 - Solución de problemas de conexión
 - Configuración de firewall
 - Verificación y testing
+
+**Guía de impresión:** `GUIA_IMPRESION.md`
+- Sistema de impresión de tickets de venta
+- Generación de códigos de barras
+- Configuración y solución de problemas
+- Compatible con Windows, macOS, Linux y móviles
 
 **Otros documentos:**
 - `backend/AUDITORIA_COMPLETA.md` - Revisión de código completa

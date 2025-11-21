@@ -1,0 +1,151 @@
+/* Barcode Print Styles - Optimized for small scannable labels */
+
+.barcode-print-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5mm;
+  padding: 5mm;
+  background: white;
+}
+
+.barcode-label {
+  width: 50mm;
+  height: 30mm;
+  border: 1px solid #ddd;
+  padding: 2mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: white;
+  page-break-inside: avoid;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.barcode-info {
+  text-align: center;
+}
+
+.barcode-business {
+  font-size: 8px;
+  font-weight: bold;
+  margin-bottom: 1mm;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.barcode-product-name {
+  font-size: 7px;
+  font-weight: 600;
+  margin-bottom: 1mm;
+  color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barcode-product-code {
+  font-size: 6px;
+  color: #666;
+  margin-bottom: 1mm;
+}
+
+.barcode-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  margin: 1mm 0;
+}
+
+.barcode-image {
+  max-width: 100%;
+  max-height: 15mm;
+  height: auto;
+  object-fit: contain;
+}
+
+.barcode-price {
+  text-align: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: #000;
+  margin-top: 1mm;
+}
+
+.barcode-footer {
+  text-align: center;
+  margin-top: 1mm;
+}
+
+.barcode-credit {
+  font-size: 5px;
+  color: #999;
+  text-decoration: none;
+}
+
+.barcode-credit:hover {
+  color: #666;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .barcode-print-container {
+    padding: 2mm;
+    gap: 3mm;
+  }
+
+  .barcode-label {
+    border: 1px solid #000;
+    margin: 0;
+  }
+
+  /* Hide everything except barcodes */
+  body * {
+    visibility: hidden;
+  }
+
+  .barcode-print-container,
+  .barcode-print-container * {
+    visibility: visible;
+  }
+
+  .barcode-print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Ensure colors print correctly */
+  .barcode-print-container {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Optimize for label printers */
+  @page {
+    size: auto;
+    margin: 2mm;
+  }
+}
+
+/* Screen Preview */
+@media screen {
+  .barcode-print-container {
+    max-width: 800px;
+    margin: 20px auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 10mm;
+  }
+
+  .barcode-label {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}

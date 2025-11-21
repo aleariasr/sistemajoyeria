@@ -564,3 +564,26 @@
 .form-group {
   position: relative;
 }
+
+/* Botón de imprimir ticket */
+.btn-imprimir-ticket {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-imprimir-ticket:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-imprimir-ticket:active {
+  transform: translateY(0);
+}
