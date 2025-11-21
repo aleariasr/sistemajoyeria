@@ -3,6 +3,8 @@
 
 -- Verificar y recrear la foreign key de items_venta si es necesario
 DO $$
+DECLARE
+  existing_constraint RECORD;
 BEGIN
   -- Eliminar la constraint existente si tiene un nombre diferente
   IF EXISTS (
