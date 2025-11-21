@@ -39,10 +39,14 @@ export const obtenerJoya = (id) => {
 };
 
 export const crearJoya = (joyaData) => {
+  // No configurar Content-Type manualmente para FormData
+  // El navegador lo establece automáticamente con el boundary correcto
   return api.post('/joyas', joyaData);
 };
 
 export const actualizarJoya = (id, joyaData) => {
+  // No configurar Content-Type manualmente para FormData
+  // El navegador lo establece automáticamente con el boundary correcto
   return api.put(`/joyas/${id}`, joyaData);
 };
 
