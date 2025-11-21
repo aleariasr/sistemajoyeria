@@ -24,11 +24,20 @@ La tabla `items_venta_dia` no tenía definida la restricción de clave foránea 
 **Error:** 
 Al hacer clic en "Imprimir Ticket" después de una venta, no se abría el diálogo de impresión.
 
-**Causa:** 
-En `frontend/src/components/Ventas.js`, el `useEffect` que dispara la impresión incluía `handlePrint` en su array de dependencias (línea 194). Como `handlePrint` es una función que se recrea en cada render, esto causaba que el effect se ejecutara múltiples veces o en momentos incorrectos, impidiendo que funcionara correctamente.
+**Causa Identificada (Fix Final - 2025-11-21):** 
+El problema era un issue de timing en el ciclo de renderizado de React:
+1. El componente `TicketPrint` se renderizaba condicionalmente solo cuando `mostrarTicket && ultimaVenta` era verdadero
+2. Al hacer clic en "Imprimir Ticket", se ejecutaba `setMostrarTicket(true)` 
+3. Un `useEffect` intentaba llamar `handlePrint()` después de 100ms
+4. Sin embargo, debido al ciclo de renderizado de React, el componente `TicketPrint` podría no estar completamente montado cuando `handlePrint()` se ejecutaba
+5. Esto resultaba en que `ticketRef.current` fuera `null`, impidiendo que se abriera el diálogo de impresión
 
-**Solución:**
-Se eliminó `handlePrint` del array de dependencias del `useEffect`, dejando solo `[mostrarTicket, ultimaVenta]` y agregando un comentario `eslint-disable` para evitar advertencias.
+**Solución Final:**
+Se simplificó completamente el mecanismo de impresión:
+1. **Eliminó el renderizado condicional basado en `mostrarTicket`**: Ahora el componente `TicketPrint` se renderiza siempre que exista `ultimaVenta`
+2. **Llamada directa a handlePrint**: La función `imprimirTicket()` ahora llama directamente a `handlePrint()` en lugar de usar un `useEffect`
+3. **Eliminó estado innecesario**: Se removió completamente el estado `mostrarTicket` que ya no es necesario
+4. **Verificación simplificada**: Solo se verifica que `ticketRef.current` exista antes de imprimir
 
 ## Archivos Modificados
 
@@ -41,9 +50,12 @@ Se eliminó `handlePrint` del array de dependencias del `useEffect`, dejando sol
    - Script de migración para agregar la foreign key en bases de datos existentes
 
 ### Frontend
-3. **`frontend/src/components/Ventas.js`** (líneas 185-194)
-   - Eliminado `handlePrint` del array de dependencias del useEffect
-   - Agregado comentario `eslint-disable-next-line react-hooks/exhaustive-deps`
+3. **`frontend/src/components/Ventas.js`** (líneas 178-185, 688-697)
+   - **CAMBIO COMPLETO (2025-11-21)**: Simplificado el mecanismo de impresión
+   - Eliminado el `useEffect` que intentaba disparar la impresión automáticamente
+   - Eliminado el estado `mostrarTicket` que ya no es necesario
+   - La función `imprimirTicket()` ahora llama directamente a `handlePrint()` si el ref existe
+   - El componente `TicketPrint` se renderiza siempre que `ultimaVenta` exista (no condicionalmente con `mostrarTicket`)
 
 ## Instrucciones de Aplicación
 
@@ -111,7 +123,16 @@ La foreign key agrega:
 - **Cascade behavior:** Si una joya se elimina, los items relacionados deben manejarse apropiadamente
 
 ### React useEffect
-El hook `useReactToPrint` devuelve una función estable que no cambia entre renders, por lo que no es necesario incluirla en las dependencias del useEffect. Incluirla causaba efectos secundarios no deseados.
+El problema no era solo con las dependencias del `useEffect`. El issue fundamental era el timing entre:
+1. El renderizado condicional del componente `TicketPrint`
+2. La disponibilidad de la referencia (`ticketRef.current`)
+3. La llamada a `handlePrint()`
+
+La solución fue eliminar completamente la complejidad:
+- Ya no se usa `useEffect` para disparar la impresión
+- Ya no se renderiza condicionalmente el componente de ticket
+- La impresión se dispara directamente cuando el usuario hace clic en el botón
+- El componente de ticket siempre está montado (pero oculto) cuando hay una venta
 
 ## Impacto
 
@@ -139,4 +160,5 @@ Si después de aplicar estos cambios sigues experimentando problemas:
 ---
 
 **Fecha de Fix:** 2025-11-21  
-**Versión:** 2.0.1
+**Versión:** 2.0.2  
+**Última Actualización:** Fix completo del botón de impresión con simplificación del mecanismo
