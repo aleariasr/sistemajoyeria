@@ -171,6 +171,9 @@ node comprehensive-test.js
 - ✅ Manejo seguro de imágenes
 - ✅ Control de concurrencia en inventario
 - ✅ Auditoría completa de cambios
+- ✅ Backend sin vulnerabilidades conocidas
+
+**Nota:** El frontend tiene vulnerabilidades conocidas en dependencias de desarrollo que **NO afectan** la producción. Ver `SECURITY.md` para detalles.
 
 ## 📄 Licencia
 

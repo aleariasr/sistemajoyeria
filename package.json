@@ -1,0 +1,39 @@
+{
+  "name": "sistemajoyeria",
+  "version": "2.0.0",
+  "description": "Sistema completo de gestión para joyerías con base de datos en la nube",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "install:backend": "npm install --workspace=backend",
+    "install:frontend": "npm install --workspace=frontend",
+    "start:backend": "npm start --workspace=backend",
+    "start:frontend": "npm start --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "test:backend": "cd backend/tests && node comprehensive-test.js",
+    "audit:backend": "npm audit --workspace=backend",
+    "audit:frontend": "npm audit --workspace=frontend",
+    "start": "echo 'Please run backend and frontend separately:' && echo '  npm run start:backend' && echo '  npm run start:frontend'"
+  },
+  "keywords": [
+    "joyeria",
+    "inventario",
+    "sistema",
+    "gestion"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aleariasr/sistemajoyeria.git"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  }
+}
