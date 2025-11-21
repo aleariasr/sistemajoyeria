@@ -165,9 +165,29 @@ console.log('🛒 E-commerce Ready: Sí');
 Promise.all([initDatabase(), initDatabaseDia()])
   .then(() => crearUsuariosIniciales())
   .then(() => {
-    server = app.listen(PORT, () => {
+    // Obtener las IPs de red local para mostrar cómo acceder desde otros dispositivos
+    const os = require('os');
+    const networkInterfaces = os.networkInterfaces();
+    const localIPs = [];
+    
+    Object.keys(networkInterfaces).forEach((interfaceName) => {
+      networkInterfaces[interfaceName].forEach((iface) => {
+        // Solo IPs IPv4 y no loopback
+        if (iface.family === 'IPv4' && !iface.internal) {
+          localIPs.push(iface.address);
+        }
+      });
+    });
+
+    server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n${'='.repeat(60)}`);
-      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`🚀 Servidor corriendo en:`);
+      console.log(`   - Local: http://localhost:${PORT}`);
+      if (localIPs.length > 0) {
+        localIPs.forEach(ip => {
+          console.log(`   - Red local: http://${ip}:${PORT}`);
+        });
+      }
       console.log(`📊 Ambiente: ${NODE_ENV}`);
       console.log(`✅ Conexión a Supabase establecida`);
       console.log(`🔐 Usuarios iniciales creados (si no existían)`);
@@ -175,7 +195,13 @@ Promise.all([initDatabase(), initDatabaseDia()])
       console.log('📝 Importante:');
       console.log('   - Ejecuta el script SQL en Supabase si es la primera vez');
       console.log('   - Archivo: backend/supabase-migration.sql');
-      console.log(`   - URL: https://mvujkbpbqyihixkbzthe.supabase.co\n`);
+      console.log(`   - URL: https://mvujkbpbqyihixkbzthe.supabase.co`);
+      if (localIPs.length > 0) {
+        console.log('\n📱 Acceso desde otros dispositivos:');
+        console.log('   1. Asegúrate que estén en la misma red WiFi');
+        console.log(`   2. En el frontend, accede a: http://${localIPs[0]}:3000`);
+        console.log('   3. El sistema detectará automáticamente la API correcta\n');
+      }
     });
   })
   .catch((err) => {
