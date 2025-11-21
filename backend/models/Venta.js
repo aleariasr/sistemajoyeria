@@ -1,204 +1,198 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 const { formatearFechaSQL } = require('../utils/timezone');
 
 class Venta {
   // Crear nueva venta
-  static crear(ventaData) {
-    return new Promise((resolve, reject) => {
-      const {
-        id_usuario, metodo_pago, subtotal, descuento, total,
-        efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-        monto_efectivo, monto_tarjeta, monto_transferencia
-      } = ventaData;
+  static async crear(ventaData) {
+    const {
+      id_usuario, metodo_pago, subtotal, descuento, total,
+      efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+      monto_efectivo, monto_tarjeta, monto_transferencia
+    } = ventaData;
 
-      // Usar fecha de Costa Rica para el registro
-      const fechaVenta = formatearFechaSQL();
+    // Usar fecha de Costa Rica para el registro
+    const fechaVenta = formatearFechaSQL();
 
-      const sql = `
-        INSERT INTO ventas (
-          id_usuario, metodo_pago, subtotal, descuento, total,
-          efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-          monto_efectivo, monto_tarjeta, monto_transferencia, fecha_venta
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('ventas')
+      .insert([{
+        id_usuario,
+        metodo_pago,
+        subtotal: subtotal || 0,
+        descuento: descuento || 0,
+        total,
+        efectivo_recibido: efectivo_recibido || null,
+        cambio: cambio || null,
+        notas: notas || null,
+        tipo_venta: tipo_venta || 'Contado',
+        id_cliente: id_cliente || null,
+        monto_efectivo: monto_efectivo || 0,
+        monto_tarjeta: monto_tarjeta || 0,
+        monto_transferencia: monto_transferencia || 0,
+        fecha_venta: fechaVenta
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [
-        id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
-        efectivo_recibido || null, cambio || null, notas || null,
-        tipo_venta || 'Contado', id_cliente || null,
-        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0,
-        fechaVenta
-      ], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener todas las ventas con paginación y filtros
-  static obtenerTodas(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const {
-        fecha_desde, fecha_hasta, metodo_pago, id_usuario,
-        pagina = 1, por_pagina = 50
-      } = filtros;
+  static async obtenerTodas(filtros = {}) {
+    const {
+      fecha_desde, fecha_hasta, metodo_pago, id_usuario,
+      pagina = 1, por_pagina = 50
+    } = filtros;
 
-      let sql = `
-        SELECT v.*, u.username as usuario, u.full_name as nombre_usuario
-        FROM ventas v
-        LEFT JOIN usuarios u ON v.id_usuario = u.id
-        WHERE 1=1
-      `;
-      const params = [];
+    let query = supabase
+      .from('ventas')
+      .select(`
+        *,
+        usuarios!ventas_id_usuario_fkey (username, full_name)
+      `, { count: 'exact' });
 
-      // Filtro por fecha desde
-      if (fecha_desde) {
-        sql += ' AND v.fecha_venta >= ?';
-        params.push(fecha_desde);
-      }
+    // Filtro por fecha desde
+    if (fecha_desde) {
+      query = query.gte('fecha_venta', fecha_desde);
+    }
 
-      // Filtro por fecha hasta
-      if (fecha_hasta) {
-        sql += ' AND v.fecha_venta <= ?';
-        params.push(fecha_hasta);
-      }
+    // Filtro por fecha hasta
+    if (fecha_hasta) {
+      query = query.lte('fecha_venta', fecha_hasta);
+    }
 
-      // Filtro por método de pago
-      if (metodo_pago) {
-        sql += ' AND v.metodo_pago = ?';
-        params.push(metodo_pago);
-      }
+    // Filtro por método de pago
+    if (metodo_pago) {
+      query = query.eq('metodo_pago', metodo_pago);
+    }
 
-      // Filtro por usuario
-      if (id_usuario) {
-        sql += ' AND v.id_usuario = ?';
-        params.push(id_usuario);
-      }
+    // Filtro por usuario
+    if (id_usuario) {
+      query = query.eq('id_usuario', id_usuario);
+    }
 
-      // Contar total de registros
-      const countSql = sql.replace(
-        'SELECT v.*, u.username as usuario, u.full_name as nombre_usuario',
-        'SELECT COUNT(*) as total'
-      );
-      db.get(countSql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          const total = row.total;
-          const offset = (pagina - 1) * por_pagina;
+    // Ordenar y paginar
+    const offset = (pagina - 1) * por_pagina;
+    query = query.order('fecha_venta', { ascending: false })
+                 .range(offset, offset + por_pagina - 1);
 
-          // Obtener registros con paginación
-          sql += ' ORDER BY v.fecha_venta DESC LIMIT ? OFFSET ?';
-          params.push(por_pagina, offset);
+    const { data, error, count } = await query;
 
-          db.all(sql, params, (err, rows) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve({
-                ventas: rows,
-                total: total,
-                pagina: parseInt(pagina),
-                por_pagina: parseInt(por_pagina),
-                total_paginas: Math.ceil(total / por_pagina)
-              });
-            }
-          });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    // Formatear datos para mantener compatibilidad
+    const ventas = data.map(venta => ({
+      ...venta,
+      usuario: venta.usuarios?.username,
+      nombre_usuario: venta.usuarios?.full_name
+    }));
+
+    return {
+      ventas,
+      total: count,
+      pagina: parseInt(pagina),
+      por_pagina: parseInt(por_pagina),
+      total_paginas: Math.ceil(count / por_pagina)
+    };
   }
 
   // Obtener una venta por ID
-  static obtenerPorId(id) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT v.*, u.username as usuario, u.full_name as nombre_usuario
-        FROM ventas v
-        LEFT JOIN usuarios u ON v.id_usuario = u.id
-        WHERE v.id = ?
-      `;
-      db.get(sql, [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('ventas')
+      .select(`
+        *,
+        usuarios!ventas_id_usuario_fkey (username, full_name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    if (data) {
+      return {
+        ...data,
+        usuario: data.usuarios?.username,
+        nombre_usuario: data.usuarios?.full_name
+      };
+    }
+
+    return data;
   }
 
   // Obtener ventas del día
-  static obtenerVentasDelDia(fecha = null) {
-    return new Promise((resolve, reject) => {
-      const fechaConsulta = fecha || new Date().toISOString().split('T')[0];
-      
-      const sql = `
-        SELECT v.*, u.username as usuario, u.full_name as nombre_usuario
-        FROM ventas v
-        LEFT JOIN usuarios u ON v.id_usuario = u.id
-        WHERE DATE(v.fecha_venta) = ?
-        ORDER BY v.fecha_venta DESC
-      `;
+  static async obtenerVentasDelDia(fecha = null) {
+    const fechaConsulta = fecha || new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('ventas')
+      .select(`
+        *,
+        usuarios!ventas_id_usuario_fkey (username, full_name)
+      `)
+      .gte('fecha_venta', `${fechaConsulta}T00:00:00`)
+      .lte('fecha_venta', `${fechaConsulta}T23:59:59`)
+      .order('fecha_venta', { ascending: false });
 
-      db.all(sql, [fechaConsulta], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return data.map(venta => ({
+      ...venta,
+      usuario: venta.usuarios?.username,
+      nombre_usuario: venta.usuarios?.full_name
+    }));
   }
 
   // Obtener resumen de ventas por periodo
-  static obtenerResumen(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const { fecha_desde, fecha_hasta } = filtros;
+  static async obtenerResumen(filtros = {}) {
+    const { fecha_desde, fecha_hasta } = filtros;
 
-      let sql = `
-        SELECT 
-          COUNT(*) as total_ventas,
-          SUM(total) as total_ingresos,
-          AVG(total) as promedio_venta,
-          COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as ventas_efectivo,
-          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta,
-          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia,
-          COUNT(CASE WHEN metodo_pago = 'Mixto' THEN 1 END) as ventas_mixto,
-          SUM(CASE WHEN metodo_pago = 'Efectivo' THEN total ELSE 0 END) as monto_efectivo,
-          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN total ELSE 0 END) as monto_tarjeta,
-          SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END) as monto_transferencia,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_efectivo ELSE 0 END) as monto_mixto_efectivo,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_tarjeta ELSE 0 END) as monto_mixto_tarjeta,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_transferencia ELSE 0 END) as monto_mixto_transferencia,
-          COUNT(CASE WHEN tipo_venta = 'Contado' OR tipo_venta IS NULL THEN 1 END) as ventas_contado,
-          COUNT(CASE WHEN tipo_venta = 'Credito' THEN 1 END) as ventas_credito
-        FROM ventas
-        WHERE 1=1
-      `;
-      const params = [];
+    let query = supabase.from('ventas').select('*');
 
-      if (fecha_desde) {
-        sql += ' AND fecha_venta >= ?';
-        params.push(fecha_desde);
-      }
+    if (fecha_desde) {
+      query = query.gte('fecha_venta', fecha_desde);
+    }
 
-      if (fecha_hasta) {
-        sql += ' AND fecha_venta <= ?';
-        params.push(fecha_hasta);
-      }
+    if (fecha_hasta) {
+      query = query.lte('fecha_venta', fecha_hasta);
+    }
 
-      db.get(sql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    // Calcular resumen
+    const resumen = {
+      total_ventas: data.length,
+      total_ingresos: data.reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      promedio_venta: data.length > 0 ? data.reduce((sum, v) => sum + parseFloat(v.total || 0), 0) / data.length : 0,
+      ventas_efectivo: data.filter(v => v.metodo_pago === 'Efectivo').length,
+      ventas_tarjeta: data.filter(v => v.metodo_pago === 'Tarjeta').length,
+      ventas_transferencia: data.filter(v => v.metodo_pago === 'Transferencia').length,
+      ventas_mixto: data.filter(v => v.metodo_pago === 'Mixto').length,
+      monto_efectivo: data.filter(v => v.metodo_pago === 'Efectivo').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      monto_tarjeta: data.filter(v => v.metodo_pago === 'Tarjeta').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      monto_transferencia: data.filter(v => v.metodo_pago === 'Transferencia').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      monto_mixto_efectivo: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_efectivo || 0), 0),
+      monto_mixto_tarjeta: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_tarjeta || 0), 0),
+      monto_mixto_transferencia: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_transferencia || 0), 0),
+      ventas_contado: data.filter(v => v.tipo_venta === 'Contado' || !v.tipo_venta).length,
+      ventas_credito: data.filter(v => v.tipo_venta === 'Credito').length
+    };
+
+    return resumen;
   }
 }
 
