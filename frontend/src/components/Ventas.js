@@ -191,7 +191,8 @@ function Ventas() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [mostrarTicket, ultimaVenta, handlePrint]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrarTicket, ultimaVenta]);
 
   const procesarVenta = async (e) => {
     e.preventDefault();

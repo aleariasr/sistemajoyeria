@@ -179,7 +179,7 @@ CREATE TABLE IF NOT EXISTS ventas_dia (
 CREATE TABLE IF NOT EXISTS items_venta_dia (
   id BIGSERIAL PRIMARY KEY,
   id_venta_dia BIGINT NOT NULL REFERENCES ventas_dia(id) ON DELETE CASCADE,
-  id_joya BIGINT NOT NULL,
+  id_joya BIGINT NOT NULL REFERENCES joyas(id),
   cantidad INTEGER NOT NULL,
   precio_unitario NUMERIC(10, 2) NOT NULL,
   subtotal NUMERIC(10, 2) NOT NULL
