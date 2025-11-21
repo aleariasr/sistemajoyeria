@@ -1,4 +1,4 @@
-/* Ticket Print Styles - Elegant and Modern Design */
+/* Ticket Print Styles - Monochromatic Thermal Printer Design */
 
 .ticket-print {
   width: 80mm;
@@ -28,6 +28,7 @@
   height: auto;
   max-height: 50mm;
   object-fit: contain;
+  filter: grayscale(100%) contrast(1.2);
 }
 
 .ticket-business-name {
@@ -43,12 +44,13 @@
   font-size: 14px;
   margin: 2px 0;
   font-weight: 600;
+  color: #000;
 }
 
 .ticket-business-info {
   font-size: 12px;
   margin: 2px 0;
-  color: #333;
+  color: #000;
 }
 
 /* Dividers */
@@ -58,7 +60,7 @@
 }
 
 .ticket-divider-thin {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #000;
   margin: 8px 0;
 }
 
@@ -80,7 +82,7 @@
 }
 
 .ticket-value {
-  color: #333;
+  color: #000;
   text-align: right;
 }
 
@@ -143,7 +145,7 @@
 }
 
 .ticket-items-table tbody tr {
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dotted #000;
 }
 
 .ticket-item-name {
@@ -154,7 +156,7 @@
 
 .ticket-item-code {
   font-size: 9px;
-  color: #666;
+  color: #000;
   font-style: italic;
 }
 
@@ -176,11 +178,11 @@
 }
 
 .ticket-total-value {
-  color: #333;
+  color: #000;
 }
 
 .ticket-descuento {
-  color: #d9534f;
+  color: #000;
   font-weight: 600;
 }
 
@@ -225,7 +227,7 @@
 }
 
 .ticket-notes-text {
-  color: #333;
+  color: #000;
   line-height: 1.4;
   word-wrap: break-word;
   margin: 0;
@@ -235,7 +237,7 @@
 .ticket-balance-section {
   margin: 10px 0;
   padding: 8px;
-  background: #f8f9fa;
+  border: 1px solid #000;
   border-radius: 4px;
 }
 
@@ -255,13 +257,13 @@
 
 .ticket-contact {
   margin: 4px 0;
-  color: #333;
+  color: #000;
 }
 
 .ticket-slogan {
   font-style: italic;
   margin: 6px 0 0 0;
-  color: #666;
+  color: #000;
   font-size: 10px;
 }
 
