@@ -6,9 +6,9 @@ const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'S
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
 const MONEDAS = ['CRC', 'USD'];
 
-// Constantes para tamaños de imagen
+// Constantes para validación y tamaño de imagen
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en bytes
 const IMAGE_PREVIEW_MAX_SIZE = '300px';
-const IMAGE_DETAIL_MAX_HEIGHT = '400px';
 
 function FormularioJoya() {
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ function FormularioJoya() {
       }
       
       // Validar tamaño (5MB máximo)
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > MAX_FILE_SIZE) {
         setErrores(['La imagen no debe superar 5MB']);
         return;
       }
