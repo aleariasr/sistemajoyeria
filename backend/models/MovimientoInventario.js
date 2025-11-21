@@ -1,127 +1,114 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 const { formatearFechaSQL } = require('../utils/timezone');
 
 class MovimientoInventario {
   // Crear nuevo movimiento
-  static crear(movimientoData) {
-    return new Promise((resolve, reject) => {
-      const {
-        id_joya, tipo_movimiento, cantidad, motivo,
-        usuario, stock_antes, stock_despues
-      } = movimientoData;
+  static async crear(movimientoData) {
+    const {
+      id_joya, tipo_movimiento, cantidad, motivo,
+      usuario, stock_antes, stock_despues
+    } = movimientoData;
 
-      // Usar fecha de Costa Rica para el registro
-      const fechaMovimiento = formatearFechaSQL();
+    // Usar fecha de Costa Rica para el registro
+    const fechaMovimiento = formatearFechaSQL();
 
-      const sql = `
-        INSERT INTO movimientos_inventario (
-          id_joya, tipo_movimiento, cantidad, motivo,
-          usuario, stock_antes, stock_despues, fecha_movimiento
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('movimientos_inventario')
+      .insert([{
+        id_joya,
+        tipo_movimiento,
+        cantidad,
+        motivo,
+        usuario: usuario || 'Sistema',
+        stock_antes,
+        stock_despues,
+        fecha_movimiento: fechaMovimiento
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [
-        id_joya, tipo_movimiento, cantidad, motivo,
-        usuario || 'Sistema', stock_antes, stock_despues, fechaMovimiento
-      ], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener todos los movimientos con filtros
-  static obtenerTodos(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const {
-        id_joya, tipo_movimiento, fecha_desde, fecha_hasta,
-        pagina = 1, por_pagina = 50
-      } = filtros;
+  static async obtenerTodos(filtros = {}) {
+    const {
+      id_joya, tipo_movimiento, fecha_desde, fecha_hasta,
+      pagina = 1, por_pagina = 50
+    } = filtros;
 
-      let sql = `
-        SELECT m.*, j.codigo, j.nombre
-        FROM movimientos_inventario m
-        LEFT JOIN joyas j ON m.id_joya = j.id
-        WHERE 1=1
-      `;
-      const params = [];
+    let query = supabase
+      .from('movimientos_inventario')
+      .select(`
+        *,
+        joyas!movimientos_inventario_id_joya_fkey (codigo, nombre)
+      `, { count: 'exact' });
 
-      // Filtro por joya
-      if (id_joya) {
-        sql += ' AND m.id_joya = ?';
-        params.push(id_joya);
-      }
+    // Filtro por joya
+    if (id_joya) {
+      query = query.eq('id_joya', id_joya);
+    }
 
-      // Filtro por tipo de movimiento
-      if (tipo_movimiento) {
-        sql += ' AND m.tipo_movimiento = ?';
-        params.push(tipo_movimiento);
-      }
+    // Filtro por tipo de movimiento
+    if (tipo_movimiento) {
+      query = query.eq('tipo_movimiento', tipo_movimiento);
+    }
 
-      // Filtro por fecha desde
-      if (fecha_desde) {
-        sql += ' AND m.fecha_movimiento >= ?';
-        params.push(fecha_desde);
-      }
+    // Filtro por fecha desde
+    if (fecha_desde) {
+      query = query.gte('fecha_movimiento', fecha_desde);
+    }
 
-      // Filtro por fecha hasta
-      if (fecha_hasta) {
-        sql += ' AND m.fecha_movimiento <= ?';
-        params.push(fecha_hasta);
-      }
+    // Filtro por fecha hasta
+    if (fecha_hasta) {
+      query = query.lte('fecha_movimiento', fecha_hasta);
+    }
 
-      // Contar total de registros
-      const countSql = sql.replace('SELECT m.*, j.codigo, j.nombre', 'SELECT COUNT(*) as total');
-      db.get(countSql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          const total = row.total;
-          const offset = (pagina - 1) * por_pagina;
+    // Ordenar y paginar
+    const offset = (pagina - 1) * por_pagina;
+    query = query.order('fecha_movimiento', { ascending: false })
+                 .range(offset, offset + por_pagina - 1);
 
-          // Obtener registros con paginación
-          sql += ' ORDER BY m.fecha_movimiento DESC LIMIT ? OFFSET ?';
-          params.push(por_pagina, offset);
+    const { data, error, count } = await query;
 
-          db.all(sql, params, (err, rows) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve({
-                movimientos: rows,
-                total: total,
-                pagina: parseInt(pagina),
-                por_pagina: parseInt(por_pagina),
-                total_paginas: Math.ceil(total / por_pagina)
-              });
-            }
-          });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    // Formatear datos para mantener compatibilidad
+    const movimientos = data.map(mov => ({
+      ...mov,
+      codigo: mov.joyas?.codigo,
+      nombre: mov.joyas?.nombre
+    }));
+
+    return {
+      movimientos,
+      total: count,
+      pagina: parseInt(pagina),
+      por_pagina: parseInt(por_pagina),
+      total_paginas: Math.ceil(count / por_pagina)
+    };
   }
 
   // Obtener movimientos de una joya específica
-  static obtenerPorJoya(id_joya, limite = 10) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT * FROM movimientos_inventario
-        WHERE id_joya = ?
-        ORDER BY fecha_movimiento DESC
-        LIMIT ?
-      `;
+  static async obtenerPorJoya(id_joya, limite = 10) {
+    const { data, error } = await supabase
+      .from('movimientos_inventario')
+      .select('*')
+      .eq('id_joya', id_joya)
+      .order('fecha_movimiento', { ascending: false })
+      .limit(limite);
 
-      db.all(sql, [id_joya, limite], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 }
 

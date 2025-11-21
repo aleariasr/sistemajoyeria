@@ -1,130 +1,132 @@
-const { dbDia } = require('../database-dia');
+const { supabase } = require('../supabase-db');
 const { formatearFechaSQL } = require('../utils/timezone');
 
 class VentaDia {
   // Crear nueva venta del día
-  static crear(ventaData) {
-    return new Promise((resolve, reject) => {
-      const {
-        id_usuario, metodo_pago, subtotal, descuento, total,
-        efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-        monto_efectivo, monto_tarjeta, monto_transferencia
-      } = ventaData;
+  static async crear(ventaData) {
+    const {
+      id_usuario, metodo_pago, subtotal, descuento, total,
+      efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
+      monto_efectivo, monto_tarjeta, monto_transferencia
+    } = ventaData;
 
-      // Usar fecha de Costa Rica para el registro
-      const fechaVenta = formatearFechaSQL();
+    // Usar fecha de Costa Rica para el registro
+    const fechaVenta = formatearFechaSQL();
 
-      const sql = `
-        INSERT INTO ventas_dia (
-          id_usuario, metodo_pago, subtotal, descuento, total,
-          efectivo_recibido, cambio, notas, tipo_venta, id_cliente,
-          monto_efectivo, monto_tarjeta, monto_transferencia, fecha_venta
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('ventas_dia')
+      .insert([{
+        id_usuario,
+        metodo_pago,
+        subtotal: subtotal || 0,
+        descuento: descuento || 0,
+        total,
+        efectivo_recibido: efectivo_recibido || null,
+        cambio: cambio || null,
+        notas: notas || null,
+        tipo_venta: tipo_venta || 'Contado',
+        id_cliente: id_cliente || null,
+        monto_efectivo: monto_efectivo || 0,
+        monto_tarjeta: monto_tarjeta || 0,
+        monto_transferencia: monto_transferencia || 0,
+        fecha_venta: fechaVenta
+      }])
+      .select()
+      .single();
 
-      dbDia.run(sql, [
-        id_usuario, metodo_pago, subtotal || 0, descuento || 0, total,
-        efectivo_recibido || null, cambio || null, notas || null,
-        tipo_venta || 'Contado', id_cliente || null,
-        monto_efectivo || 0, monto_tarjeta || 0, monto_transferencia || 0,
-        fechaVenta
-      ], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener todas las ventas del día
-  static obtenerTodas() {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT * FROM ventas_dia
-        ORDER BY fecha_venta DESC
-      `;
+  static async obtenerTodas() {
+    const { data, error } = await supabase
+      .from('ventas_dia')
+      .select('*')
+      .order('fecha_venta', { ascending: false });
 
-      dbDia.all(sql, [], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener una venta por ID
-  static obtenerPorId(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM ventas_dia WHERE id = ?';
-      dbDia.get(sql, [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('ventas_dia')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener resumen de ventas del día (solo ventas de contado)
-  static obtenerResumen() {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT 
-          COUNT(*) as total_ventas,
-          SUM(total) as total_ingresos,
-          SUM(CASE WHEN metodo_pago = 'Efectivo' THEN total ELSE 0 END) as total_efectivo,
-          SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END) as total_transferencia,
-          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN total ELSE 0 END) as total_tarjeta,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_efectivo ELSE 0 END) as total_efectivo_mixto,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_tarjeta ELSE 0 END) as total_tarjeta_mixto,
-          SUM(CASE WHEN metodo_pago = 'Mixto' THEN monto_transferencia ELSE 0 END) as total_transferencia_mixto,
-          COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as ventas_efectivo,
-          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as ventas_transferencia,
-          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as ventas_tarjeta,
-          COUNT(CASE WHEN metodo_pago = 'Mixto' THEN 1 END) as ventas_mixto
-        FROM ventas_dia
-        WHERE tipo_venta = 'Contado' OR tipo_venta IS NULL
-      `;
+  static async obtenerResumen() {
+    const { data, error } = await supabase
+      .from('ventas_dia')
+      .select('*')
+      .or('tipo_venta.eq.Contado,tipo_venta.is.null');
 
-      dbDia.get(sql, [], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          // Combinar totales de pagos simples y mixtos
-          const resultado = {
-            ...row,
-            total_efectivo_final: (row.total_efectivo || 0) + (row.total_efectivo_mixto || 0),
-            total_tarjeta_final: (row.total_tarjeta || 0) + (row.total_tarjeta_mixto || 0),
-            total_transferencia_final: (row.total_transferencia || 0) + (row.total_transferencia_mixto || 0)
-          };
-          resolve(resultado);
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    const resumen = {
+      total_ventas: data.length,
+      total_ingresos: data.reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      total_efectivo: data.filter(v => v.metodo_pago === 'Efectivo').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      total_transferencia: data.filter(v => v.metodo_pago === 'Transferencia').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      total_tarjeta: data.filter(v => v.metodo_pago === 'Tarjeta').reduce((sum, v) => sum + parseFloat(v.total || 0), 0),
+      total_efectivo_mixto: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_efectivo || 0), 0),
+      total_tarjeta_mixto: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_tarjeta || 0), 0),
+      total_transferencia_mixto: data.filter(v => v.metodo_pago === 'Mixto').reduce((sum, v) => sum + parseFloat(v.monto_transferencia || 0), 0),
+      ventas_efectivo: data.filter(v => v.metodo_pago === 'Efectivo').length,
+      ventas_transferencia: data.filter(v => v.metodo_pago === 'Transferencia').length,
+      ventas_tarjeta: data.filter(v => v.metodo_pago === 'Tarjeta').length,
+      ventas_mixto: data.filter(v => v.metodo_pago === 'Mixto').length
+    };
+
+    // Combinar totales de pagos simples y mixtos
+    resumen.total_efectivo_final = resumen.total_efectivo + resumen.total_efectivo_mixto;
+    resumen.total_tarjeta_final = resumen.total_tarjeta + resumen.total_tarjeta_mixto;
+    resumen.total_transferencia_final = resumen.total_transferencia + resumen.total_transferencia_mixto;
+
+    return resumen;
   }
 
   // Limpiar todas las ventas del día (después del cierre)
-  static limpiar() {
-    return new Promise((resolve, reject) => {
-      dbDia.run('DELETE FROM items_venta_dia', [], (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          dbDia.run('DELETE FROM ventas_dia', [], (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        }
-      });
-    });
+  static async limpiar() {
+    // Primero eliminar items
+    const { error: errorItems } = await supabase
+      .from('items_venta_dia')
+      .delete()
+      .neq('id', 0); // Eliminar todos
+
+    if (errorItems) {
+      throw errorItems;
+    }
+
+    // Luego eliminar ventas
+    const { error: errorVentas } = await supabase
+      .from('ventas_dia')
+      .delete()
+      .neq('id', 0); // Eliminar todos
+
+    if (errorVentas) {
+      throw errorVentas;
+    }
+
+    return true;
   }
 }
 

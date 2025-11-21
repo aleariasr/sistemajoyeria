@@ -1,175 +1,160 @@
-const { db } = require('../database');
+const { supabase } = require('../supabase-db');
 const { formatearFechaSQL } = require('../utils/timezone');
 
 class Abono {
   // Crear nuevo abono
-  static crear(abonoData) {
-    return new Promise((resolve, reject) => {
-      const { id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario } = abonoData;
+  static async crear(abonoData) {
+    const { id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario } = abonoData;
 
-      // Usar fecha de Costa Rica para el registro
-      const fechaAbono = formatearFechaSQL();
+    // Usar fecha de Costa Rica para el registro
+    const fechaAbono = formatearFechaSQL();
 
-      const sql = `
-        INSERT INTO abonos (id_cuenta_por_cobrar, monto, metodo_pago, notas, usuario, fecha_abono)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
+    const { data, error } = await supabase
+      .from('abonos')
+      .insert([{
+        id_cuenta_por_cobrar,
+        monto,
+        metodo_pago,
+        notas: notas || null,
+        usuario: usuario || null,
+        fecha_abono: fechaAbono
+      }])
+      .select()
+      .single();
 
-      db.run(sql, [id_cuenta_por_cobrar, monto, metodo_pago, notas || null, usuario || null, fechaAbono], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    return { id: data.id };
   }
 
   // Obtener todos los abonos de una cuenta
-  static obtenerPorCuenta(id_cuenta_por_cobrar) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT * FROM abonos 
-        WHERE id_cuenta_por_cobrar = ?
-        ORDER BY fecha_abono DESC
-      `;
-      db.all(sql, [id_cuenta_por_cobrar], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+  static async obtenerPorCuenta(id_cuenta_por_cobrar) {
+    const { data, error } = await supabase
+      .from('abonos')
+      .select('*')
+      .eq('id_cuenta_por_cobrar', id_cuenta_por_cobrar)
+      .order('fecha_abono', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener un abono por ID
-  static obtenerPorId(id) {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM abonos WHERE id = ?';
-      db.get(sql, [id], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('abonos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
   }
 
   // Obtener todos los abonos con información de cuenta y cliente
-  static obtenerTodos(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const { id_cliente, fecha_desde, fecha_hasta, pagina = 1, por_pagina = 50 } = filtros;
+  static async obtenerTodos(filtros = {}) {
+    const { id_cliente, fecha_desde, fecha_hasta, pagina = 1, por_pagina = 50 } = filtros;
 
-      let sql = `
-        SELECT 
-          a.*,
-          c.id_cliente,
-          c.monto_total as monto_cuenta,
-          c.saldo_pendiente,
-          cl.nombre as nombre_cliente,
-          cl.cedula as cedula_cliente,
-          v.id as id_venta
-        FROM abonos a
-        LEFT JOIN cuentas_por_cobrar c ON a.id_cuenta_por_cobrar = c.id
-        LEFT JOIN clientes cl ON c.id_cliente = cl.id
-        LEFT JOIN ventas v ON c.id_venta = v.id
-        WHERE 1=1
-      `;
-      const params = [];
+    let query = supabase
+      .from('abonos')
+      .select(`
+        *,
+        cuentas_por_cobrar!abonos_id_cuenta_por_cobrar_fkey (
+          id_cliente,
+          monto_total,
+          saldo_pendiente,
+          id_venta,
+          clientes!cuentas_por_cobrar_id_cliente_fkey (nombre, cedula)
+        )
+      `, { count: 'exact' });
 
-      // Filtro por cliente
-      if (id_cliente) {
-        sql += ' AND c.id_cliente = ?';
-        params.push(id_cliente);
-      }
+    // Filtro por cliente
+    if (id_cliente) {
+      query = query.eq('cuentas_por_cobrar.id_cliente', id_cliente);
+    }
 
-      // Filtro por fecha desde
-      if (fecha_desde) {
-        sql += ' AND a.fecha_abono >= ?';
-        params.push(fecha_desde);
-      }
+    // Filtro por fecha desde
+    if (fecha_desde) {
+      query = query.gte('fecha_abono', fecha_desde);
+    }
 
-      // Filtro por fecha hasta
-      if (fecha_hasta) {
-        sql += ' AND a.fecha_abono <= ?';
-        params.push(fecha_hasta);
-      }
+    // Filtro por fecha hasta
+    if (fecha_hasta) {
+      query = query.lte('fecha_abono', fecha_hasta);
+    }
 
-      // Contar total de registros
-      const countSql = sql.replace(
-        /SELECT\s+a\.\*,[\s\S]*?FROM/i,
-        'SELECT COUNT(*) as total FROM'
-      );
-      db.get(countSql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          const total = row ? row.total : 0;
-          const offset = (pagina - 1) * por_pagina;
+    // Ordenar y paginar
+    const offset = (pagina - 1) * por_pagina;
+    query = query.order('fecha_abono', { ascending: false })
+                 .range(offset, offset + por_pagina - 1);
 
-          // Obtener registros con paginación
-          sql += ' ORDER BY a.fecha_abono DESC LIMIT ? OFFSET ?';
-          params.push(por_pagina, offset);
+    const { data, error, count } = await query;
 
-          db.all(sql, params, (err, rows) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve({
-                abonos: rows,
-                total: total,
-                pagina: parseInt(pagina),
-                por_pagina: parseInt(por_pagina),
-                total_paginas: Math.ceil(total / por_pagina)
-              });
-            }
-          });
-        }
-      });
-    });
+    if (error) {
+      throw error;
+    }
+
+    // Formatear datos para mantener compatibilidad
+    const abonos = data.map(abono => ({
+      ...abono,
+      id_cliente: abono.cuentas_por_cobrar?.id_cliente,
+      monto_cuenta: abono.cuentas_por_cobrar?.monto_total,
+      saldo_pendiente: abono.cuentas_por_cobrar?.saldo_pendiente,
+      id_venta: abono.cuentas_por_cobrar?.id_venta,
+      nombre_cliente: abono.cuentas_por_cobrar?.clientes?.nombre,
+      cedula_cliente: abono.cuentas_por_cobrar?.clientes?.cedula
+    }));
+
+    return {
+      abonos,
+      total: count || 0,
+      pagina: parseInt(pagina),
+      por_pagina: parseInt(por_pagina),
+      total_paginas: Math.ceil((count || 0) / por_pagina)
+    };
   }
 
   // Obtener resumen de abonos por periodo
-  static obtenerResumen(filtros = {}) {
-    return new Promise((resolve, reject) => {
-      const { fecha_desde, fecha_hasta } = filtros;
+  static async obtenerResumen(filtros = {}) {
+    const { fecha_desde, fecha_hasta } = filtros;
 
-      let sql = `
-        SELECT 
-          COUNT(*) as total_abonos,
-          SUM(monto) as monto_total_abonos,
-          AVG(monto) as promedio_abono,
-          COUNT(CASE WHEN metodo_pago = 'Efectivo' THEN 1 END) as abonos_efectivo,
-          COUNT(CASE WHEN metodo_pago = 'Tarjeta' THEN 1 END) as abonos_tarjeta,
-          COUNT(CASE WHEN metodo_pago = 'Transferencia' THEN 1 END) as abonos_transferencia,
-          SUM(CASE WHEN metodo_pago = 'Efectivo' THEN monto ELSE 0 END) as monto_abonos_efectivo,
-          SUM(CASE WHEN metodo_pago = 'Tarjeta' THEN monto ELSE 0 END) as monto_abonos_tarjeta,
-          SUM(CASE WHEN metodo_pago = 'Transferencia' THEN monto ELSE 0 END) as monto_abonos_transferencia
-        FROM abonos
-        WHERE 1=1
-      `;
-      const params = [];
+    let query = supabase.from('abonos').select('*');
 
-      if (fecha_desde) {
-        sql += ' AND fecha_abono >= ?';
-        params.push(fecha_desde);
-      }
+    if (fecha_desde) {
+      query = query.gte('fecha_abono', fecha_desde);
+    }
 
-      if (fecha_hasta) {
-        sql += ' AND fecha_abono <= ?';
-        params.push(fecha_hasta);
-      }
+    if (fecha_hasta) {
+      query = query.lte('fecha_abono', fecha_hasta);
+    }
 
-      db.get(sql, params, (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    const resumen = {
+      total_abonos: data.length,
+      monto_total_abonos: data.reduce((sum, a) => sum + parseFloat(a.monto || 0), 0),
+      promedio_abono: data.length > 0 ? data.reduce((sum, a) => sum + parseFloat(a.monto || 0), 0) / data.length : 0,
+      abonos_efectivo: data.filter(a => a.metodo_pago === 'Efectivo').length,
+      abonos_tarjeta: data.filter(a => a.metodo_pago === 'Tarjeta').length,
+      abonos_transferencia: data.filter(a => a.metodo_pago === 'Transferencia').length,
+      monto_abonos_efectivo: data.filter(a => a.metodo_pago === 'Efectivo').reduce((sum, a) => sum + parseFloat(a.monto || 0), 0),
+      monto_abonos_tarjeta: data.filter(a => a.metodo_pago === 'Tarjeta').reduce((sum, a) => sum + parseFloat(a.monto || 0), 0),
+      monto_abonos_transferencia: data.filter(a => a.metodo_pago === 'Transferencia').reduce((sum, a) => sum + parseFloat(a.monto || 0), 0)
+    };
+
+    return resumen;
   }
 }
 
