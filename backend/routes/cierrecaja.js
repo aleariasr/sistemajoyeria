@@ -237,7 +237,7 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       total_ingresos: ventasTransferidas.reduce((sum, v) => sum + v.total, 0),
       ventas_transferidas: ventasTransferidas,
       total_abonos_cerrados: resultadoAbonos.count,
-      monto_abonos_cerrados: resultadoAbonos.abonos?.reduce((sum, a) => sum + parseFloat(a.monto || 0), 0) || 0
+      monto_abonos_cerrados: resultadoAbonos.abonos?.reduce((sum, a) => sum + (parseFloat(a.monto) || 0), 0) || 0
     };
 
     res.json({

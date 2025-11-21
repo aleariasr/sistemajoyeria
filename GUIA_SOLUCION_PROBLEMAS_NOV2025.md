@@ -7,7 +7,7 @@ Este documento describe las soluciones a tres problemas identificados en el sist
 | Problema | Estado | Solución |
 |----------|--------|----------|
 | 1. Botón de impresión no funciona | ✅ RESUELTO | Actualizar API de react-to-print v2 a v3 |
-| 2. Productos no aparecen en detalle de ventas | ⚠️ INVESTIGAR | Verificar foreign key constraint |
+| 2. Productos no aparecen en detalle de ventas | ✅ RESUELTO | Verificar y corregir foreign key constraint |
 | 3. Abonos aparecen después de cierre de caja | ✅ RESUELTO | Agregar campo `cerrado` a tabla abonos |
 
 ---
