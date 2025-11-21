@@ -1,6 +1,21 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+// Detectar automáticamente la URL del backend basándose en el host actual
+// Esto permite acceso desde múltiples dispositivos en la red local
+const getApiUrl = () => {
+  // Si hay una variable de entorno configurada, usarla
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // De lo contrario, construir la URL usando el mismo host que el frontend
+  // pero con el puerto del backend (3001)
+  const protocol = window.location.protocol; // http: o https:
+  const hostname = window.location.hostname; // localhost, 192.168.1.100, etc.
+  return `${protocol}//${hostname}:3001/api`;
+};
+
+const API_URL = getApiUrl();
 
 // Crear instancia de axios con la URL base
 const api = axios.create({

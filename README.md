@@ -41,6 +41,7 @@ cd backend
 npm install
 npm start
 # Servidor en http://localhost:3001
+# También muestra la IP de red local para acceso desde otros dispositivos
 
 # Frontend (otra terminal)
 cd frontend
@@ -48,6 +49,12 @@ npm install
 npm start
 # App en http://localhost:3000
 ```
+
+**Para acceder desde otros dispositivos (celular, tablet, otra PC):**
+1. Ambos dispositivos deben estar en la misma red WiFi
+2. El backend mostrará la IP de red al iniciar (ej: `http://192.168.1.100:3001`)
+3. Accede desde el otro dispositivo usando esa IP con puerto 3000 (ej: `http://192.168.1.100:3000`)
+4. El sistema detectará automáticamente la API correcta
 
 ### 3. Login
 
@@ -64,6 +71,12 @@ Incluye:
 - Preparación para e-commerce
 - Solución de problemas
 - Tests y verificación
+
+**Guía de acceso multi-dispositivo:** `GUIA_MULTI_DISPOSITIVO.md`
+- Configuración paso a paso para acceso desde celulares y tablets
+- Solución de problemas de conexión
+- Configuración de firewall
+- Verificación y testing
 
 **Otros documentos:**
 - `backend/AUDITORIA_COMPLETA.md` - Revisión de código completa
