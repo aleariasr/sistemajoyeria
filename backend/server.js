@@ -72,7 +72,8 @@ app.use(session({
     secure: false, // Cambiar a true si se usa HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    sameSite: 'lax' // Permite cookies en navegación normal, importante para móviles
+    sameSite: 'lax' // 'lax' es necesario para móviles que acceden via IP (192.168.x.x)
+                     // 'strict' bloquearía el login desde dispositivos móviles
   }
 }));
 
