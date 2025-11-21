@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
+import BarcodeModal from './BarcodeModal';
 
 // Constantes para thumbnail de imagen
 const THUMBNAIL_SIZE = '50px';
@@ -28,6 +29,10 @@ function ListadoJoyas() {
   
   // Listas para filtros
   const [categorias, setCategorias] = useState([]);
+  
+  // Estado para modal de código de barras
+  const [joyaSeleccionada, setJoyaSeleccionada] = useState(null);
+  const [mostrarModalBarcode, setMostrarModalBarcode] = useState(false);
 
   useEffect(() => {
     cargarCategorias();
@@ -125,6 +130,16 @@ function ListadoJoyas() {
     if (joya.stock_actual === 0) return 'stock-agotado';
     if (joya.stock_actual <= joya.stock_minimo) return 'stock-bajo';
     return '';
+  };
+
+  const handleOpenBarcodeModal = (joya) => {
+    setJoyaSeleccionada(joya);
+    setMostrarModalBarcode(true);
+  };
+
+  const handleCloseBarcodeModal = () => {
+    setMostrarModalBarcode(false);
+    setJoyaSeleccionada(null);
   };
 
   return (
@@ -285,7 +300,27 @@ function ListadoJoyas() {
                           </div>
                         )}
                       </td>
-                      <td><strong>{joya.codigo}</strong></td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <strong>{joya.codigo}</strong>
+                          <button
+                            className="btn btn-icon btn-barcode"
+                            title="Generar Código de Barras"
+                            onClick={() => handleOpenBarcodeModal(joya)}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '0.85rem',
+                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                              border: 'none',
+                              color: 'white',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            🏷️
+                          </button>
+                        </div>
+                      </td>
                       <td>{joya.nombre}</td>
                       <td>{joya.categoria}</td>
                       <td>{formatearMoneda(joya.precio_venta, joya.moneda)}</td>
@@ -350,6 +385,14 @@ function ListadoJoyas() {
           </>
         )}
       </div>
+      
+      {/* Modal de código de barras */}
+      {mostrarModalBarcode && joyaSeleccionada && (
+        <BarcodeModal 
+          joya={joyaSeleccionada} 
+          onClose={handleCloseBarcodeModal}
+        />
+      )}
     </div>
   );
 }

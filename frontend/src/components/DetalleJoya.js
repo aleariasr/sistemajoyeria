@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { obtenerJoya } from '../services/api';
+import BarcodeModal from './BarcodeModal';
 
 // Constante para tamaño máximo de imagen en detalle
 const IMAGE_DETAIL_MAX_HEIGHT = '400px';
@@ -12,6 +13,7 @@ function DetalleJoya() {
   const [movimientos, setMovimientos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mostrarModalBarcode, setMostrarModalBarcode] = useState(false);
 
   const cargarJoya = useCallback(async () => {
     try {
@@ -89,6 +91,17 @@ function DetalleJoya() {
             <p>Código: {joya.codigo}</p>
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              className="btn btn-info" 
+              onClick={() => setMostrarModalBarcode(true)}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                color: 'white'
+              }}
+            >
+              🏷️ Generar Código de Barras
+            </button>
             <button className="btn btn-secondary" onClick={() => navigate('/')}>
               ← Volver
             </button>
@@ -265,6 +278,14 @@ function DetalleJoya() {
             </table>
           </div>
         </div>
+      )}
+      
+      {/* Modal de código de barras */}
+      {mostrarModalBarcode && joya && (
+        <BarcodeModal 
+          joya={joya} 
+          onClose={() => setMostrarModalBarcode(false)}
+        />
       )}
     </div>
   );
