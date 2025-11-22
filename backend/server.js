@@ -19,12 +19,14 @@ const corsOptions = {
     
     // Lista de orígenes permitidos
     const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,  // IPs locales
-      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$/,  // Redes privadas
-      /^http:\/\/172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}:\d{1,5}$/  // Redes privadas
-    ];
+  'http://localhost',
+  'http://localhost/',
+  'http://localhost:80',
+  'http://127.0.0.1',
+  'http://127.0.0.1:80',
+  /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
+  /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
+];
     
     // En producción, agregar dominio real
     if (process.env.FRONTEND_URL) {
