@@ -3,7 +3,16 @@ import axios from 'axios';
 // Detectar automáticamente la URL del backend basándose en el host actual
 // Esto permite acceso desde múltiples dispositivos en la red local
 const getApiUrl = () => {
-  return "/api"; // Nginx manda esto al backend automáticamente
+  // Si hay variable de entorno, úsala
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  // Usar IP o hostname del frontend y agregar :3001/api
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+
+  return `${protocol}//${hostname}:3001/api`;
 };
 
 const API_URL = getApiUrl();
