@@ -10,6 +10,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+const RedisStore = require('connect-redis').default;
+const redis = require('redis').createClient({
+  url: process.env.REDIS_URL
+});
+app.use(session({
+  store: new RedisStore({ client: redis }),
+  secret: process.env.SESSION_SECRET,
+  ...
+}));
+
 // Middleware
 // CORS configurado para múltiples dispositivos
 const corsOptions = {
@@ -22,6 +32,7 @@ const corsOptions = {
   'http://localhost',
   'http://localhost/',
   'http://localhost:80',
+  'backend-production-cdd5.up.railway.app'
   'http://127.0.0.1',
   'http://127.0.0.1:80',
   /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
