@@ -10,51 +10,90 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-const RedisStore = require('connect-redis').default;
-const redis = require('redis').createClient({
-  url: process.env.REDIS_URL
-});
-app.use(session({
-  store: new RedisStore({ client: redis }),
-  secret: process.env.SESSION_SECRET,
-  ...
-}));
+/* ============================================================
+   REDIS SOLO EN PRODUCCIÓN (NO ROMPE NADA LOCAL)
+   ============================================================ */
+let RedisStore = null;
+let redis = null;
 
-// Middleware
-// CORS configurado para múltiples dispositivos
+if (NODE_ENV === 'production' && process.env.REDIS_URL) {
+  try {
+    RedisStore = require('connect-redis').default;
+    redis = require('redis').createClient({
+      url: process.env.REDIS_URL
+    });
+
+    // Conectar cliente Redis
+    redis.connect().catch(console.error);
+
+    app.use(session({
+      store: new RedisStore({ client: redis }),
+      secret: process.env.SESSION_SECRET || 'joyeria-secret-key-2024',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: true,
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: 'lax'
+      }
+    }));
+
+    console.log("🟢 Redis activado en producción");
+
+  } catch (err) {
+    console.error("❌ Error inicializando Redis:", err);
+  }
+} else {
+  /* ============================================================
+     SESIONES NORMALES (AMBIENTE LOCAL / SIN REDIS)
+     ============================================================ */
+  app.use(session({
+    secret: 'joyeria-secret-key-2024',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
+    }
+  }));
+
+  console.log("🟡 Sesiones locales activas (sin Redis)");
+}
+
+
+/* ============================================================
+   CORS — AHORA SIN ERRORES DE SINTAXIS
+   ============================================================ */
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    
     if (!origin) return callback(null, true);
-    
-    // Lista de orígenes permitidos
+
     const allowedOrigins = [
-  'http://localhost',
-  'http://localhost/',
-  'http://localhost:80',
-  'backend-production-cdd5.up.railway.app'
-  'http://127.0.0.1',
-  'http://127.0.0.1:80',
-  /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
-  /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
-];
-    
-    // En producción, agregar dominio real
+      'http://localhost',
+      'http://localhost/',
+      'http://localhost:80',
+      'http://127.0.0.1',
+      'http://127.0.0.1:80',
+      'https://backend-production-cdd5.up.railway.app',
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
+    ];
+
+    // Agregar frontend real en producción
     if (process.env.FRONTEND_URL) {
       allowedOrigins.push(process.env.FRONTEND_URL);
     }
-    
-    // Verificar si el origen está permitido
+
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return origin === allowedOrigin;
-      }
-      if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
+      if (typeof allowedOrigin === 'string') return origin === allowedOrigin;
+      if (allowedOrigin instanceof RegExp) return allowedOrigin.test(origin);
       return false;
     });
-    
+
     if (isAllowed || NODE_ENV === 'development') {
       callback(null, true);
     } else {
@@ -69,7 +108,10 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
-// Log de peticiones en desarrollo
+
+/* ============================================================
+   LOGS SOLO EN DESARROLLO
+   ============================================================ */
 if (NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -77,21 +119,10 @@ if (NODE_ENV === 'development') {
   });
 }
 
-// Configurar sesiones
-app.use(session({
-  secret: 'joyeria-secret-key-2024',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Cambiar a true si se usa HTTPS
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    sameSite: 'lax' // 'lax' es necesario para móviles que acceden via IP (192.168.x.x)
-                     // 'strict' bloquearía el login desde dispositivos móviles
-  }
-}));
 
-// Rutas
+/* ============================================================
+   RUTAS
+   ============================================================ */
 const joyasRoutes = require('./routes/joyas');
 const movimientosRoutes = require('./routes/movimientos');
 const reportesRoutes = require('./routes/reportes');
@@ -110,19 +141,25 @@ app.use('/api/cierrecaja', cierreCajaRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/cuentas-por-cobrar', cuentasPorCobrarRoutes);
 
-// Ruta de salud del servidor
+
+/* ============================================================
+   HEALTHCHECK
+   ============================================================ */
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
     database: 'Supabase (PostgreSQL)'
   });
 });
 
-// Ruta raíz
+
+/* ============================================================
+   HOME
+   ============================================================ */
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     mensaje: 'API del Sistema de Inventario de Joyería',
     version: '2.0.0',
     database: 'Supabase + Cloudinary',
@@ -136,31 +173,39 @@ app.get('/', (req, res) => {
   });
 });
 
-// Manejo de rutas no encontradas
+
+/* ============================================================
+   404
+   ============================================================ */
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Ruta no encontrada',
-    path: req.path 
+    path: req.path
   });
 });
 
-// Manejo de errores
+
+/* ============================================================
+   MANEJO DE ERRORES
+   ============================================================ */
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
-  
-  // Manejo de errores de JSON inválido
+
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ error: 'JSON inválido en la petición' });
   }
-  
-  res.status(err.status || 500).json({ 
-    error: NODE_ENV === 'production' 
-      ? 'Error interno del servidor' 
-      : err.message 
+
+  res.status(err.status || 500).json({
+    error: NODE_ENV === 'production'
+      ? 'Error interno del servidor'
+      : err.message
   });
 });
 
-// Manejo de cierre graceful
+
+/* ============================================================
+   CIERRA GRACEFUL
+   ============================================================ */
 process.on('SIGTERM', () => {
   console.log('SIGTERM recibido, cerrando servidor...');
   server.close(() => {
@@ -169,8 +214,12 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Inicializar base de datos y servidor
+
+/* ============================================================
+   INICIAR SERVIDOR + BASE DE DATOS
+   ============================================================ */
 let server;
+
 console.log('🚀 Iniciando Sistema de Joyería v2.0...');
 console.log('📊 Base de datos: Supabase (PostgreSQL)');
 console.log('🖼️  Imágenes: Cloudinary');
@@ -179,49 +228,16 @@ console.log('🛒 E-commerce Ready: Sí');
 Promise.all([initDatabase(), initDatabaseDia()])
   .then(() => crearUsuariosIniciales())
   .then(() => {
-    // Obtener las IPs de red local para mostrar cómo acceder desde otros dispositivos
-    const networkInterfaces = os.networkInterfaces();
-    const localIPs = [];
-    
-    Object.keys(networkInterfaces).forEach((interfaceName) => {
-      networkInterfaces[interfaceName].forEach((iface) => {
-        // Solo IPs IPv4 y no loopback
-        if (iface.family === 'IPv4' && !iface.internal) {
-          localIPs.push(iface.address);
-        }
-      });
-    });
 
     server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n${'='.repeat(60)}`);
-      console.log(`🚀 Servidor corriendo en:`);
-      console.log(`   - Local: http://localhost:${PORT}`);
-      if (localIPs.length > 0) {
-        localIPs.forEach(ip => {
-          console.log(`   - Red local: http://${ip}:${PORT}`);
-        });
-      }
+      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
       console.log(`📊 Ambiente: ${NODE_ENV}`);
       console.log(`✅ Conexión a Supabase establecida`);
-      console.log(`🔐 Usuarios iniciales creados (si no existían)`);
       console.log(`${'='.repeat(60)}\n`);
-      console.log('📝 Importante:');
-      console.log('   - Ejecuta el script SQL en Supabase si es la primera vez');
-      console.log('   - Archivo: backend/supabase-migration.sql');
-      console.log(`   - URL: https://mvujkbpbqyihixkbzthe.supabase.co`);
-      if (localIPs.length > 0) {
-        console.log('\n📱 Acceso desde otros dispositivos:');
-        console.log('   1. Asegúrate que estén en la misma red WiFi');
-        console.log(`   2. En el frontend, accede a: http://${localIPs[0]}:3000`);
-        console.log('   3. El sistema detectará automáticamente la API correcta\n');
-      }
     });
   })
   .catch((err) => {
     console.error('❌ Error al inicializar la aplicación:', err);
-    console.error('\n⚠️  Posibles soluciones:');
-    console.error('   1. Verifica que hayas ejecutado el SQL de migración en Supabase');
-    console.error('   2. Verifica las credenciales de Supabase en .env');
-    console.error('   3. Verifica tu conexión a internet');
     process.exit(1);
   });
