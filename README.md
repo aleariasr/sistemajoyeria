@@ -1,191 +1,156 @@
 # Sistema de Inventario de Joyería 💎
 
-Sistema completo de gestión para joyerías con base de datos en la nube, soporte de imágenes y preparado para e-commerce.
+Sistema completo de gestión para joyerías con base de datos PostgreSQL en la nube.
 
-## ✨ Versión 2.0 - Actualización Mayor
+## 🎯 Características Principales
 
-**🎯 Migrado a Supabase + Cloudinary**
-- Base de datos PostgreSQL en la nube (Supabase)
-- Imágenes de productos en Cloudinary
-- Multi-dispositivo simultáneo
-- Preparado para tienda online
+- 🔐 **Autenticación segura**: Login con roles (Administrador/Dependiente)
+- 💎 **Gestión de inventario**: CRUD completo con imágenes
+- 💰 **Sistema de ventas**: Múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto)
+- 💳 **Ventas a crédito**: Gestión de cuentas por cobrar y abonos
+- 📊 **Cierre de caja**: Reportes y cierre diario
+- 👥 **Gestión de clientes**: Base de datos de clientes
+- 📱 **Multi-dispositivo**: Acceso desde cualquier dispositivo en la red
 
-## 📋 Características Principales
+## 🚀 Instalación Local
 
-- 🔐 **Autenticación segura**: Sistema de login con roles (Administrador y Dependiente)
-- 💎 **Gestión de joyas**: CRUD completo con soporte de imágenes
-- 🖼️ **Imágenes de productos**: Subida y gestión de fotos (Cloudinary)
-- 🔍 **Búsqueda avanzada**: Filtros por categoría, precio, stock y estado
-- 📦 **Control de inventario**: Registro automático y manual de movimientos
-- 💰 **Sistema de ventas**: Múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto, crédito)
-- 🎫 **Impresión de tickets**: Tickets profesionales para todas las ventas
-- 🏷️ **Códigos de barras**: Generación e impresión de etiquetas con códigos de barras
-- 💳 **Cuentas por cobrar**: Gestión de créditos con registro de abonos
-- 📊 **Reportes y cierre de caja**: Reportes financieros completos
-- ⚠️ **Alertas de stock**: Notificaciones para productos con stock bajo
-- 📱 **Multi-dispositivo**: Usa el sistema desde varios dispositivos simultáneamente
-- 🛒 **E-commerce ready**: Preparado para tienda online con reservas de inventario
-
-## 🚀 Inicio Rápido
-
-### 1. Configurar Base de Datos
-
-Ejecuta el SQL en Supabase (una sola vez):
-- Abre: https://mvujkbpbqyihixkbzthe.supabase.co
-- Ve a SQL Editor
-- Ejecuta: `backend/supabase-migration.sql`
-
-### 2. Instalar y Ejecutar
-
+### 1. Clonar el repositorio
 ```bash
-# Backend
+git clone https://github.com/aleariasr/sistemajoyeria.git
+cd sistemajoyeria
+```
+
+### 2. Instalar Backend
+```bash
 cd backend
 npm install
+cp .env.example .env
+# Editar .env si es necesario
 npm start
-# Servidor en http://localhost:3001
-# También muestra la IP de red local para acceso desde otros dispositivos
+```
 
-# Frontend (otra terminal)
+El backend correrá en `http://localhost:3001`
+
+### 3. Instalar Frontend
+```bash
 cd frontend
 npm install
 npm start
-# App en http://localhost:3000
 ```
 
-**Para acceder desde otros dispositivos (celular, tablet, otra PC):**
-1. Ambos dispositivos deben estar en la misma red WiFi
-2. El backend mostrará la IP de red al iniciar (ej: `http://192.168.1.100:3001`)
-3. Accede desde el otro dispositivo usando esa IP con puerto 3000 (ej: `http://192.168.1.100:3000`)
-4. El sistema detectará automáticamente la API correcta
+El frontend correrá en `http://localhost:3000`
 
-### 3. Login
-
+### 4. Login por Defecto
 - **Admin:** `admin` / `admin123`
 - **Dependiente:** `dependiente` / `dependiente123`
 
-## 📚 Documentación Completa
+## 🌐 Deploy en Railway
 
-**Guía principal:** `backend/GUIA_COMPLETA.md`
+### Configuración Rápida
 
-Incluye:
-- Setup detallado paso a paso
-- Configuración multi-dispositivo
-- Preparación para e-commerce
-- Solución de problemas
-- Tests y verificación
-
-**Guía de acceso multi-dispositivo:** `GUIA_MULTI_DISPOSITIVO.md`
-- Configuración paso a paso para acceso desde celulares y tablets
-- Solución de problemas de conexión
-- Configuración de firewall
-- Verificación y testing
-
-**Guía de impresión:** `GUIA_IMPRESION.md`
-- Sistema de impresión de tickets de venta
-- Generación de códigos de barras
-- Configuración y solución de problemas
-- Compatible con Windows, macOS, Linux y móviles
-
-**Otros documentos:**
-- `backend/AUDITORIA_COMPLETA.md` - Revisión de código completa
-- `backend/supabase-migration.sql` - Schema de base de datos
-- `CHANGELOG.md` - Historial de cambios
-
-## 🗄️ Estructura del Sistema
-
-### Base de Datos (Supabase/PostgreSQL)
-
-**Tablas Principales:**
-- `usuarios` - Control de acceso
-- `joyas` - Inventario con imágenes
-- `clientes` - Base de clientes
-- `ventas` - Transacciones
-- `items_venta` - Detalle de ventas
-- `cuentas_por_cobrar` - Créditos
-- `abonos` - Pagos a créditos
-- `movimientos_inventario` - Historial
-
-**Tablas E-commerce:**
-- `reservas_inventario` - Carritos online
-- `auditoria_inventario` - Trazabilidad completa
-- `configuracion_tienda` - Parámetros globales
-
-### Backend (Node.js + Express)
-
-- 10 modelos completamente migrados a Supabase
-- 8 rutas API RESTful
-- Middleware de autenticación
-- Subida de imágenes con Cloudinary
-- Control de concurrencia
-
-### Frontend (React)
-
-- Interfaz responsive
-- Gestión completa de inventario
-- Sistema de ventas
-- Reportes y análisis
-- Multi-usuario
-
-## 📝 API Endpoints
-
-Ver documentación completa en `backend/GUIA_COMPLETA.md`
-
-Principales endpoints:
-- `/api/auth/*` - Autenticación y usuarios
-- `/api/joyas/*` - Gestión de inventario (con soporte de imágenes)
-- `/api/ventas/*` - Sistema de ventas
-- `/api/clientes/*` - Gestión de clientes
-- `/api/cuentas-por-cobrar/*` - Créditos y abonos
-- `/api/movimientos/*` - Historial de inventario
-- `/api/reportes/*` - Reportes y análisis
-- `/api/cierrecaja/*` - Cierre de caja
-
-## 🛠️ Tecnologías
-
-**Backend:**
-- Node.js + Express
-- Supabase (PostgreSQL)
-- Cloudinary (imágenes)
-- bcryptjs (seguridad)
-- Multer (uploads)
-
-**Frontend:**
-- React 18
-- React Router
-- Axios
-- CSS moderno
-
-## 🧪 Testing
+1. Conecta tu repositorio a Railway
+2. Configura las siguientes variables de entorno:
 
 ```bash
-cd backend/tests
-node comprehensive-test.js
+# Backend Service
+PORT=3001
+NODE_ENV=production
+HOST=0.0.0.0
+
+# Base de datos Supabase
+SUPABASE_URL=https://mvujkbpbqyihixkbzthe.supabase.co
+SUPABASE_KEY=tu_clave_de_supabase
+
+# Cloudinary para imágenes
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
+
+# Sesión (genera una clave aleatoria)
+SESSION_SECRET=tu_clave_secreta_aleatoria
+
+# CORS - URL del frontend (si separado)
+FRONTEND_URL=https://tu-frontend.railway.app
 ```
+
+3. Railway detectará automáticamente el `Procfile` y ejecutará el backend
+
+### Frontend en Railway (Opcional)
+
+Si quieres deployar el frontend por separado:
+
+```bash
+# Variables de entorno del frontend
+REACT_APP_API_URL=https://tu-backend.railway.app/api
+```
+
+## 📁 Estructura del Proyecto
+
+```
+sistemajoyeria/
+├── backend/              # API Node.js + Express
+│   ├── models/          # Modelos de datos (10 archivos)
+│   ├── routes/          # Rutas API (8 archivos)
+│   ├── middleware/      # Middleware de autenticación
+│   ├── utils/           # Utilidades y validaciones
+│   ├── server.js        # Servidor principal
+│   └── supabase-db.js   # Configuración de base de datos
+├── frontend/            # Aplicación React
+│   ├── src/
+│   │   ├── components/  # Componentes React
+│   │   ├── services/    # Servicios API
+│   │   └── context/     # Context de autenticación
+│   └── public/
+├── Procfile            # Configuración Railway
+└── README.md
+```
+
+## 🗄️ Base de Datos
+
+El sistema usa PostgreSQL en Supabase. El schema completo está en:
+- `backend/supabase-migration.sql`
+
+### Tablas Principales:
+- `usuarios` - Gestión de usuarios
+- `joyas` - Inventario de productos
+- `clientes` - Base de clientes
+- `ventas` / `ventas_dia` - Transacciones
+- `items_venta` / `items_venta_dia` - Detalles de ventas
+- `cuentas_por_cobrar` - Créditos
+- `abonos` - Pagos de créditos
+- `movimientos_inventario` - Historial
 
 ## 🔒 Seguridad
 
 - ✅ Autenticación con sesiones
 - ✅ Contraseñas encriptadas (bcrypt)
 - ✅ Control de acceso por roles
-- ✅ Validaciones en backend y frontend
-- ✅ Manejo seguro de imágenes
-- ✅ Control de concurrencia en inventario
-- ✅ Auditoría completa de cambios
-- ✅ Backend sin vulnerabilidades conocidas
+- ✅ Validaciones de datos
+- ✅ CORS configurado
 
-**Nota:** El frontend tiene vulnerabilidades conocidas en dependencias de desarrollo que **NO afectan** la producción. Ver `SECURITY.md` para detalles.
+## 📚 Documentación Adicional
 
-## 📄 Licencia
+- `CHANGELOG.md` - Historial de cambios
+- `GUIA_IMPRESION.md` - Sistema de tickets
+- `GUIA_MULTI_DISPOSITIVO.md` - Configuración de red
+- `backend/GUIA_COMPLETA.md` - Guía técnica detallada
 
-Este proyecto es privado y de uso interno.
+## 🆘 Solución de Problemas
 
-## 🤝 Contribuir
+### Backend no se conecta a Supabase
+- Verificar variables de entorno `SUPABASE_URL` y `SUPABASE_KEY`
+- Asegurar que el schema SQL fue ejecutado
 
-Ver `CHANGELOG.md` para historial de cambios.
+### Frontend no se conecta al backend
+- Verificar que el backend esté corriendo
+- En Railway, configurar `REACT_APP_API_URL` correctamente
+
+### Errores de CORS
+- En producción, configurar `FRONTEND_URL` en el backend
+- Verificar que ambos servicios estén en HTTPS
 
 ---
 
 **Versión:** 2.0  
-**Estado:** ✅ Producción Ready  
-**Base de datos:** Supabase (PostgreSQL)  
-**Última actualización:** 2025-11-21
+**Licencia:** MIT  
+**Última actualización:** 2025-11-24
