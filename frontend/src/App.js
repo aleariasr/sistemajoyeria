@@ -23,6 +23,8 @@ import Clientes from './components/Clientes';
 import FormularioCliente from './components/FormularioCliente';
 import CuentasPorCobrar from './components/CuentasPorCobrar';
 import DetalleCuentaPorCobrar from './components/DetalleCuentaPorCobrar';
+import IngresosExtras from './components/IngresosExtras';
+import Devoluciones from './components/Devoluciones';
 
 function Sidebar() {
   const location = useLocation();
@@ -74,6 +76,20 @@ function Sidebar() {
           <Link to="/clientes" className={isActive('/clientes')}>
             <span className="icon">👥</span>
             <span>Clientes</span>
+          </Link>
+        </li>
+
+        <li>
+          <Link to="/ingresos-extras" className={isActive('/ingresos-extras')}>
+            <span className="icon">💵</span>
+            <span>Ingresos Extras</span>
+          </Link>
+        </li>
+
+        <li>
+          <Link to="/devoluciones" className={isActive('/devoluciones')}>
+            <span className="icon">🔄</span>
+            <span>Devoluciones</span>
           </Link>
         </li>
 
@@ -184,6 +200,8 @@ function AppContent() {
           <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
           <Route path="/nuevo-cliente" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />
           <Route path="/editar-cliente/:id" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />
+          <Route path="/ingresos-extras" element={<ProtectedRoute><IngresosExtras /></ProtectedRoute>} />
+          <Route path="/devoluciones" element={<ProtectedRoute><Devoluciones /></ProtectedRoute>} />
 
           {/* Rutas administrativas - Solo administradores */}
           <Route path="/" element={<ProtectedRoute adminOnly={true}><ListadoJoyas /></ProtectedRoute>} />

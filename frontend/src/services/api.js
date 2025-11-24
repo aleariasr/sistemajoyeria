@@ -77,3 +77,17 @@ export const obtenerCuentaPorCobrar = (id) => api.get(`/cuentas-por-cobrar/${id}
 export const obtenerResumenCuentasPorCobrar = () => api.get('/cuentas-por-cobrar/resumen');
 export const obtenerCuentasPorCliente = (id_cliente) => api.get(`/cuentas-por-cobrar/cliente/${id_cliente}`);
 export const registrarAbono = (id_cuenta, data) => api.post(`/cuentas-por-cobrar/${id_cuenta}/abonos`, data);
+
+// ------- INGRESOS EXTRAS -------
+export const obtenerIngresosExtras = (filtros = {}) => api.get('/ingresos-extras', { params: filtros });
+export const obtenerIngresoExtra = (id) => api.get(`/ingresos-extras/${id}`);
+export const crearIngresoExtra = (data) => api.post('/ingresos-extras', data);
+export const obtenerResumenIngresosExtras = (filtros = {}) => api.get('/ingresos-extras/resumen', { params: filtros });
+
+// ------- DEVOLUCIONES -------
+export const obtenerDevoluciones = (filtros = {}) => api.get('/devoluciones', { params: filtros });
+export const obtenerDevolucion = (id) => api.get(`/devoluciones/${id}`);
+export const crearDevolucion = (data) => api.post('/devoluciones', data);
+export const procesarDevolucion = (id, data) => api.post(`/devoluciones/${id}/procesar`, data);
+export const obtenerDevolucionesPorVenta = (idVenta) => api.get(`/devoluciones/venta/${idVenta}`);
+export const obtenerResumenDevoluciones = (filtros = {}) => api.get('/devoluciones/resumen', { params: filtros });

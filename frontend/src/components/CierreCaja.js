@@ -4,6 +4,7 @@ import api from '../services/api';
 function CierreCaja() {
   const [ventasDia, setVentasDia] = useState([]);
   const [abonosDia, setAbonosDia] = useState([]);
+  const [ingresosExtras, setIngresosExtras] = useState([]);
   const [resumen, setResumen] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +21,7 @@ function CierreCaja() {
       const response = await api.get('/cierrecaja/resumen-dia');
       setVentasDia(response.data.ventas);
       setAbonosDia(response.data.abonos || []);
+      setIngresosExtras(response.data.ingresos_extras || []);
       setResumen(response.data.resumen);
     } catch (err) {
       setError('Error al cargar ventas del día');
@@ -30,8 +32,8 @@ function CierreCaja() {
   };
 
   const realizarCierre = async () => {
-    if (ventasDia.length === 0 && abonosDia.length === 0) {
-      setError('No hay ventas ni abonos para cerrar');
+    if (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0) {
+      setError('No hay ventas, abonos ni ingresos extras para cerrar');
       return;
     }
 
@@ -44,7 +46,7 @@ function CierreCaja() {
       setError(null);
       const response = await api.post('/cierrecaja/cerrar-caja');
       
-      alert(`Cierre realizado exitosamente.\n\nVentas transferidas: ${response.data.resumen.total_ventas}\nTotal: ${formatearMoneda(response.data.resumen.total_ingresos)}`);
+      alert(`Cierre realizado exitosamente.\n\nVentas transferidas: ${response.data.resumen.total_ventas}\nAbonos cerrados: ${response.data.resumen.total_abonos_cerrados}\nIngresos extras cerrados: ${response.data.resumen.total_ingresos_extras_cerrados}\nTotal: ${formatearMoneda(response.data.resumen.total_general)}`);
       
       // Recargar datos
       await cargarVentasDia();
@@ -370,6 +372,59 @@ function CierreCaja() {
                 </div>
               )}
 
+              {/* Ingresos Extras del Día */}
+              {ingresosExtras.length > 0 && (
+                <div className="card" style={{ marginTop: '20px' }}>
+                  <div className="card-header">
+                    <h3>💵 Ingresos Extras del Día ({ingresosExtras.length})</h3>
+                  </div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Fecha</th>
+                          <th>Tipo</th>
+                          <th>Descripción</th>
+                          <th>Método</th>
+                          <th>Monto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ingresosExtras.map((ingreso) => (
+                          <tr key={ingreso.id}>
+                            <td><strong>{ingreso.id}</strong></td>
+                            <td>{formatearFecha(ingreso.fecha_ingreso)}</td>
+                            <td>
+                              <span style={{
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                backgroundColor:
+                                  ingreso.tipo === 'Fondo de Caja' ? '#d4edda' :
+                                  ingreso.tipo === 'Prestamo' ? '#fff3cd' :
+                                  ingreso.tipo === 'Devolucion' ? '#d1ecf1' : '#e9ecef',
+                                color: '#000'
+                              }}>
+                                {ingreso.tipo}
+                              </span>
+                            </td>
+                            <td>{ingreso.descripcion}</td>
+                            <td>{ingreso.metodo_pago}</td>
+                            <td><strong>{formatearMoneda(ingreso.monto)}</strong></td>
+                          </tr>
+                        ))}
+                        <tr className="total-row">
+                          <td colSpan="5" style={{ textAlign: 'right' }}><strong>Total Ingresos Extras:</strong></td>
+                          <td><strong>{formatearMoneda(resumen?.monto_total_ingresos_extras || 0)}</strong></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               {/* Botón de Cierre */}
               <div className="card" style={{ marginTop: '20px' }}>
                 <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -377,12 +432,12 @@ function CierreCaja() {
                     className="btn btn-danger"
                     style={{ fontSize: '1.2rem', padding: '15px 40px' }}
                     onClick={realizarCierre}
-                    disabled={procesando || (ventasDia.length === 0 && abonosDia.length === 0)}
+                    disabled={procesando || (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0)}
                   >
                     {procesando ? '🔄 Procesando...' : '🔒 Realizar Cierre de Caja'}
                   </button>
                   <p style={{ marginTop: '15px', color: '#666', fontSize: '0.9rem' }}>
-                    Al realizar el cierre, todas las ventas del día se transferirán a la base de datos principal
+                    Al realizar el cierre, todas las ventas del día, abonos e ingresos extras se transferirán a la base de datos principal
                   </p>
                 </div>
               </div>
