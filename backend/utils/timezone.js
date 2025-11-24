@@ -19,9 +19,9 @@ function obtenerFechaCostaRica() {
 }
 
 /**
- * Formatea una fecha en formato ISO para SQL (YYYY-MM-DD HH:MM:SS)
+ * Formatea una fecha en formato ISO para SQL (YYYY-MM-DDTHH:MM:SS)
  * @param {Date} fecha - Fecha a formatear (opcional, usa fecha actual de CR si no se proporciona)
- * @returns {string} Fecha formateada para SQL
+ * @returns {string} Fecha formateada para SQL en formato ISO
  */
 function formatearFechaSQL(fecha = null) {
   const fechaCR = fecha || obtenerFechaCostaRica();
@@ -32,7 +32,8 @@ function formatearFechaSQL(fecha = null) {
   const minutes = String(fechaCR.getMinutes()).padStart(2, '0');
   const seconds = String(fechaCR.getSeconds()).padStart(2, '0');
   
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  // Formato ISO 8601 para Supabase/PostgreSQL
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -51,13 +52,13 @@ function obtenerFechaActualCR() {
 /**
  * Obtiene el rango de fechas para un día completo en Costa Rica
  * @param {string} fecha - Fecha en formato YYYY-MM-DD (opcional, usa fecha actual si no se proporciona)
- * @returns {Object} Objeto con fecha_desde y fecha_hasta
+ * @returns {Object} Objeto con fecha_desde y fecha_hasta en formato ISO
  */
 function obtenerRangoDia(fecha = null) {
   const fechaUsar = fecha || obtenerFechaActualCR();
   return {
-    fecha_desde: `${fechaUsar} 00:00:00`,
-    fecha_hasta: `${fechaUsar} 23:59:59`
+    fecha_desde: `${fechaUsar}T00:00:00`,
+    fecha_hasta: `${fechaUsar}T23:59:59`
   };
 }
 

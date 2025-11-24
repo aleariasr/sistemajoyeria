@@ -196,7 +196,7 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener todas las ventas con filtros
+// Obtener todas las ventas con filtros (incluye ventas del día y del historial)
 router.get('/', requireAuth, async (req, res) => {
   try {
     const filtros = {
@@ -208,8 +208,34 @@ router.get('/', requireAuth, async (req, res) => {
       por_pagina: req.query.por_pagina
     };
 
-    const resultado = await Venta.obtenerTodas(filtros);
-    res.json(resultado);
+    // Obtener ventas del historial (ya cerradas)
+    const resultadoHistorial = await Venta.obtenerTodas(filtros);
+
+    // Obtener ventas del día (aún no cerradas)
+    const ventasDia = await VentaDia.obtenerTodas();
+
+    // Marcar las ventas del día para distinguirlas
+    const ventasDiaMarcadas = ventasDia.map(venta => ({
+      ...venta,
+      es_venta_dia: true,  // Marca para distinguir en el frontend
+      fecha_venta: venta.fecha_venta
+    }));
+
+    // Combinar ambas listas
+    const todasLasVentas = [
+      ...ventasDiaMarcadas,
+      ...resultadoHistorial.ventas
+    ];
+
+    // Ordenar por fecha (más recientes primero)
+    todasLasVentas.sort((a, b) => new Date(b.fecha_venta) - new Date(a.fecha_venta));
+
+    res.json({
+      ventas: todasLasVentas,
+      total: resultadoHistorial.total + ventasDia.length,
+      ventas_dia_count: ventasDia.length,
+      ventas_historial_count: resultadoHistorial.total
+    });
   } catch (error) {
     console.error('Error al obtener ventas:', error);
     res.status(500).json({ error: 'Error al obtener ventas' });
@@ -221,17 +247,31 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const venta = await Venta.obtenerPorId(id);
+    // Buscar primero en ventas del historial
+    let venta = await Venta.obtenerPorId(id);
+    let items = null;
+    let esVentaDia = false;
+
+    if (venta) {
+      // Encontrada en historial
+      items = await ItemVenta.obtenerPorVenta(id);
+    } else {
+      // Buscar en ventas del día
+      venta = await VentaDia.obtenerPorId(id);
+      if (venta) {
+        esVentaDia = true;
+        items = await ItemVentaDia.obtenerPorVenta(id);
+      }
+    }
     
     if (!venta) {
       return res.status(404).json({ error: 'Venta no encontrada' });
     }
 
-    const items = await ItemVenta.obtenerPorVenta(id);
-
     res.json({
       ...venta,
-      items
+      items,
+      es_venta_dia: esVentaDia
     });
   } catch (error) {
     console.error('Error al obtener venta:', error);

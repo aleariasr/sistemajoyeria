@@ -144,8 +144,23 @@ function HistorialVentas() {
               </thead>
               <tbody>
                 {ventas.map(venta => (
-                  <tr key={venta.id}>
-                    <td>{venta.id}</td>
+                  <tr key={venta.id} style={venta.es_venta_dia ? { backgroundColor: '#e8f5e9' } : {}}>
+                    <td>
+                      {venta.id}
+                      {venta.es_venta_dia && (
+                        <span style={{
+                          marginLeft: '8px',
+                          padding: '2px 6px',
+                          borderRadius: '3px',
+                          backgroundColor: '#4caf50',
+                          color: 'white',
+                          fontSize: '0.75em',
+                          fontWeight: 'bold'
+                        }}>
+                          📋 Del Día
+                        </span>
+                      )}
+                    </td>
                     <td>{formatearFecha(venta.fecha_venta)}</td>
                     {isAdmin() && <td>{venta.nombre_usuario || venta.usuario}</td>}
                     <td>

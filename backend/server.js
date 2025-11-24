@@ -7,8 +7,11 @@ const { initDatabase, initDatabaseDia } = require('./supabase-db');
 const { crearUsuariosIniciales } = require('./init-users');
 
 const app = express();
+// Railway proporciona el puerto, en local usar 3001
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+// Railway usa 0.0.0.0 por defecto, que está bien
+const HOST = process.env.HOST || '0.0.0.0';
 
 /* ============================================================
    REDIS SOLO EN PRODUCCIÓN (NO ROMPE NADA LOCAL)
@@ -131,6 +134,8 @@ const ventasRoutes = require('./routes/ventas');
 const cierreCajaRoutes = require('./routes/cierrecaja');
 const clientesRoutes = require('./routes/clientes');
 const cuentasPorCobrarRoutes = require('./routes/cuentas-por-cobrar');
+const ingresosExtrasRoutes = require('./routes/ingresos-extras');
+const devolucionesRoutes = require('./routes/devoluciones');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -140,6 +145,8 @@ app.use('/api/ventas', ventasRoutes);
 app.use('/api/cierrecaja', cierreCajaRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/cuentas-por-cobrar', cuentasPorCobrarRoutes);
+app.use('/api/ingresos-extras', ingresosExtrasRoutes);
+app.use('/api/devoluciones', devolucionesRoutes);
 
 
 /* ============================================================
@@ -229,11 +236,30 @@ Promise.all([initDatabase(), initDatabaseDia()])
   .then(() => crearUsuariosIniciales())
   .then(() => {
 
-    server = app.listen(PORT, '0.0.0.0', () => {
+    server = app.listen(PORT, HOST, () => {
       console.log(`\n${'='.repeat(60)}`);
       console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
       console.log(`📊 Ambiente: ${NODE_ENV}`);
+      console.log(`🌐 Host: ${HOST}`);
       console.log(`✅ Conexión a Supabase establecida`);
+      
+      // En desarrollo, mostrar IP de red local para acceso multi-dispositivo
+      if (NODE_ENV === 'development') {
+        const interfaces = os.networkInterfaces();
+        const addresses = [];
+        for (const k in interfaces) {
+          for (const k2 in interfaces[k]) {
+            const address = interfaces[k][k2];
+            if (address.family === 'IPv4' && !address.internal) {
+              addresses.push(address.address);
+            }
+          }
+        }
+        if (addresses.length > 0) {
+          console.log(`📱 Acceso desde red local: http://${addresses[0]}:${PORT}`);
+        }
+      }
+      
       console.log(`${'='.repeat(60)}\n`);
     });
   })
