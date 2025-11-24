@@ -189,6 +189,8 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       throw abonosError;
     }
 
+    const totalAbonos = abonosDelDia?.length || 0;
+
     // Validar que haya al menos ventas, abonos o ingresos extras
     // Obtener ingresos extras del día
     const ingresosExtrasDelDia = await IngresoExtra.obtenerDelDia({
