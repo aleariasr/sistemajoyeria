@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo \"no build step\"",
     "test": "node tests/comprehensive-test.js"
   },
   "keywords": [
