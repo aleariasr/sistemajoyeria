@@ -19,29 +19,39 @@ export const AuthProvider = ({ children }) => {
     checkSession();
   }, []);
 
-  const checkSession = async () => {
-    try {
-      const response = await api.get('/auth/session');
-      if (response.data.loggedIn) {
-        setUser(response.data.usuario);
-      }
-    } catch (error) {
-      console.error('Error al verificar sesión:', error);
-    } finally {
-      setLoading(false);
+ const checkSession = async () => {
+  try {
+    const response = await api.get('/auth/session', {
+      withCredentials: true
+    });
+    if (response.data.loggedIn) {
+      setUser(response.data.usuario);
     }
-  };
+  } catch (error) {
+    console.error('Error al verificar sesión:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const login = async (username, password) => {
-    const response = await api.post('/auth/login', { username, password });
-    setUser(response.data.usuario);
-    return response.data;
-  };
+const login = async (username, password) => {
+  const response = await api.post(
+    '/auth/login',
+    { username, password },
+    { withCredentials: true }
+  );
+  setUser(response.data.usuario);
+  return response.data;
+};
 
-  const logout = async () => {
-    await api.post('/auth/logout');
-    setUser(null);
-  };
+const logout = async () => {
+  await api.post(
+    '/auth/logout',
+    {},
+    { withCredentials: true }
+  );
+  setUser(null);
+};
 
   const isAdmin = () => {
     return user && user.role === 'administrador';
