@@ -1,43 +1,41 @@
 import axios from 'axios';
 
+// Detectar URL del backend correctamente en CRA + Railway
 function getApiUrl() {
-  // 1. Producción con Vite (Railway)
-  if (import.meta?.env?.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-
-  // 2. Producción con CRA
+  // 1. Producción (Railway) usando variable REACT_APP_API_URL
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
 
-  // 3. Local: usar automatic detection
+  // 2. Local: usar :3001/api siempre
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
 
-  // Local → backend está en puerto 3001
   return `${protocol}//${hostname}:3001/api`;
 }
 
 const API_URL = getApiUrl();
+
 console.log("🌐 API_URL detectada:", API_URL);
 
+// Crear instancia de axios
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true
 });
 
+// Manejo global de errores
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response) {
-      console.error("❌ Error respuesta backend:", error.response.data);
-    } else if (error.request) {
+  (res) => res,
+  (err) => {
+    if (err.response) {
+      console.error("❌ Error servidor:", err.response.data);
+    } else if (err.request) {
       console.error("❌ No hay respuesta del backend");
     } else {
-      console.error("❌ Error:", error.message);
+      console.error("❌ Error:", err.message);
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 
@@ -46,8 +44,8 @@ export default api;
 // ------- JOYAS -------
 export const obtenerJoyas = (filtros = {}) => api.get('/joyas', { params: filtros });
 export const obtenerJoya = (id) => api.get(`/joyas/${id}`);
-export const crearJoya = (joyaData) => api.post('/joyas', joyaData);
-export const actualizarJoya = (id, joyaData) => api.put(`/joyas/${id}`, joyaData);
+export const crearJoya = (data) => api.post('/joyas', data);
+export const actualizarJoya = (id, data) => api.put(`/joyas/${id}`, data);
 export const eliminarJoya = (id) => api.delete(`/joyas/${id}`);
 export const obtenerCategorias = () => api.get('/joyas/categorias');
 export const obtenerJoyasStockBajo = () => api.get('/joyas/stock-bajo');
@@ -68,8 +66,8 @@ export const cerrarCaja = () => api.post('/cierrecaja/cerrar-caja');
 // ------- CLIENTES -------
 export const obtenerClientes = (filtros = {}) => api.get('/clientes', { params: filtros });
 export const obtenerCliente = (id) => api.get(`/clientes/${id}`);
-export const buscarClientes = (termino) => api.get('/clientes/buscar', { params: { q: termino } });
-export const crearCliente = (clienteData) => api.post('/clientes', clienteData);
+export const buscarClientes = (t) => api.get('/clientes/buscar', { params: { q: t } });
+export const crearCliente = (data) => api.post('/clientes', data);
 export const actualizarCliente = (id, data) => api.put(`/clientes/${id}`, data);
 export const eliminarCliente = (id) => api.delete(`/clientes/${id}`);
 
