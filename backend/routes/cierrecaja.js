@@ -5,6 +5,7 @@ const ItemVentaDia = require('../models/ItemVentaDia');
 const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
 const Abono = require('../models/Abono');
+const IngresoExtra = require('../models/IngresoExtra');
 const { supabase } = require('../supabase-db');
 const { obtenerFechaActualCR, obtenerRangoDia } = require('../utils/timezone');
 
@@ -90,7 +91,13 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
       cedula_cliente: abono.cuentas_por_cobrar?.clientes?.cedula
     }));
 
-    // Calcular total de abonos del día
+    // Obtener ingresos extras del día que NO han sido cerrados
+    const ingresosExtras = await IngresoExtra.obtenerDelDia({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
+
+    // Calcular totales de abonos del día
     const totalAbonos = abonosDelDia.reduce((sum, abono) => sum + abono.monto, 0);
     
     // Agrupar abonos por método de pago
@@ -102,13 +109,25 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
     const totalAbonosTransferencia = abonosTransferencia.reduce((sum, a) => sum + a.monto, 0);
     const totalAbonosTarjeta = abonosTarjeta.reduce((sum, a) => sum + a.monto, 0);
 
+    // Calcular totales de ingresos extras
+    const totalIngresosExtras = ingresosExtras.reduce((sum, ing) => sum + parseFloat(ing.monto || 0), 0);
+    
+    // Agrupar ingresos extras por método de pago
+    const ingresosEfectivo = ingresosExtras.filter(ing => ing.metodo_pago === 'Efectivo');
+    const ingresosTransferencia = ingresosExtras.filter(ing => ing.metodo_pago === 'Transferencia');
+    const ingresosTarjeta = ingresosExtras.filter(ing => ing.metodo_pago === 'Tarjeta');
+
+    const totalIngresosEfectivo = ingresosEfectivo.reduce((sum, ing) => sum + parseFloat(ing.monto || 0), 0);
+    const totalIngresosTransferencia = ingresosTransferencia.reduce((sum, ing) => sum + parseFloat(ing.monto || 0), 0);
+    const totalIngresosTarjeta = ingresosTarjeta.reduce((sum, ing) => sum + parseFloat(ing.monto || 0), 0);
+
     // Calcular totales de ventas (usando los totales finales que ya incluyen pagos mixtos)
     const totalVentasEfectivo = resumen.total_efectivo_final || 0;
     const totalVentasTransferencia = resumen.total_transferencia_final || 0;
     const totalVentasTarjeta = resumen.total_tarjeta_final || 0;
     const totalVentas = resumen.total_ingresos || 0;
 
-    // Incluir abonos en el resumen
+    // Incluir abonos e ingresos extras en el resumen
     const resumenCompleto = {
       ...resumen,
       // Abonos
@@ -120,17 +139,27 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
       monto_abonos_transferencia: totalAbonosTransferencia,
       abonos_tarjeta: abonosTarjeta.length,
       monto_abonos_tarjeta: totalAbonosTarjeta,
-      // Totales combinados (ventas + abonos)
-      total_efectivo_combinado: totalVentasEfectivo + totalAbonosEfectivo,
-      total_transferencia_combinado: totalVentasTransferencia + totalAbonosTransferencia,
-      total_tarjeta_combinado: totalVentasTarjeta + totalAbonosTarjeta,
-      total_ingresos_combinado: totalVentas + totalAbonos
+      // Ingresos extras
+      total_ingresos_extras: ingresosExtras.length,
+      monto_total_ingresos_extras: totalIngresosExtras,
+      ingresos_extras_efectivo: ingresosEfectivo.length,
+      monto_ingresos_extras_efectivo: totalIngresosEfectivo,
+      ingresos_extras_transferencia: ingresosTransferencia.length,
+      monto_ingresos_extras_transferencia: totalIngresosTransferencia,
+      ingresos_extras_tarjeta: ingresosTarjeta.length,
+      monto_ingresos_extras_tarjeta: totalIngresosTarjeta,
+      // Totales combinados (ventas + abonos + ingresos extras)
+      total_efectivo_combinado: totalVentasEfectivo + totalAbonosEfectivo + totalIngresosEfectivo,
+      total_transferencia_combinado: totalVentasTransferencia + totalAbonosTransferencia + totalIngresosTransferencia,
+      total_tarjeta_combinado: totalVentasTarjeta + totalAbonosTarjeta + totalIngresosTarjeta,
+      total_ingresos_combinado: totalVentas + totalAbonos + totalIngresosExtras
     };
 
     res.json({
       resumen: resumenCompleto,
       ventas: ventasContado,
-      abonos: abonosDelDia
+      abonos: abonosDelDia,
+      ingresos_extras: ingresosExtras
     });
   } catch (error) {
     console.error('Error al obtener resumen del día:', error);
@@ -160,11 +189,17 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       throw abonosError;
     }
 
-    const totalAbonos = abonosDelDia?.length || 0;
+    // Validar que haya al menos ventas, abonos o ingresos extras
+    // Obtener ingresos extras del día
+    const ingresosExtrasDelDia = await IngresoExtra.obtenerDelDia({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
 
-    // Validar que haya al menos ventas o abonos
-    if (ventasContado.length === 0 && totalAbonos === 0) {
-      return res.status(400).json({ error: 'No hay ventas ni abonos para cerrar' });
+    const totalIngresosExtras = ingresosExtrasDelDia?.length || 0;
+
+    if (ventasContado.length === 0 && totalAbonos === 0 && totalIngresosExtras === 0) {
+      return res.status(400).json({ error: 'No hay ventas, abonos ni ingresos extras para cerrar' });
     }
 
     // Transferir cada venta de contado a la base de datos principal
@@ -229,6 +264,12 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       fecha_hasta: rangoHoy.fecha_hasta
     });
 
+    // Marcar ingresos extras del día como cerrados
+    const resultadoIngresosExtras = await IngresoExtra.marcarComoCerrados({
+      fecha_desde: rangoHoy.fecha_desde,
+      fecha_hasta: rangoHoy.fecha_hasta
+    });
+
     // Limpiar la base de datos del día
     await VentaDia.limpiar();
 
@@ -237,7 +278,12 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
       total_ingresos: ventasTransferidas.reduce((sum, v) => sum + v.total, 0),
       ventas_transferidas: ventasTransferidas,
       total_abonos_cerrados: resultadoAbonos.count,
-      monto_abonos_cerrados: resultadoAbonos.abonos?.reduce((sum, a) => sum + (parseFloat(a.monto) || 0), 0) || 0
+      monto_abonos_cerrados: resultadoAbonos.abonos?.reduce((sum, a) => sum + (parseFloat(a.monto) || 0), 0) || 0,
+      total_ingresos_extras_cerrados: resultadoIngresosExtras.count,
+      monto_ingresos_extras_cerrados: resultadoIngresosExtras.ingresos?.reduce((sum, ing) => sum + (parseFloat(ing.monto) || 0), 0) || 0,
+      total_general: ventasTransferidas.reduce((sum, v) => sum + v.total, 0) + 
+                     (resultadoAbonos.abonos?.reduce((sum, a) => sum + (parseFloat(a.monto) || 0), 0) || 0) +
+                     (resultadoIngresosExtras.ingresos?.reduce((sum, ing) => sum + (parseFloat(ing.monto) || 0), 0) || 0)
     };
 
     res.json({
