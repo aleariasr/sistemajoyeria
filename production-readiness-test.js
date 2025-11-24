@@ -227,13 +227,24 @@ console.log('\n--- Security Tests ---');
 
 test('No hardcoded secrets in server.js', () => {
   const serverCode = fs.readFileSync('backend/server.js', 'utf8');
-  // Check for common secret patterns (excluding commented examples)
-  const lines = serverCode.split('\n').filter(line => !line.trim().startsWith('//'));
-  const codeWithoutComments = lines.join('\n');
+  // Check for common secret patterns (excluding process.env usage)
+  const lines = serverCode.split('\n');
   
-  if (codeWithoutComments.match(/password\s*=\s*['"][^'"]+['"]/i) && 
-      !codeWithoutComments.includes('process.env')) {
-    throw new Error('Possible hardcoded password found');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    // Skip comments
+    if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) continue;
+    
+    // Check for hardcoded password assignments (not using process.env)
+    if (line.match(/password\s*=\s*['"][^'"]+['"]/i)) {
+      // Make sure it's not using process.env
+      if (!line.includes('process.env')) {
+        // Also skip if it's a fallback after ||
+        if (!lines[i-1] || !lines[i-1].includes('process.env')) {
+          throw new Error(`Possible hardcoded password at line ${i + 1}: ${line.substring(0, 50)}`);
+        }
+      }
+    }
   }
 });
 
