@@ -8,7 +8,9 @@ Sistema completo de gestión para joyerías con base de datos PostgreSQL en la n
 - 💎 **Gestión de inventario**: CRUD completo con imágenes
 - 💰 **Sistema de ventas**: Múltiples métodos de pago (efectivo, tarjeta, transferencia, mixto)
 - 💳 **Ventas a crédito**: Gestión de cuentas por cobrar y abonos
-- 📊 **Cierre de caja**: Reportes y cierre diario
+- 💵 **Ingresos extras**: Registro de ingresos fuera de ventas (fondo de caja, préstamos, etc.)
+- 🔄 **Devoluciones**: Sistema de gestión de devoluciones con workflow de aprobación
+- 📊 **Cierre de caja**: Reportes completos y cierre diario
 - 👥 **Gestión de clientes**: Base de datos de clientes
 - 📱 **Multi-dispositivo**: Acceso desde cualquier dispositivo en la red
 
@@ -25,7 +27,7 @@ cd sistemajoyeria
 cd backend
 npm install
 cp .env.example .env
-# Editar .env si es necesario
+# Editar .env si es necesario (ver sección Variables de Entorno)
 npm start
 ```
 
@@ -44,15 +46,68 @@ El frontend correrá en `http://localhost:3000`
 - **Admin:** `admin` / `admin123`
 - **Dependiente:** `dependiente` / `dependiente123`
 
+## 🔧 Variables de Entorno
+
+### Backend (.env)
+
+**Requeridas:**
+```bash
+# Servidor
+PORT=3001
+NODE_ENV=development
+HOST=0.0.0.0
+
+# Base de datos Supabase (REQUERIDO)
+SUPABASE_URL=https://mvujkbpbqyihixkbzthe.supabase.co
+SUPABASE_KEY=tu_clave_de_supabase
+
+# Cloudinary para imágenes (REQUERIDO)
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
+
+# Sesión (CAMBIAR EN PRODUCCIÓN)
+SESSION_SECRET=joyeria-secret-key-2024
+```
+
+**Opcionales:**
+```bash
+# Redis (solo en producción con alta carga)
+REDIS_URL=redis://usuario:password@host:port
+
+# CORS - URL del frontend (si separado)
+FRONTEND_URL=https://tu-frontend.railway.app
+```
+
+### Frontend (.env)
+
+**Opcional:**
+```bash
+# Solo si necesitas apuntar a un servidor específico
+REACT_APP_API_URL=http://localhost:3001/api
+
+# Para acceso multi-dispositivo, NO configures esta variable
+# El sistema detectará automáticamente la IP correcta
+```
+
 ## 🌐 Deploy en Railway
 
-### Configuración Rápida
+### Preparación de la Base de Datos
+
+**IMPORTANTE**: Antes de deployar, ejecuta la migración SQL en Supabase:
+
+1. Ve a tu proyecto en Supabase: https://supabase.com
+2. Abre el SQL Editor
+3. Ejecuta el archivo `backend/migrations/add-new-features.sql`
+4. Verifica que las tablas se crearon correctamente
+
+### Configuración en Railway
 
 1. Conecta tu repositorio a Railway
 2. Configura las siguientes variables de entorno:
 
 ```bash
-# Backend Service
+# Backend Service - Variables Requeridas
 PORT=3001
 NODE_ENV=production
 HOST=0.0.0.0
@@ -66,8 +121,8 @@ CLOUDINARY_CLOUD_NAME=tu_cloud_name
 CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 
-# Sesión (genera una clave aleatoria)
-SESSION_SECRET=tu_clave_secreta_aleatoria
+# Sesión - IMPORTANTE: genera una clave aleatoria segura
+SESSION_SECRET=tu_clave_secreta_aleatoria_muy_larga
 
 # CORS - URL del frontend (si separado)
 FRONTEND_URL=https://tu-frontend.railway.app
@@ -82,6 +137,24 @@ Si quieres deployar el frontend por separado:
 ```bash
 # Variables de entorno del frontend
 REACT_APP_API_URL=https://tu-backend.railway.app/api
+```
+
+## 📦 Comandos Útiles
+
+```bash
+# Backend
+cd backend
+npm start                 # Iniciar servidor
+npm run dev              # Iniciar con nodemon (desarrollo)
+npm test                 # Ejecutar tests
+
+# Frontend
+cd frontend
+npm start                # Iniciar desarrollo
+npm run build            # Build para producción
+
+# Tests de producción
+node production-readiness-test.js  # Verificar sistema antes de deploy
 ```
 
 ## 📁 Estructura del Proyecto
