@@ -203,11 +203,24 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
             </div>
           </>
         )}
+        {tipo === 'cierre' && (
+          <>
+            <div className="ticket-row">
+              <span className="ticket-label">Cierre #:</span>
+              <span className="ticket-value">{venta?.id || '-'}
+              </span>
+            </div>
+            <div className="ticket-row">
+              <span className="ticket-label">Usuario:</span>
+              <span className="ticket-value">{venta?.usuario || venta?.nombre_usuario || 'N/A'}</span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="ticket-divider"></div>
 
-      {items && items.length > 0 && (
+      {items && items.length > 0 && tipo !== 'cierre' && (
         <>
           <div className="ticket-items-section">
             <h3 className="ticket-section-title">Detalle de {tipo === 'venta' ? 'Venta' : 'Productos'}</h3>
@@ -256,10 +269,12 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
           </>
         )}
         
-        <div className="ticket-total-row ticket-total-final">
-          <span className="ticket-total-label-final">TOTAL:</span>
-          <span className="ticket-total-value-final">₡{(venta?.total || venta?.monto || 0).toFixed(2)}</span>
-        </div>
+        {tipo !== 'cierre' && (
+          <div className="ticket-total-row ticket-total-final">
+            <span className="ticket-total-label-final">TOTAL:</span>
+            <span className="ticket-total-value-final">₡{(venta?.total || venta?.monto || 0).toFixed(2)}</span>
+          </div>
+        )}
 
         {tipo === 'venta' && venta?.metodo_pago && (
           <>
@@ -332,6 +347,40 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
         </>
       )}
 
+      {tipo === 'cierre' && venta?.resumen && (
+        <>
+          <div className="ticket-divider"></div>
+          <div className="ticket-items-section">
+            <h3 className="ticket-section-title">Resumen del Día</h3>
+            <div className="ticket-total-row">
+              <span className="ticket-total-label">Ventas contado:</span>
+              <span className="ticket-total-value">{venta.resumen.total_ventas}</span>
+            </div>
+            <div className="ticket-total-row">
+              <span className="ticket-total-label">Efectivo (ventas+abonos):</span>
+              <span className="ticket-total-value">₡{(venta.resumen.total_efectivo_combinado || 0).toFixed(2)}</span>
+            </div>
+            <div className="ticket-total-row">
+              <span className="ticket-total-label">Transferencias (ventas+abonos):</span>
+              <span className="ticket-total-value">₡{(venta.resumen.total_transferencia_combinado || 0).toFixed(2)}</span>
+            </div>
+            <div className="ticket-total-row">
+              <span className="ticket-total-label">Tarjeta (ventas+abonos):</span>
+              <span className="ticket-total-value">₡{(venta.resumen.total_tarjeta_combinado || 0).toFixed(2)}</span>
+            </div>
+            <div className="ticket-total-row">
+              <span className="ticket-total-label">Ingresos extras:</span>
+              <span className="ticket-total-value">₡{(venta.resumen.monto_total_ingresos_extras || 0).toFixed(2)}</span>
+            </div>
+            <div className="ticket-divider-thin"></div>
+            <div className="ticket-total-row ticket-total-final">
+              <span className="ticket-total-label-final">TOTAL DEL DÍA:</span>
+              <span className="ticket-total-value-final">₡{(venta.resumen.total_ingresos_combinado || 0).toFixed(2)}</span>
+            </div>
+          </div>
+        </>
+      )}
+
       {tipo === 'movimiento' && venta?.motivo && (
         <>
           <div className="ticket-divider"></div>
@@ -345,9 +394,19 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
       <div className="ticket-divider"></div>
 
       <div className="ticket-footer">
-        <p className="ticket-thanks">¡Gracias por su compra!</p>
-        <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
-        <p className="ticket-slogan">Belleza y Elegancia en Cada Detalle</p>
+        {tipo === 'cierre' ? (
+          <>
+            <p className="ticket-thanks">Cierre de Caja realizado</p>
+            <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
+            <p className="ticket-slogan">Resumen del día</p>
+          </>
+        ) : (
+          <>
+            <p className="ticket-thanks">¡Gracias por su compra!</p>
+            <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
+            <p className="ticket-slogan">Belleza y Elegancia en Cada Detalle</p>
+          </>
+        )}
       </div>
       
       {/* Espacio para corte de papel en impresora térmica */}

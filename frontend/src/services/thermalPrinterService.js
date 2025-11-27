@@ -262,7 +262,7 @@ class ThermalPrinterService {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true
+      hour12: false
     });
     
     commands.push(this.textToBytes(this.formatLine('Fecha:', fechaFormateada) + '\n'));
@@ -287,6 +287,29 @@ class ThermalPrinterService {
       commands.push(this.textToBytes(this.formatLine('Movimiento #:', String(venta?.id || '')) + '\n'));
       commands.push(this.textToBytes(this.formatLine('Tipo:', venta?.tipo_movimiento || 'N/A') + '\n'));
       commands.push(this.textToBytes(this.formatLine('Usuario:', venta?.usuario || 'N/A') + '\n'));
+    } else if (tipo === 'cierre') {
+      commands.push(this.textToBytes(this.formatLine('Cierre #:', String(venta?.id || '-')) + '\n'));
+      commands.push(this.textToBytes(this.formatLine('Usuario:', venta?.usuario || 'N/A') + '\n'));
+      commands.push(this.textToBytes(ESCPOS.LINE_SEPARATOR + '\n'));
+      // Resumen del día
+      commands.push(new Uint8Array(ESCPOS.ALIGN_CENTER));
+      commands.push(new Uint8Array(ESCPOS.BOLD_ON));
+      commands.push(this.textToBytes('RESUMEN DEL DIA\n'));
+      commands.push(new Uint8Array(ESCPOS.BOLD_OFF));
+      commands.push(new Uint8Array(ESCPOS.ALIGN_LEFT));
+      const r = venta?.resumen || {};
+      commands.push(this.textToBytes(this.formatLine('Ventas contado:', String(r.total_ventas || 0)) + '\n'));
+      commands.push(this.textToBytes(this.formatLine('Efectivo comb.:', 'C' + Number(r.total_efectivo_combinado || 0).toFixed(2)) + '\n'));
+      commands.push(this.textToBytes(this.formatLine('Transfer comb.:', 'C' + Number(r.total_transferencia_combinado || 0).toFixed(2)) + '\n'));
+      commands.push(this.textToBytes(this.formatLine('Tarjeta comb.:', 'C' + Number(r.total_tarjeta_combinado || 0).toFixed(2)) + '\n'));
+      commands.push(this.textToBytes(this.formatLine('Ingresos extras:', 'C' + Number(r.monto_total_ingresos_extras || 0).toFixed(2)) + '\n'));
+      commands.push(this.textToBytes(ESCPOS.LINE_SEPARATOR + '\n'));
+      commands.push(new Uint8Array(ESCPOS.ALIGN_RIGHT));
+      commands.push(new Uint8Array(ESCPOS.BOLD_ON));
+      commands.push(new Uint8Array(ESCPOS.DOUBLE_HEIGHT_ON));
+      commands.push(this.textToBytes('TOTAL DIA: C' + Number(r.total_ingresos_combinado || 0).toFixed(2) + '\n'));
+      commands.push(new Uint8Array(ESCPOS.NORMAL_SIZE));
+      commands.push(new Uint8Array(ESCPOS.BOLD_OFF));
     }
     
     commands.push(this.textToBytes(ESCPOS.LINE_SEPARATOR + '\n'));
@@ -395,7 +418,11 @@ class ThermalPrinterService {
     commands.push(this.textToBytes(ESCPOS.LINE_SEPARATOR + '\n'));
     commands.push(new Uint8Array(ESCPOS.ALIGN_CENTER));
     commands.push(new Uint8Array(ESCPOS.BOLD_ON));
-    commands.push(this.textToBytes('\nGracias por su compra!\n'));
+    if (tipo === 'cierre') {
+      commands.push(this.textToBytes('\nCierre de Caja realizado\n'));
+    } else {
+      commands.push(this.textToBytes('\nGracias por su compra!\n'));
+    }
     commands.push(new Uint8Array(ESCPOS.BOLD_OFF));
     commands.push(this.textToBytes('\nCuero y Perla - Grecia, Alajuela\n'));
     commands.push(this.textToBytes('Belleza y Elegancia en Cada Detalle\n'));
