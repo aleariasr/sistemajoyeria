@@ -47,13 +47,19 @@ export const useThermalPrint = () => {
       // Conectar si no está conectado
       if (!thermalPrinterService.isConnected) {
         await thermalPrinterService.connect();
-        setIsConnected(true);
       }
       
+      // Verificar que la conexión fue exitosa
+      if (!thermalPrinterService.isConnected) {
+        throw new Error('No se pudo establecer conexión con la impresora');
+      }
+      
+      setIsConnected(true);
       await thermalPrinterService.printTicket(venta, items, tipo);
       return true;
     } catch (err) {
       setError(err.message);
+      setIsConnected(thermalPrinterService.isConnected);
       return false;
     } finally {
       setIsPrinting(false);
@@ -68,13 +74,19 @@ export const useThermalPrint = () => {
       
       if (!thermalPrinterService.isConnected) {
         await thermalPrinterService.connect();
-        setIsConnected(true);
       }
       
+      // Verificar que la conexión fue exitosa
+      if (!thermalPrinterService.isConnected) {
+        throw new Error('No se pudo establecer conexión con la impresora');
+      }
+      
+      setIsConnected(true);
       await thermalPrinterService.testPrint();
       return true;
     } catch (err) {
       setError(err.message);
+      setIsConnected(thermalPrinterService.isConnected);
       return false;
     } finally {
       setIsPrinting(false);

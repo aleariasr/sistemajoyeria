@@ -192,9 +192,12 @@ function Ventas() {
       });
     } else {
       // Si falla la impresión térmica, usar fallback del navegador
+      const errorMessage = thermalPrint.error 
+        ? `Error: ${thermalPrint.error}` 
+        : 'Impresora térmica no disponible';
       setMensaje({ 
         tipo: 'info', 
-        texto: `Usando impresión del navegador (${thermalPrint.error || 'WebUSB no disponible'})` 
+        texto: `Usando diálogo de impresión del navegador. ${errorMessage}` 
       });
       handlePrint();
     }

@@ -216,14 +216,18 @@ class ThermalPrinterService {
    * Formatea texto para impresión en impresora térmica de 32 caracteres (80mm)
    */
   formatLine(left, right = '', width = 32) {
-    if (!right) {
-      return left.substring(0, width).padEnd(width);
+    // Manejar valores null/undefined
+    const leftStr = String(left || '');
+    const rightStr = String(right || '');
+    
+    if (!rightStr) {
+      return leftStr.substring(0, width).padEnd(width);
     }
-    const spaceNeeded = width - left.length - right.length;
+    const spaceNeeded = width - leftStr.length - rightStr.length;
     if (spaceNeeded < 1) {
-      return left.substring(0, width - right.length - 1) + ' ' + right;
+      return leftStr.substring(0, width - rightStr.length - 1) + ' ' + rightStr;
     }
-    return left + ' '.repeat(spaceNeeded) + right;
+    return leftStr + ' '.repeat(spaceNeeded) + rightStr;
   }
 
   /**
