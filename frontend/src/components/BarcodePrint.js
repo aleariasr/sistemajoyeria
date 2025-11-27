@@ -21,7 +21,6 @@ const BarcodePrint = React.forwardRef(({ joya, cantidad = 1 }, ref) => {
           <div className="barcode-info">
             <div className="barcode-business">Cuero y Perla</div>
             <div className="barcode-product-name">{joya.nombre}</div>
-            <div className="barcode-product-code">Código: {joya.codigo}</div>
           </div>
           <div className="barcode-image-container">
             <img 
