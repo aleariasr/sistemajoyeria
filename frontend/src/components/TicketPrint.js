@@ -108,6 +108,8 @@ export const useThermalPrint = () => {
 const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => {
   const emphasisStyle = { fontWeight: 700, color: '#000' };
   const emphasisStrongStyle = { ...emphasisStyle, fontSize: '1rem' };
+  const headerEmphasisStyle = { fontWeight: 800, color: '#000' };
+  const footerEmphasisStyle = { fontWeight: 700, color: '#000' };
 
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-CR', {
@@ -139,7 +141,7 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
         </div>
         <h1 className="ticket-business-name">Cuero y Perla</h1>
         <p className="ticket-business-location">Grecia, Alajuela</p>
-        <p className="ticket-business-info">Costa Rica</p>
+        <p className="ticket-business-info" style={headerEmphasisStyle}>Costa Rica</p>
         <div className="ticket-divider"></div>
       </div>
 
@@ -233,10 +235,10 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
             <table className="ticket-items-table">
               <thead>
                 <tr>
-                  <th className="ticket-th-left">Producto</th>
-                  <th className="ticket-th-center">Cant.</th>
-                  <th className="ticket-th-right">Precio</th>
-                  <th className="ticket-th-right">Total</th>
+                  <th className="ticket-th-left" style={headerEmphasisStyle}>Producto</th>
+                  <th className="ticket-th-center" style={headerEmphasisStyle}>Cant.</th>
+                  <th className="ticket-th-right" style={headerEmphasisStyle}>Precio</th>
+                  <th className="ticket-th-right" style={headerEmphasisStyle}>Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -296,41 +298,50 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
             <div className="ticket-payment-section">
               <div className="ticket-total-row">
                 <span className="ticket-total-label">Método de Pago:</span>
-                <span className="ticket-total-value">{venta.metodo_pago}</span>
+                <span className="ticket-total-value" style={emphasisStyle}>{venta.metodo_pago}</span>
               </div>
               
               {venta.metodo_pago === 'Mixto' && (
                 <>
                   {venta.monto_efectivo > 0 && (
                     <div className="ticket-total-row ticket-payment-detail">
-                      <span className="ticket-total-label">Efectivo:</span>
-                      <span className="ticket-total-value">₡{venta.monto_efectivo.toFixed(2)}</span>
+                      <span className="ticket-total-label" style={emphasisStyle}>Efectivo:</span>
+                      <span className="ticket-total-value" style={emphasisStyle}>
+                        ₡{venta.monto_efectivo.toFixed(2)}
+                      </span>
                     </div>
                   )}
                   {venta.monto_tarjeta > 0 && (
                     <div className="ticket-total-row ticket-payment-detail">
-                      <span className="ticket-total-label">Tarjeta:</span>
-                      <span className="ticket-total-value">₡{venta.monto_tarjeta.toFixed(2)}</span>
+                      <span className="ticket-total-label" style={emphasisStyle}>Tarjeta:</span>
+                      <span className="ticket-total-value" style={emphasisStyle}>
+                        ₡{venta.monto_tarjeta.toFixed(2)}
+                      </span>
                     </div>
                   )}
                   {venta.monto_transferencia > 0 && (
                     <div className="ticket-total-row ticket-payment-detail">
-                      <span className="ticket-total-label">Transferencia:</span>
-                      <span className="ticket-total-value">₡{venta.monto_transferencia.toFixed(2)}</span>
+                      <span className="ticket-total-label" style={emphasisStyle}>Transferencia:</span>
+                      <span className="ticket-total-value" style={emphasisStyle}>
+                        ₡{venta.monto_transferencia.toFixed(2)}
+                      </span>
                     </div>
                   )}
                 </>
               )}
-
               {venta.metodo_pago === 'Efectivo' && venta.efectivo_recibido && (
                 <>
                   <div className="ticket-total-row">
-                    <span className="ticket-total-label">Efectivo Recibido:</span>
-                    <span className="ticket-total-value">₡{venta.efectivo_recibido.toFixed(2)}</span>
+                    <span className="ticket-total-label" style={emphasisStyle}>Efectivo Recibido:</span>
+                    <span className="ticket-total-value" style={emphasisStyle}>
+                      ₡{venta.efectivo_recibido.toFixed(2)}
+                    </span>
                   </div>
                   <div className="ticket-total-row">
-                    <span className="ticket-total-label">Cambio:</span>
-                    <span className="ticket-total-value">₡{(venta.cambio || 0).toFixed(2)}</span>
+                    <span className="ticket-total-label" style={emphasisStyle}>Cambio:</span>
+                    <span className="ticket-total-value" style={emphasisStyle}>
+                      ₡{(venta.cambio || 0).toFixed(2)}
+                    </span>
                   </div>
                 </>
               )}
@@ -422,15 +433,15 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
       <div className="ticket-footer">
         {tipo === 'cierre' ? (
           <>
-            <p className="ticket-thanks">Cierre de Caja realizado</p>
-            <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
-            <p className="ticket-slogan">Resumen del día</p>
+            <p className="ticket-thanks" style={footerEmphasisStyle}>Cierre de Caja realizado</p>
+            <p className="ticket-contact" style={footerEmphasisStyle}>Cuero y Perla - Grecia, Alajuela</p>
+            <p className="ticket-slogan" style={footerEmphasisStyle}>Resumen del día</p>
           </>
         ) : (
           <>
-            <p className="ticket-thanks">¡Gracias por su compra!</p>
-            <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
-            <p className="ticket-slogan">Belleza y Elegancia en Cada Detalle</p>
+            <p className="ticket-thanks" style={footerEmphasisStyle}>¡Gracias por su compra!</p>
+            <p className="ticket-contact" style={footerEmphasisStyle}>Cuero y Perla - Grecia, Alajuela</p>
+            <p className="ticket-slogan" style={footerEmphasisStyle}>Belleza y Elegancia en Cada Detalle</p>
           </>
         )}
       </div>
