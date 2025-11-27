@@ -41,8 +41,13 @@ class Joya {
   static async obtenerTodas(filtros = {}) {
     const {
       busqueda, categoria, precio_min, precio_max,
-      stock_bajo, sin_stock, estado, pagina = 1, por_pagina = 20
+      stock_bajo, sin_stock, estado,
+      pagina = 1,
+      por_pagina = 20
     } = filtros;
+
+    const paginaNum = Math.max(1, parseInt(pagina, 10) || 1);
+    const porPaginaNum = Math.max(1, parseInt(por_pagina, 10) || 20);
 
     let query = supabase.from('joyas').select('*', { count: 'exact' });
 
@@ -80,9 +85,11 @@ class Joya {
     }
 
     // Ordenar y paginar
-    const offset = (pagina - 1) * por_pagina;
-    query = query.order('fecha_creacion', { ascending: false })
-                 .range(offset, offset + por_pagina - 1);
+    const offset = (paginaNum - 1) * porPaginaNum;
+    const hasta = offset + porPaginaNum - 1;
+    query = query
+      .order('fecha_creacion', { ascending: false })
+      .range(offset, hasta);
 
     const { data, error, count } = await query;
 
@@ -92,10 +99,10 @@ class Joya {
 
     return {
       joyas: data,
-      total: count,
-      pagina: parseInt(pagina),
-      por_pagina: parseInt(por_pagina),
-      total_paginas: Math.ceil(count / por_pagina)
+      total: count || 0,
+      pagina: paginaNum,
+      por_pagina: porPaginaNum,
+      total_paginas: Math.max(1, Math.ceil((count || 0) / porPaginaNum))
     };
   }
 

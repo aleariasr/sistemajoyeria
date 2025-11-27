@@ -14,6 +14,7 @@ import Movimientos from './components/Movimientos';
 import Reportes from './components/Reportes';
 import StockBajo from './components/StockBajo';
 import CierreCaja from './components/CierreCaja';
+import HistorialCierres from './components/HistorialCierres';
 import Ventas from './components/Ventas';
 import HistorialVentas from './components/HistorialVentas';
 import DetalleVenta from './components/DetalleVenta';
@@ -97,6 +98,12 @@ function Sidebar() {
           <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
             <span className="icon">💰</span>
             <span>Cierre de Caja</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/historial-cierres" className={isActive('/historial-cierres')}>
+            <span className="icon">🧾</span>
+            <span>Histórico de Cierres</span>
           </Link>
         </li>
 
@@ -197,6 +204,7 @@ function AppContent() {
           <Route path="/cuentas-por-cobrar" element={<ProtectedRoute><CuentasPorCobrar /></ProtectedRoute>} />
           <Route path="/cuenta-por-cobrar/:id" element={<ProtectedRoute><DetalleCuentaPorCobrar /></ProtectedRoute>} />
           <Route path="/cierre-caja" element={<ProtectedRoute><CierreCaja /></ProtectedRoute>} />
+          <Route path="/historial-cierres" element={<ProtectedRoute><HistorialCierres /></ProtectedRoute>} />
           <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
           <Route path="/nuevo-cliente" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />
           <Route path="/editar-cliente/:id" element={<ProtectedRoute><FormularioCliente /></ProtectedRoute>} />

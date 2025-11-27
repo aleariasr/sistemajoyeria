@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { useReactToPrint } from 'react-to-print';
+import TicketPrint from './TicketPrint';
+import thermalPrinterService from '../services/thermalPrinterService';
 
 function CierreCaja() {
   const [ventasDia, setVentasDia] = useState([]);
@@ -9,6 +12,62 @@ function CierreCaja() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [procesando, setProcesando] = useState(false);
+  const ticketRef = useRef();
+
+  const handlePrintTicket = useReactToPrint({
+    content: () => ticketRef.current,
+    documentTitle: `Cierre-Caja-${new Date().toISOString().slice(0,10)}`,
+    removeAfterPrint: false,
+  });
+
+  const triggerPrintCierre = () => {
+    if (!resumen) {
+      alert('No hay resumen del día para imprimir.');
+      return;
+    }
+    if (!ticketRef.current) {
+      console.warn('TicketPrint aún no está listo para imprimir (ref vacío).');
+      // intentar esperar un ciclo de render
+      setTimeout(() => {
+        if (ticketRef.current) {
+          handlePrintTicket();
+        } else {
+          alert('No se pudo preparar el contenido de impresión. Inténtalo de nuevo.');
+        }
+      }, 200);
+      return;
+    }
+    try {
+      handlePrintTicket();
+    } catch (e) {
+      console.warn('Fallo al invocar react-to-print, usando window.print()', e);
+      window.print();
+    }
+  };
+
+  const printCierreUSB = async () => {
+    try {
+      if (!thermalPrinterService.isWebUSBSupported()) {
+        alert('Tu navegador no soporta WebUSB. Usa la impresión del navegador.');
+        return;
+      }
+      // Conectar si no está conectado
+      if (!thermalPrinterService.isConnected) {
+        await thermalPrinterService.connect();
+      }
+      const ventaCierre = {
+        id: resumen?.id_cierre,
+        usuario: resumen?.usuario,
+        fecha_venta: new Date(),
+        resumen,
+        notas: 'Cierre de caja diario'
+      };
+      await thermalPrinterService.printTicket(ventaCierre, [], 'cierre');
+    } catch (err) {
+      console.error('Error imprimiendo por USB:', err);
+      alert(err.message || 'Error al imprimir por USB');
+    }
+  };
 
   useEffect(() => {
     cargarVentasDia();
@@ -31,6 +90,8 @@ function CierreCaja() {
     }
   };
 
+  
+
   const realizarCierre = async () => {
     if (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0) {
       setError('No hay ventas, abonos ni ingresos extras para cerrar');
@@ -50,6 +111,13 @@ function CierreCaja() {
       
       // Recargar datos
       await cargarVentasDia();
+      // Intentar imprimir ticket automático
+      try {
+        setResumen(response.data.resumen);
+        setTimeout(() => triggerPrintCierre(), 300);
+      } catch (e) {
+        console.warn('No se pudo imprimir el ticket de cierre automáticamente:', e);
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Error al realizar el cierre de caja');
       console.error(err);
@@ -436,6 +504,23 @@ function CierreCaja() {
                   >
                     {procesando ? '🔄 Procesando...' : '🔒 Realizar Cierre de Caja'}
                   </button>
+                  <div style={{ marginTop: '12px' }}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={triggerPrintCierre}
+                      disabled={!resumen}
+                    >
+                      🖨️ Imprimir Ticket de Cierre
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={printCierreUSB}
+                      disabled={!resumen}
+                      style={{ marginLeft: '10px' }}
+                    >
+                      🔌 Imprimir por USB (Térmica)
+                    </button>
+                  </div>
                   <p style={{ marginTop: '15px', color: '#666', fontSize: '0.9rem' }}>
                     Al realizar el cierre, todas las ventas del día, abonos e ingresos extras se transferirán a la base de datos principal
                   </p>
@@ -445,6 +530,21 @@ function CierreCaja() {
           )}
         </>
       )}
+
+      {/* Contenido oculto siempre montado para impresión de ticket de cierre */}
+      <div style={{ position: 'absolute', left: -9999, top: -9999 }}>
+        <TicketPrint
+          ref={ticketRef}
+          tipo="cierre"
+          venta={{
+            id: resumen?.id_cierre,
+            usuario: resumen?.usuario,
+            fecha_venta: new Date(),
+            resumen,
+            notas: resumen ? 'Cierre de caja diario' : 'Preparando cierre'
+          }}
+        />
+      </div>
     </div>
   );
 }

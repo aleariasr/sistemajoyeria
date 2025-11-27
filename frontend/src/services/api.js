@@ -62,6 +62,7 @@ export const obtenerReporteStockBajo = () => api.get('/reportes/stock-bajo');
 export const obtenerVentasDia = () => api.get('/cierrecaja/ventas-dia');
 export const obtenerResumenDia = () => api.get('/cierrecaja/resumen-dia');
 export const cerrarCaja = () => api.post('/cierrecaja/cerrar-caja');
+export const obtenerCierresHistorico = (filtros = {}) => api.get('/cierrecaja/historico', { params: filtros });
 
 // ------- CLIENTES -------
 export const obtenerClientes = (filtros = {}) => api.get('/clientes', { params: filtros });

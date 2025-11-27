@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 import BarcodeModal from './BarcodeModal';
@@ -33,6 +33,8 @@ function ListadoJoyas() {
   // Estado para modal de código de barras
   const [joyaSeleccionada, setJoyaSeleccionada] = useState(null);
   const [mostrarModalBarcode, setMostrarModalBarcode] = useState(false);
+  const [seleccion, setSeleccion] = useState({});
+  const [mostrarModalMulti, setMostrarModalMulti] = useState(false);
 
   useEffect(() => {
     cargarCategorias();
@@ -57,7 +59,20 @@ function ListadoJoyas() {
       if (estado) filtros.estado = estado;
 
       const response = await obtenerJoyas(filtros);
-      setJoyas(response.data.joyas);
+      const lista = Array.isArray(response.data.joyas) ? response.data.joyas : [];
+      // Dedup por id/codigo por si el backend o la UI repite entradas
+      const seen = new Set();
+      const dedup = [];
+      for (const j of lista) {
+        const key = j.id ?? j.codigo;
+        if (!seen.has(key)) {
+          seen.add(key);
+          dedup.push(j);
+        }
+      }
+      setJoyas(dedup);
+      // Reset selección al cambiar página o filtros
+      setSeleccion({});
       setTotalPaginas(response.data.total_paginas);
       setTotal(response.data.total);
     } catch (err) {
@@ -140,6 +155,26 @@ function ListadoJoyas() {
   const handleCloseBarcodeModal = () => {
     setMostrarModalBarcode(false);
     setJoyaSeleccionada(null);
+  };
+
+  const joyasSeleccionadas = useMemo(() => {
+    return joyas.filter((j) => seleccion[j.id] || seleccion[j.codigo]);
+  }, [joyas, seleccion]);
+
+  const toggleSeleccion = (j) => {
+    const key = j.id ?? j.codigo;
+    setSeleccion((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleSeleccionPagina = (checked) => {
+    setSeleccion((prev) => {
+      const next = { ...prev };
+      joyas.forEach((j) => {
+        const key = j.id ?? j.codigo;
+        next[key] = checked;
+      });
+      return next;
+    });
   };
 
   return (
@@ -232,6 +267,14 @@ function ListadoJoyas() {
           <button className="btn btn-secondary" onClick={limpiarFiltros}>
             🔄 Limpiar Filtros
           </button>
+          <button
+            className="btn btn-primary"
+            disabled={joyasSeleccionadas.length === 0}
+            onClick={() => setMostrarModalMulti(true)}
+            title={joyasSeleccionadas.length === 0 ? 'Seleccione una o más joyas' : 'Imprimir códigos seleccionados'}
+          >
+            🖨️ Imprimir códigos seleccionados ({joyasSeleccionadas.length})
+          </button>
           <span style={{ color: '#666', alignSelf: 'center' }}>
             Total: {total} joyas
           </span>
@@ -257,6 +300,14 @@ function ListadoJoyas() {
               <table>
                 <thead>
                   <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        aria-label="Seleccionar página"
+                        checked={joyas.length > 0 && joyas.every((j) => seleccion[j.id] || seleccion[j.codigo])}
+                        onChange={(e) => toggleSeleccionPagina(e.target.checked)}
+                      />
+                    </th>
                     <th>Imagen</th>
                     <th>Código</th>
                     <th>Nombre</th>
@@ -271,6 +322,14 @@ function ListadoJoyas() {
                 <tbody>
                   {joyas.map((joya) => (
                     <tr key={joya.id} className={getRowClass(joya)}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={!!(seleccion[joya.id] || seleccion[joya.codigo])}
+                          onChange={() => toggleSeleccion(joya)}
+                          aria-label={`Seleccionar ${joya.codigo}`}
+                        />
+                      </td>
                       <td>
                         {joya.imagen_url ? (
                           <img 
@@ -391,6 +450,14 @@ function ListadoJoyas() {
         <BarcodeModal 
           joya={joyaSeleccionada} 
           onClose={handleCloseBarcodeModal}
+        />
+      )}
+
+      {/* Modal de códigos múltiple */}
+      {mostrarModalMulti && joyasSeleccionadas.length > 0 && (
+        <BarcodeModal
+          joyas={joyasSeleccionadas}
+          onClose={() => setMostrarModalMulti(false)}
         />
       )}
     </div>

@@ -69,3 +69,30 @@ COMMENT ON COLUMN ingresos_extras.tipo IS 'Tipo de ingreso: Fondo de Caja, Prest
 COMMENT ON TABLE devoluciones IS 'Registra devoluciones y cambios de productos vendidos';
 COMMENT ON COLUMN devoluciones.tipo_devolucion IS 'Reembolso (devolver dinero), Cambio (cambiar por otro producto), Nota de Credito';
 COMMENT ON COLUMN devoluciones.estado IS 'Pendiente (recién creada), Aprobada (autorizada), Procesada (completada)';
+
+-- =========================================
+-- TABLA: cierres_caja
+-- =========================================
+-- Para registrar el resumen de cada cierre de caja realizado
+CREATE TABLE IF NOT EXISTS cierres_caja (
+  id BIGSERIAL PRIMARY KEY,
+  fecha_cierre TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  id_usuario BIGINT REFERENCES usuarios(id),
+  usuario TEXT,
+  resumen JSONB,
+  total_ventas INTEGER DEFAULT 0,
+  total_ingresos NUMERIC(12, 2) DEFAULT 0,
+  total_general NUMERIC(12, 2) DEFAULT 0,
+  total_efectivo_combinado NUMERIC(12, 2) DEFAULT 0,
+  total_transferencia_combinado NUMERIC(12, 2) DEFAULT 0,
+  total_tarjeta_combinado NUMERIC(12, 2) DEFAULT 0,
+  monto_total_abonos NUMERIC(12, 2) DEFAULT 0,
+  monto_total_ingresos_extras NUMERIC(12, 2) DEFAULT 0,
+  notas TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cierres_caja_fecha ON cierres_caja(fecha_cierre);
+CREATE INDEX IF NOT EXISTS idx_cierres_caja_usuario ON cierres_caja(usuario);
+
+COMMENT ON TABLE cierres_caja IS 'Histórico de cierres de caja con totales combinados y resumen completo';
+COMMENT ON COLUMN cierres_caja.resumen IS 'Objeto JSON con el resumen completo del cierre inclusive de ventas, abonos e ingresos extras';

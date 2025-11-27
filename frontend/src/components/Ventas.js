@@ -22,6 +22,7 @@ function Ventas() {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const joyasRequestIdRef = useRef(0);
   
   // Estados para pago mixto
   const [montoEfectivo, setMontoEfectivo] = useState('');
@@ -37,13 +38,41 @@ function Ventas() {
   const thermalPrint = useThermalPrint();
 
   const buscarJoyas = useCallback(async () => {
+    const requestId = ++joyasRequestIdRef.current;
+    const q = busqueda.trim();
+    if (q.length < 2) {
+      setJoyas([]);
+      return;
+    }
     try {
       const response = await api.get('/joyas', {
-        params: { busqueda, estado: 'Activo', por_pagina: 10 }
+        params: { busqueda: q, estado: 'Activo', por_pagina: 20 }
       });
-      setJoyas(response.data.joyas || []);
+      if (requestId !== joyasRequestIdRef.current) {
+        return; // Hay una búsqueda más reciente en curso
+      }
+
+      const lista = response.data.joyas || [];
+      const lowerQ = q.toLowerCase();
+      const exact = lista.find(j => j.codigo?.toLowerCase() === lowerQ);
+      if (exact) {
+        setJoyas([exact]);
+        return;
+      }
+
+      const filtrada = lista.filter(j => {
+        const c = (j.codigo || '').toLowerCase();
+        const n = (j.nombre || '').toLowerCase();
+        const cat = (j.categoria || '').toLowerCase();
+        return c.includes(lowerQ) || n.includes(lowerQ) || cat.includes(lowerQ);
+      }).slice(0, 10);
+      setJoyas(filtrada);
     } catch (error) {
+      if (requestId !== joyasRequestIdRef.current) {
+        return;
+      }
       console.error('Error al buscar joyas:', error);
+      setJoyas([]);
     }
   }, [busqueda]);
 
@@ -61,11 +90,7 @@ function Ventas() {
   }, [busquedaCliente]);
 
   useEffect(() => {
-    if (busqueda.length >= 2) {
-      buscarJoyas();
-    } else {
-      setJoyas([]);
-    }
+    buscarJoyas();
   }, [busqueda, buscarJoyas]);
 
   useEffect(() => {
@@ -117,6 +142,7 @@ function Ventas() {
       }]);
     }
     
+    // Limpiar resultados tras agregar; si se escaneó un código, esto evita listados
     setBusqueda('');
     setJoyas([]);
   };
