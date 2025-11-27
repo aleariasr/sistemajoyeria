@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api, { buscarClientes } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
-import TicketPrint from './TicketPrint';
+import TicketPrint, { useThermalPrint } from './TicketPrint';
 import '../styles/Ventas.css';
 
 function Ventas() {
@@ -32,6 +32,9 @@ function Ventas() {
   const [ultimaVenta, setUltimaVenta] = useState(null);
   const [ultimosItems, setUltimosItems] = useState([]);
   const ticketRef = useRef();
+  
+  // Hook para impresión térmica (3nstar RPT008)
+  const thermalPrint = useThermalPrint();
 
   const buscarJoyas = useCallback(async () => {
     try {
@@ -171,14 +174,41 @@ function Ventas() {
     return total - pagado;
   };
 
-  // Manejador de impresión
+  // Manejador de impresión por navegador (fallback)
   const handlePrint = useReactToPrint({
     contentRef: ticketRef,
     documentTitle: `Ticket-Venta-${ultimaVenta?.id || 'N/A'}`,
   });
 
+  // Imprimir con impresora térmica USB (3nstar RPT008)
+  const imprimirTermico = async () => {
+    if (!ultimaVenta || !ultimosItems) return;
+    
+    const success = await thermalPrint.printTicket(ultimaVenta, ultimosItems, 'venta');
+    if (success) {
+      setMensaje({ 
+        tipo: 'success', 
+        texto: `Ticket #${ultimaVenta.id} impreso correctamente en impresora térmica` 
+      });
+    } else {
+      // Si falla la impresión térmica, usar fallback del navegador
+      setMensaje({ 
+        tipo: 'info', 
+        texto: `Usando impresión del navegador (${thermalPrint.error || 'WebUSB no disponible'})` 
+      });
+      handlePrint();
+    }
+  };
+
+  // Función principal de impresión
   const imprimirTicket = () => {
-    handlePrint();
+    // Si WebUSB está soportado, intentar impresión térmica
+    if (thermalPrint.isSupported) {
+      imprimirTermico();
+    } else {
+      // Fallback a impresión del navegador
+      handlePrint();
+    }
   };
 
   const procesarVenta = async (e) => {
@@ -305,13 +335,26 @@ function Ventas() {
         <div className={`mensaje ${mensaje.tipo}`}>
           {mensaje.texto}
           {mensaje.tipo === 'success' && ultimaVenta && (
-            <button 
-              onClick={imprimirTicket}
-              className="btn-imprimir-ticket"
-              style={{ marginLeft: '15px' }}
-            >
-              🖨️ Imprimir Ticket
-            </button>
+            <div style={{ display: 'inline-flex', gap: '10px', marginLeft: '15px' }}>
+              <button 
+                onClick={imprimirTicket}
+                className="btn-imprimir-ticket"
+                disabled={thermalPrint.isPrinting}
+              >
+                🖨️ {thermalPrint.isPrinting ? 'Imprimiendo...' : 'Imprimir Ticket'}
+              </button>
+              {/* Botón alternativo para impresión por navegador */}
+              {thermalPrint.isSupported && (
+                <button 
+                  onClick={handlePrint}
+                  className="btn-imprimir-ticket"
+                  style={{ backgroundColor: '#6c757d' }}
+                  title="Usar diálogo de impresión del navegador"
+                >
+                  📄 Navegador
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

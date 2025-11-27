@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useReactToPrint } from 'react-to-print';
-import TicketPrint from './TicketPrint';
+import TicketPrint, { useThermalPrint } from './TicketPrint';
 import '../styles/DetalleVenta.css';
 
 function DetalleVenta() {
@@ -10,12 +10,44 @@ function DetalleVenta() {
   const navigate = useNavigate();
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mensajePrint, setMensajePrint] = useState('');
   const ticketRef = useRef();
+  
+  // Hook para impresión térmica (3nstar RPT008)
+  const thermalPrint = useThermalPrint();
 
+  // Impresión por navegador (fallback)
   const handlePrint = useReactToPrint({
     contentRef: ticketRef,
     documentTitle: `Ticket-Venta-${id}`,
   });
+  
+  // Imprimir con impresora térmica USB
+  const imprimirTermico = async () => {
+    if (!venta) return;
+    
+    setMensajePrint('Imprimiendo...');
+    const success = await thermalPrint.printTicket(venta, venta.items || [], 'venta');
+    
+    if (success) {
+      setMensajePrint('✓ Impreso correctamente');
+      setTimeout(() => setMensajePrint(''), 3000);
+    } else {
+      // Fallback a impresión del navegador
+      setMensajePrint('Usando navegador...');
+      handlePrint();
+      setTimeout(() => setMensajePrint(''), 2000);
+    }
+  };
+  
+  // Función principal de impresión
+  const imprimirTicket = () => {
+    if (thermalPrint.isSupported) {
+      imprimirTermico();
+    } else {
+      handlePrint();
+    }
+  };
 
   const cargarVenta = useCallback(async () => {
     try {
@@ -64,10 +96,33 @@ function DetalleVenta() {
           <h1>📄 Detalle de Venta #{venta.id}</h1>
           <p>{formatearFecha(venta.fecha_venta)}</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handlePrint} className="btn-imprimir">
-            🖨️ Imprimir Ticket
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {mensajePrint && (
+            <span style={{ 
+              fontSize: '14px', 
+              color: mensajePrint.includes('✓') ? '#28a745' : '#666' 
+            }}>
+              {mensajePrint}
+            </span>
+          )}
+          <button 
+            onClick={imprimirTicket} 
+            className="btn-imprimir"
+            disabled={thermalPrint.isPrinting}
+          >
+            🖨️ {thermalPrint.isPrinting ? 'Imprimiendo...' : 'Imprimir Ticket'}
           </button>
+          {/* Botón alternativo para navegador */}
+          {thermalPrint.isSupported && (
+            <button 
+              onClick={handlePrint} 
+              className="btn-imprimir"
+              style={{ backgroundColor: '#6c757d' }}
+              title="Usar diálogo de impresión del navegador"
+            >
+              📄 Navegador
+            </button>
+          )}
           <button onClick={() => navigate('/historial-ventas')} className="btn-volver">
             ← Volver
           </button>
