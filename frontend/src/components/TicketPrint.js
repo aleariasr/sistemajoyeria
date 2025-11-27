@@ -106,6 +106,9 @@ export const useThermalPrint = () => {
 };
 
 const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => {
+  const emphasisStyle = { fontWeight: 700, color: '#000' };
+  const emphasisStrongStyle = { ...emphasisStyle, fontSize: '1rem' };
+
   const formatearFecha = (fecha) => {
     return new Date(fecha).toLocaleString('es-CR', {
       year: 'numeric',
@@ -143,22 +146,26 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
       <div className="ticket-info-section">
         <div className="ticket-row">
           <span className="ticket-label">Fecha:</span>
-          <span className="ticket-value">{formatearFecha(venta?.fecha_venta || new Date())}</span>
+          <span className="ticket-value" style={emphasisStyle}>
+            {formatearFecha(venta?.fecha_venta || new Date())}
+          </span>
         </div>
         {tipo === 'venta' && (
           <>
             <div className="ticket-row">
               <span className="ticket-label">Ticket #:</span>
-              <span className="ticket-value">{venta?.id}</span>
+              <span className="ticket-value" style={emphasisStyle}>{venta?.id}</span>
             </div>
             <div className="ticket-row">
               <span className="ticket-label">Vendedor:</span>
-              <span className="ticket-value">{venta?.nombre_usuario || venta?.usuario || 'N/A'}</span>
+              <span className="ticket-value" style={emphasisStyle}>
+                {venta?.nombre_usuario || venta?.usuario || 'N/A'}
+              </span>
             </div>
             {venta?.tipo_venta && (
               <div className="ticket-row">
                 <span className="ticket-label">Tipo:</span>
-                <span className="ticket-value ticket-tipo-venta">
+                <span className="ticket-value ticket-tipo-venta" style={emphasisStyle}>
                   {venta.tipo_venta === 'Credito' ? '📝 Crédito' : '💰 Contado'}
                 </span>
               </div>
@@ -207,8 +214,7 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
           <>
             <div className="ticket-row">
               <span className="ticket-label">Cierre #:</span>
-              <span className="ticket-value">{venta?.id || '-'}
-              </span>
+              <span className="ticket-value">{venta?.id || '-'}</span>
             </div>
             <div className="ticket-row">
               <span className="ticket-label">Usuario:</span>
@@ -240,9 +246,13 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
                       <div className="ticket-item-name">{item.nombre}</div>
                       {item.codigo && <div className="ticket-item-code">Cód: {item.codigo}</div>}
                     </td>
-                    <td className="ticket-td-center">{item.cantidad}</td>
-                    <td className="ticket-td-right">₡{(item.precio_unitario || 0).toFixed(2)}</td>
-                    <td className="ticket-td-right">₡{(item.subtotal || item.precio_unitario * item.cantidad).toFixed(2)}</td>
+                    <td className="ticket-td-center" style={emphasisStyle}>{item.cantidad}</td>
+                    <td className="ticket-td-right" style={emphasisStyle}>
+                      ₡{(item.precio_unitario || 0).toFixed(2)}
+                    </td>
+                    <td className="ticket-td-right" style={emphasisStyle}>
+                      ₡{(item.subtotal || item.precio_unitario * item.cantidad).toFixed(2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -258,7 +268,9 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
           <>
             <div className="ticket-total-row">
               <span className="ticket-total-label">Subtotal:</span>
-              <span className="ticket-total-value">₡{calcularSubtotal().toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{calcularSubtotal().toFixed(2)}
+              </span>
             </div>
             {venta?.descuento > 0 && (
               <div className="ticket-total-row">
@@ -272,7 +284,9 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
         {tipo !== 'cierre' && (
           <div className="ticket-total-row ticket-total-final">
             <span className="ticket-total-label-final">TOTAL:</span>
-            <span className="ticket-total-value-final">₡{(venta?.total || venta?.monto || 0).toFixed(2)}</span>
+            <span className="ticket-total-value-final" style={emphasisStrongStyle}>
+              ₡{(venta?.total || venta?.monto || 0).toFixed(2)}
+            </span>
           </div>
         )}
 
@@ -341,7 +355,9 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
           <div className="ticket-balance-section">
             <div className="ticket-total-row">
               <span className="ticket-total-label">Saldo Pendiente:</span>
-              <span className="ticket-total-value">₡{(venta.saldo_pendiente || 0).toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{(venta.saldo_pendiente || 0).toFixed(2)}
+              </span>
             </div>
           </div>
         </>
@@ -358,24 +374,34 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
             </div>
             <div className="ticket-total-row">
               <span className="ticket-total-label">Efectivo (ventas+abonos):</span>
-              <span className="ticket-total-value">₡{(venta.resumen.total_efectivo_combinado || 0).toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{(venta.resumen.total_efectivo_combinado || 0).toFixed(2)}
+              </span>
             </div>
             <div className="ticket-total-row">
               <span className="ticket-total-label">Transferencias (ventas+abonos):</span>
-              <span className="ticket-total-value">₡{(venta.resumen.total_transferencia_combinado || 0).toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{(venta.resumen.total_transferencia_combinado || 0).toFixed(2)}
+              </span>
             </div>
             <div className="ticket-total-row">
               <span className="ticket-total-label">Tarjeta (ventas+abonos):</span>
-              <span className="ticket-total-value">₡{(venta.resumen.total_tarjeta_combinado || 0).toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{(venta.resumen.total_tarjeta_combinado || 0).toFixed(2)}
+              </span>
             </div>
             <div className="ticket-total-row">
               <span className="ticket-total-label">Ingresos extras:</span>
-              <span className="ticket-total-value">₡{(venta.resumen.monto_total_ingresos_extras || 0).toFixed(2)}</span>
+              <span className="ticket-total-value" style={emphasisStyle}>
+                ₡{(venta.resumen.monto_total_ingresos_extras || 0).toFixed(2)}
+              </span>
             </div>
             <div className="ticket-divider-thin"></div>
             <div className="ticket-total-row ticket-total-final">
               <span className="ticket-total-label-final">TOTAL DEL DÍA:</span>
-              <span className="ticket-total-value-final">₡{(venta.resumen.total_ingresos_combinado || 0).toFixed(2)}</span>
+              <span className="ticket-total-value-final" style={emphasisStrongStyle}>
+                ₡{(venta.resumen.total_ingresos_combinado || 0).toFixed(2)}
+              </span>
             </div>
           </div>
         </>
