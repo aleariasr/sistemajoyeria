@@ -1,5 +1,109 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import thermalPrinterService from '../services/thermalPrinterService';
 import '../styles/TicketPrint.css';
+
+/**
+ * Hook personalizado para manejo de impresión térmica
+ * Compatible con impresora 3nstar RPT008 vía USB
+ */
+export const useThermalPrint = () => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Verificar soporte de WebUSB
+  const isSupported = thermalPrinterService.isWebUSBSupported();
+
+  // Conectar a la impresora
+  const connect = useCallback(async () => {
+    try {
+      setError(null);
+      await thermalPrinterService.connect();
+      setIsConnected(true);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      setIsConnected(false);
+      return false;
+    }
+  }, []);
+
+  // Desconectar de la impresora
+  const disconnect = useCallback(async () => {
+    try {
+      await thermalPrinterService.disconnect();
+      setIsConnected(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  }, []);
+
+  // Imprimir ticket
+  const printTicket = useCallback(async (venta, items, tipo = 'venta') => {
+    try {
+      setError(null);
+      setIsPrinting(true);
+      
+      // Conectar si no está conectado
+      if (!thermalPrinterService.isConnected) {
+        await thermalPrinterService.connect();
+      }
+      
+      // Verificar que la conexión fue exitosa
+      if (!thermalPrinterService.isConnected) {
+        throw new Error('No se pudo establecer conexión con la impresora');
+      }
+      
+      setIsConnected(true);
+      await thermalPrinterService.printTicket(venta, items, tipo);
+      return true;
+    } catch (err) {
+      setError(err.message);
+      setIsConnected(thermalPrinterService.isConnected);
+      return false;
+    } finally {
+      setIsPrinting(false);
+    }
+  }, []);
+
+  // Prueba de impresión
+  const testPrint = useCallback(async () => {
+    try {
+      setError(null);
+      setIsPrinting(true);
+      
+      if (!thermalPrinterService.isConnected) {
+        await thermalPrinterService.connect();
+      }
+      
+      // Verificar que la conexión fue exitosa
+      if (!thermalPrinterService.isConnected) {
+        throw new Error('No se pudo establecer conexión con la impresora');
+      }
+      
+      setIsConnected(true);
+      await thermalPrinterService.testPrint();
+      return true;
+    } catch (err) {
+      setError(err.message);
+      setIsConnected(thermalPrinterService.isConnected);
+      return false;
+    } finally {
+      setIsPrinting(false);
+    }
+  }, []);
+
+  return {
+    isSupported,
+    isConnected,
+    isPrinting,
+    error,
+    connect,
+    disconnect,
+    printTicket,
+    testPrint,
+  };
+};
 
 const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => {
   const formatearFecha = (fecha) => {
@@ -244,6 +348,13 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
         <p className="ticket-thanks">¡Gracias por su compra!</p>
         <p className="ticket-contact">Cuero y Perla - Grecia, Alajuela</p>
         <p className="ticket-slogan">Belleza y Elegancia en Cada Detalle</p>
+      </div>
+      
+      {/* Espacio para corte de papel en impresora térmica */}
+      <div className="ticket-cut-space"></div>
+      <div className="ticket-cut-line">
+        <span className="cut-symbol">✂</span>
+        <span className="cut-dashes">- - - - - - - - - - - - - - -</span>
       </div>
     </div>
   );

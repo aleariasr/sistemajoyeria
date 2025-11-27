@@ -317,3 +317,40 @@
     max-width: 90%;
   }
 }
+
+/* Paper Cut Styles for Thermal Printers */
+.ticket-cut-space {
+  height: 15mm;
+}
+
+.ticket-cut-line {
+  text-align: center;
+  margin-top: 5mm;
+  color: #999;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.cut-symbol {
+  font-size: 14px;
+}
+
+.cut-dashes {
+  letter-spacing: 2px;
+}
+
+@media print {
+  /* La línea de corte indica dónde cortará la impresora térmica */
+  .ticket-cut-line {
+    color: #ccc;
+    margin-top: 10mm;
+    page-break-after: always;
+  }
+  
+  .ticket-cut-space {
+    height: 20mm;
+  }
+}

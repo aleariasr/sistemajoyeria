@@ -1,5 +1,42 @@
 # Sistema de Impresión de Tickets y Códigos de Barras
 
+## 🖨️ Impresora Térmica 3nstar RPT008 (USB)
+
+### Configuración para USB (Windows, Linux y macOS)
+
+El sistema está configurado para trabajar directamente con la impresora térmica 3nstar RPT008 vía USB usando la API WebUSB. Esto permite:
+- **Impresión directa** sin necesidad de drivers adicionales en la mayoría de los casos
+- **Corte automático** del papel al final de cada ticket
+- **Compatibilidad multiplataforma**: Windows, Linux y macOS
+- **Fallback automático**: Si WebUSB no está disponible, se usa el diálogo de impresión del navegador
+
+### Requisitos
+1. **Navegador compatible con WebUSB**: Chrome, Edge, Opera (Firefox y Safari no soportan WebUSB)
+2. **Conexión USB**: La impresora debe estar conectada por USB
+3. **Permisos**: El navegador pedirá permiso la primera vez para acceder al dispositivo USB
+
+### Cómo Imprimir
+
+#### Impresión Térmica USB (Recomendado)
+1. Al hacer click en "🖨️ Imprimir Ticket", el sistema intentará usar WebUSB
+2. Si es la primera vez, se mostrará un diálogo para seleccionar la impresora
+3. Selecciona "RPT008" o tu impresora térmica de la lista
+4. El ticket se imprimirá directamente con corte automático
+
+#### Impresión por Navegador (Alternativa)
+Si WebUSB no está disponible o prefieres usar el diálogo de impresión:
+1. Click en el botón "📄 Navegador"
+2. Se abrirá el diálogo de impresión del sistema operativo
+3. Selecciona tu impresora y configura las opciones
+
+### Características de Impresión Térmica
+- ✂️ **Corte automático** al final de cada ticket
+- 📐 **Formato 80mm** optimizado para impresoras térmicas
+- 🖨️ **Comandos ESC/POS** nativos para máxima compatibilidad
+- 💾 **Sin drivers adicionales** gracias a WebUSB
+
+---
+
 ## 🎫 Impresión de Tickets de Venta
 
 ### Características
@@ -117,6 +154,15 @@ Cada etiqueta incluye:
 - **Múltiples por página**: Si usas papel de etiquetas estándar
 
 ### Compatibilidad
+
+#### Impresión Térmica USB (WebUSB)
+- ✅ **Windows**: Chrome, Edge, Opera
+- ✅ **macOS**: Chrome, Edge, Opera
+- ✅ **Linux**: Chrome, Chromium
+- ❌ **Firefox**: No soporta WebUSB (usar impresión por navegador)
+- ❌ **Safari**: No soporta WebUSB (usar impresión por navegador)
+
+#### Impresión por Navegador (Fallback)
 - ✅ **Windows**: Chrome, Firefox, Edge
 - ✅ **macOS**: Chrome, Firefox, Safari
 - ✅ **Linux**: Chrome, Firefox
@@ -144,21 +190,31 @@ Cada etiqueta incluye:
 
 ## 🔧 Implementación Técnica
 
-### Librerías Utilizadas
-- **react-to-print**: Manejo de impresión desde React
+### Librerías y Tecnologías Utilizadas
+- **react-to-print**: Manejo de impresión desde React (fallback)
+- **WebUSB API**: Comunicación directa con impresoras USB
+- **ESC/POS Commands**: Comandos nativos para impresoras térmicas
 - **TEC-IT Barcode API**: Generación de códigos de barras
 
-### Componentes Creados
-1. **TicketPrint.js**: Componente de ticket de venta
-2. **TicketPrint.css**: Estilos optimizados para impresión
-3. **BarcodePrint.js**: Componente de etiquetas de código de barras
-4. **BarcodePrint.css**: Estilos para etiquetas
-5. **BarcodeModal.js**: Modal de configuración de códigos de barras
-6. **BarcodeModal.css**: Estilos del modal
+### Componentes y Servicios Creados
+1. **thermalPrinterService.js**: Servicio de impresión térmica USB con ESC/POS
+2. **TicketPrint.js**: Componente de ticket + hook `useThermalPrint()`
+3. **TicketPrint.css**: Estilos optimizados para impresión
+4. **BarcodePrint.js**: Componente de etiquetas de código de barras
+5. **BarcodePrint.css**: Estilos para etiquetas
+6. **BarcodeModal.js**: Modal de configuración de códigos de barras
+7. **BarcodeModal.css**: Estilos del modal
+
+### Comandos ESC/POS Implementados
+- **Inicialización**: ESC @ (0x1B 0x40)
+- **Alineación**: ESC a (centro, izquierda, derecha)
+- **Estilos**: Negrita, doble altura, doble ancho
+- **Corte de papel**: GS V A 3 (0x1D 0x56 0x41 0x03)
+- **Alimentación**: ESC d n (alimentar n líneas)
 
 ### Archivos Modificados
-- **Ventas.js**: Añadido botón de impresión post-venta
-- **DetalleVenta.js**: Añadido botón de reimpresión
+- **Ventas.js**: Añadido soporte para impresión térmica USB
+- **DetalleVenta.js**: Añadido soporte para impresión térmica USB
 - **ListadoJoyas.js**: Añadido botón de código de barras
 - **DetalleJoya.js**: Añadido botón de código de barras
 
@@ -187,6 +243,31 @@ Cada etiqueta incluye:
 ---
 
 ## 🆘 Solución de Problemas
+
+### Impresora Térmica RPT008
+
+#### La impresora no aparece en la lista de dispositivos USB
+- Verifica que la impresora esté encendida y conectada por USB
+- Prueba con otro puerto USB
+- En Linux, puede ser necesario dar permisos al usuario:
+  ```bash
+  sudo usermod -a -G lp $USER
+  ```
+- Reinicia el navegador después de conectar la impresora
+
+#### El navegador no pide permiso para acceder al USB
+- Verifica que estés usando Chrome, Edge u Opera (Firefox/Safari no soportan WebUSB)
+- Asegúrate de que el sitio se sirve por HTTPS (o localhost para desarrollo)
+- Revisa que no hayas bloqueado el permiso previamente
+
+#### La impresión sale en blanco o no corta
+- Verifica que la impresora tenga papel
+- Revisa la configuración de calor de la impresora
+- Asegúrate de que sea una impresora compatible con ESC/POS
+
+#### El ticket no se imprime correctamente
+- Usa el botón "📄 Navegador" como alternativa
+- Configura el tamaño de papel a 80mm en el diálogo de impresión
 
 ### El botón de impresión no aparece
 - Verifica que la venta se haya completado exitosamente
