@@ -134,7 +134,7 @@ const TicketPrint = React.forwardRef(({ venta, items, tipo = 'venta' }, ref) => 
       <div className="ticket-header">
         <div className="ticket-logo-container">
           <img 
-            src="https://res.cloudinary.com/dekqptpft/image/upload/v1763754027/CYP_FB-1_smbu4s.jpg" 
+            src="https://res.cloudinary.com/dekqptpft/image/upload/v1764286222/CamScanner_27-11-25_17.29_wt08ta.jpg" 
             alt="Cuero y Perla Logo" 
             className="ticket-logo"
           />
