@@ -13,6 +13,34 @@
 BEGIN;
 
 -- =========================================
+-- VERIFICACIÓN PREVIA: Confirmar que hay datos a preservar
+-- =========================================
+DO $$
+DECLARE
+  v_joyas_antes INTEGER;
+  v_usuarios_antes INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_joyas_antes FROM joyas;
+  SELECT COUNT(*) INTO v_usuarios_antes FROM usuarios;
+  
+  RAISE NOTICE '=========================================';
+  RAISE NOTICE 'VERIFICACIÓN PREVIA A LIMPIEZA';
+  RAISE NOTICE '=========================================';
+  RAISE NOTICE '📦 Joyas a preservar: %', v_joyas_antes;
+  RAISE NOTICE '👤 Usuarios a preservar: %', v_usuarios_antes;
+  RAISE NOTICE '=========================================';
+  
+  -- Almacenar los conteos para validación posterior
+  -- (usamos tablas temporales para pasar valores entre bloques)
+  CREATE TEMP TABLE IF NOT EXISTS _limpieza_verificacion (
+    joyas_antes INTEGER,
+    usuarios_antes INTEGER
+  );
+  DELETE FROM _limpieza_verificacion;
+  INSERT INTO _limpieza_verificacion VALUES (v_joyas_antes, v_usuarios_antes);
+END $$;
+
+-- =========================================
 -- PASO 1: Eliminar tablas dependientes primero
 -- (respetando las restricciones de clave foránea)
 -- =========================================
@@ -124,7 +152,10 @@ DECLARE
   v_movimientos INTEGER;
   v_cuentas INTEGER;
   v_abonos INTEGER;
+  v_joyas_antes INTEGER;
+  v_usuarios_antes INTEGER;
 BEGIN
+  -- Obtener conteos actuales
   SELECT COUNT(*) INTO v_joyas FROM joyas;
   SELECT COUNT(*) INTO v_usuarios FROM usuarios;
   SELECT COUNT(*) INTO v_ventas FROM ventas;
@@ -134,12 +165,18 @@ BEGIN
   SELECT COUNT(*) INTO v_cuentas FROM cuentas_por_cobrar;
   SELECT COUNT(*) INTO v_abonos FROM abonos;
   
+  -- Obtener conteos previos de la verificación
+  SELECT joyas_antes, usuarios_antes 
+  INTO v_joyas_antes, v_usuarios_antes 
+  FROM _limpieza_verificacion 
+  LIMIT 1;
+  
   RAISE NOTICE '';
   RAISE NOTICE '=========================================';
   RAISE NOTICE 'RESUMEN DE LIMPIEZA';
   RAISE NOTICE '=========================================';
-  RAISE NOTICE '📦 Joyas preservadas: %', v_joyas;
-  RAISE NOTICE '👤 Usuarios preservados: %', v_usuarios;
+  RAISE NOTICE '📦 Joyas preservadas: % (antes: %)', v_joyas, COALESCE(v_joyas_antes, 0);
+  RAISE NOTICE '👤 Usuarios preservados: % (antes: %)', v_usuarios, COALESCE(v_usuarios_antes, 0);
   RAISE NOTICE '';
   RAISE NOTICE 'Tablas limpiadas (deben estar en 0):';
   RAISE NOTICE '  - Ventas: %', v_ventas;
@@ -151,16 +188,29 @@ BEGIN
   RAISE NOTICE '=========================================';
   
   -- Validar que joyas y usuarios no fueron afectados
-  IF v_joyas = 0 THEN
+  -- Solo dar error si había datos antes Y ahora no hay
+  IF v_joyas_antes IS NOT NULL AND v_joyas_antes > 0 AND v_joyas = 0 THEN
     RAISE EXCEPTION '❌ ERROR: Las joyas fueron eliminadas por error!';
   END IF;
   
-  IF v_usuarios = 0 THEN
+  IF v_usuarios_antes IS NOT NULL AND v_usuarios_antes > 0 AND v_usuarios = 0 THEN
     RAISE EXCEPTION '❌ ERROR: Los usuarios fueron eliminados por error!';
+  END IF;
+  
+  -- Validar que los conteos coinciden
+  IF v_joyas_antes IS NOT NULL AND v_joyas != v_joyas_antes THEN
+    RAISE EXCEPTION '❌ ERROR: El número de joyas cambió! Antes: %, Después: %', v_joyas_antes, v_joyas;
+  END IF;
+  
+  IF v_usuarios_antes IS NOT NULL AND v_usuarios != v_usuarios_antes THEN
+    RAISE EXCEPTION '❌ ERROR: El número de usuarios cambió! Antes: %, Después: %', v_usuarios_antes, v_usuarios;
   END IF;
   
   RAISE NOTICE '✅ Limpieza completada exitosamente';
   RAISE NOTICE '✅ Joyas y usuarios preservados correctamente';
+  
+  -- Limpiar tabla temporal
+  DROP TABLE IF EXISTS _limpieza_verificacion;
 END $$;
 
 -- Confirmar transacción
