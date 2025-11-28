@@ -74,15 +74,20 @@ function generateWebOrderId() {
  */
 router.get('/products', async (req, res) => {
   try {
+    const pagina = parseInt(req.query.pagina || req.query.page || 1);
+    const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 100);
+    
     const filtros = {
       busqueda: req.query.busqueda || req.query.search,
       categoria: req.query.categoria || req.query.category,
       precio_min: req.query.precio_min || req.query.price_min,
       precio_max: req.query.precio_max || req.query.price_max,
-      // Only show active products with stock for public storefront
+      // Only show active products for public storefront
       estado: 'Activo',
-      pagina: req.query.pagina || req.query.page || 1,
-      por_pagina: req.query.por_pagina || req.query.per_page || 20
+      // Get all products first, then filter by stock in JS
+      // since Supabase doesn't support gt filter in the same way
+      pagina: 1,
+      por_pagina: 1000 // Get all active products
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
@@ -91,14 +96,20 @@ router.get('/products', async (req, res) => {
     const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
 
     // Transform data for public consumption (hide sensitive fields)
-    const productos = productosDisponibles.map(joya => transformToPublicProduct(joya));
+    const todosProductos = productosDisponibles.map(joya => transformToPublicProduct(joya));
+
+    // Apply pagination after filtering
+    const totalProductos = todosProductos.length;
+    const totalPaginas = Math.ceil(totalProductos / porPagina);
+    const offset = (pagina - 1) * porPagina;
+    const productosPaginados = todosProductos.slice(offset, offset + porPagina);
 
     res.json({
-      products: productos,
-      total: productos.length,
-      page: parseInt(filtros.pagina),
-      per_page: parseInt(filtros.por_pagina),
-      total_pages: Math.ceil(productos.length / parseInt(filtros.por_pagina))
+      products: productosPaginados,
+      total: totalProductos,
+      page: pagina,
+      per_page: porPagina,
+      total_pages: totalPaginas
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
@@ -116,7 +127,7 @@ router.get('/products/featured', async (req, res) => {
     const filtros = {
       estado: 'Activo',
       pagina: 1,
-      por_pagina: 8
+      por_pagina: 100 // Get enough products to find 8 with stock
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
@@ -124,6 +135,7 @@ router.get('/products/featured', async (req, res) => {
     // Filter to only show products with stock
     const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
 
+    // Take first 8 products
     const productos = productosDisponibles.slice(0, 8).map(joya => transformToPublicProduct(joya));
 
     res.json({ products: productos });
@@ -163,10 +175,34 @@ router.get('/products/:id', async (req, res) => {
 /**
  * GET /api/public/categories
  * Get all product categories for filtering
+ * Only returns categories from active products with stock
  */
 router.get('/categories', async (req, res) => {
   try {
-    const categorias = await Joya.obtenerCategorias();
+    // Get all active products first
+    const filtros = {
+      estado: 'Activo',
+      pagina: 1,
+      por_pagina: 1000
+    };
+    
+    const resultado = await Joya.obtenerTodas(filtros);
+    
+    // Filter to only products with stock > 0
+    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
+    
+    // Extract unique categories from available products
+    const categoriasSet = new Set(
+      productosDisponibles
+        .map(j => j.categoria)
+        .filter(cat => cat && cat.trim() !== '')
+    );
+    
+    // Sort categories alphabetically
+    const categorias = Array.from(categoriasSet).sort((a, b) => 
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+    
     res.json({ categories: categorias });
   } catch (error) {
     console.error('Error fetching categories:', error);
