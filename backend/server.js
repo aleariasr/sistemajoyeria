@@ -86,6 +86,7 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
+      // Desarrollo local
       'http://localhost',
       'http://localhost/',
       'http://localhost:80',
@@ -93,12 +94,14 @@ const corsOptions = {
       'http://127.0.0.1',
       'http://127.0.0.1:80',
       'http://127.0.0.1:3000',
+      // Producción
       'https://sistemajoyeria-production.up.railway.app',
+      'https://sistemajoyeria-frontend.vercel.app',
       // Patrones para red local
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
-      // Patrón para dominios de Vercel (preview y producción)
-      /^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/i
+      // Patrón para dominios de Vercel (preview deployments)
+      /^https:\/\/sistemajoyeria-frontend[a-zA-Z0-9._-]*\.vercel\.app$/i
     ];
 
     // Agregar frontend real en producción
