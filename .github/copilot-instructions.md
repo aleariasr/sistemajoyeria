@@ -1,117 +1,92 @@
 # Sistema de Joyería - Copilot Instructions
 
-Este es un repositorio monorepo con backend (Node.js + Express) y frontend (React). El sistema es una aplicación completa de gestión para joyerías con base de datos PostgreSQL en Supabase.
+Este es un repositorio monorepo con:
+- **backend/** - API Node.js + Express + Supabase
+- **frontend/** - React POS (punto de venta)
+- **storefront/** - Next.js (tienda online pública)
 
 ## Estructura del Proyecto
 
 ```
 sistemajoyeria/
 ├── backend/              # API Node.js + Express
-│   ├── models/          # Modelos de datos
+│   ├── models/          # Modelos de datos (Joya, Venta, Cliente, etc.)
 │   ├── routes/          # Rutas API
 │   ├── middleware/      # Middleware de autenticación
-│   ├── utils/           # Utilidades y validaciones
-│   ├── tests/           # Tests del backend
-│   ├── server.js        # Servidor principal
-│   └── supabase-db.js   # Configuración de base de datos
-├── frontend/            # Aplicación React
-│   ├── src/
-│   │   ├── components/  # Componentes React
-│   │   ├── services/    # Servicios API
-│   │   └── context/     # Context de autenticación
-│   └── public/
-├── Procfile            # Configuración Railway
-├── railway.json        # Configuración Railway
-└── package.json        # Root package con workspaces
+│   ├── migrations/      # Migraciones SQL para Supabase
+│   └── server.js        # Servidor principal
+├── frontend/            # React POS
+│   └── src/
+│       ├── components/  # Componentes React
+│       ├── services/    # Servicios API (axios)
+│       └── context/     # AuthContext
+├── storefront/          # Next.js Tienda Online
+│   └── src/
+│       ├── app/         # App Router (Next.js 14)
+│       ├── components/  # Componentes React
+│       ├── hooks/       # Custom hooks (useApi, useCart)
+│       └── lib/         # Utilidades
+├── package.json         # Root package con workspaces
+└── DEPLOY.md           # Guía de despliegue
 ```
 
 ## Comandos de Desarrollo
 
-### Instalación
 ```bash
-npm install                    # Instala dependencias de root y workspaces
-npm run install:backend        # Instala solo backend
-npm run install:frontend       # Instala solo frontend
+npm install                    # Instala dependencias de todos los workspaces
+npm run start:backend          # Backend (puerto 3001)
+npm run start:frontend         # Frontend POS (puerto 3000)
+npm run start:storefront       # Storefront (puerto 3002)
+npm run dev:backend            # Backend con nodemon
+npm run build:frontend         # Build frontend
+npm run build:storefront       # Build storefront
 ```
 
-### Ejecución
-```bash
-npm run start:backend          # Inicia el servidor backend (puerto 3001)
-npm run start:frontend         # Inicia el frontend React (puerto 3000)
-npm run dev:backend            # Backend con nodemon (desarrollo)
-```
-
-### Testing
-```bash
-npm run test:backend           # Ejecuta tests del backend
-node production-readiness-test.js  # Verificación pre-deploy
-```
-
-### Build
-```bash
-npm run build:frontend         # Build de producción del frontend
-```
-
-## Convenciones de Código
+## Convenciones
 
 ### Backend (Node.js/Express)
-- Usar Express Router para organizar rutas por recurso
-- Validar datos de entrada en cada endpoint
-- Usar middleware de autenticación para rutas protegidas
-- Manejar errores con try/catch y respuestas JSON consistentes
-- Usar bcryptjs para encriptación de contraseñas
-- Configurar CORS apropiadamente para el frontend
+- Rutas en `routes/` organizadas por recurso
+- Modelos en `models/` con métodos estáticos
+- Middleware `requireAuth` para rutas protegidas
+- Respuestas JSON consistentes: `{ success, data }` o `{ error }`
+- Async/await con try/catch
 
 ### Frontend (React)
 - Componentes funcionales con hooks
-- Context API para estado global (autenticación)
-- Servicios separados para llamadas a la API
-- Usar react-router-dom para navegación
-- Seguir las convenciones de ESLint de react-app
+- Context API para autenticación (AuthContext)
+- Servicios en `services/api.js` con axios
+- react-router-dom v6
 
-### Base de Datos
-- PostgreSQL con Supabase
-- Migraciones en `backend/migrations/`
-- Schema principal en `backend/supabase-migration.sql`
+### Storefront (Next.js)
+- App Router (Next.js 14)
+- TypeScript
+- Tailwind CSS
+- Zustand para estado (carrito)
+- React Query para fetching
 
 ## Variables de Entorno
 
-### Backend (.env)
-```bash
-PORT=3001
-NODE_ENV=development
-HOST=0.0.0.0
-SUPABASE_URL=<url>
-SUPABASE_KEY=<key>
-CLOUDINARY_CLOUD_NAME=<name>
-CLOUDINARY_API_KEY=<key>
-CLOUDINARY_API_SECRET=<secret>
-SESSION_SECRET=<secret>
-```
+### Backend
+- `SUPABASE_URL`, `SUPABASE_KEY` - Base de datos
+- `CLOUDINARY_*` - Imágenes
+- `SESSION_SECRET` - Sesiones
+- `FRONTEND_URL` - CORS en producción
 
-### Frontend (.env)
-```bash
-REACT_APP_API_URL=http://localhost:3001/api
-```
+### Frontend
+- `REACT_APP_API_URL` - URL del backend
+
+### Storefront
+- `NEXT_PUBLIC_API_URL` - URL del backend
 
 ## Despliegue
 
-El proyecto usa Railway para despliegue:
-- `railway.json` contiene la configuración de build y deploy
-- `Procfile` define el comando de inicio
-- Usar `npm run start:backend` para iniciar (workspace command)
+- **Backend**: Railway (usa `railway.json` y `nixpacks.toml`)
+- **Frontend/Storefront**: Vercel (usa `vercel.json` en cada carpeta)
 
 ## Seguridad
 
-- Autenticación con sesiones Express
-- Contraseñas encriptadas con bcrypt
-- Control de acceso por roles (admin/dependiente)
-- Validación de datos de entrada
-- CORS configurado para frontend específico
-
-## Notas Importantes
-
-1. Este es un monorepo con npm workspaces - usar `npm run start:backend` en lugar de `cd backend && npm start` para asegurar que las dependencias y el entorno se resuelvan correctamente
-2. El backend corre en puerto 3001, frontend en 3000
-3. Ejecutar migraciones SQL antes de iniciar en un nuevo ambiente
-4. Cloudinary se usa para almacenar imágenes de productos
+- Autenticación con sesiones Express (httpOnly cookies)
+- Contraseñas bcrypt
+- SQL injection prevention en búsquedas
+- CORS dinámico desde `FRONTEND_URL`
+- Headers de seguridad (HSTS, X-Frame-Options)
