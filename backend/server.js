@@ -98,18 +98,21 @@ const corsOptions = {
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
       // Patrón para dominios de Vercel (preview y producción)
-      /^https:\/\/[a-z0-9_-]+(-[a-z0-9_-]+)*\.vercel\.app$/
+      /^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/i
     ];
 
-    // Agregar frontend real en producción (con y sin trailing slash)
+    // Agregar frontend real en producción
     if (process.env.FRONTEND_URL) {
       const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, ''); // Eliminar trailing slash si existe
       allowedOrigins.push(frontendUrl);
-      allowedOrigins.push(frontendUrl + '/');
     }
 
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') return origin === allowedOrigin || origin === allowedOrigin.replace(/\/$/, '');
+      if (typeof allowedOrigin === 'string') {
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        const normalizedAllowed = allowedOrigin.replace(/\/$/, '');
+        return normalizedOrigin === normalizedAllowed;
+      }
       if (allowedOrigin instanceof RegExp) return allowedOrigin.test(origin);
       return false;
     });
