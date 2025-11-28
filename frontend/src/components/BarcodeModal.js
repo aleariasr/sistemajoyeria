@@ -33,7 +33,7 @@ function BarcodeModal({ joya, joyas = [], onClose }) {
   const barcodeRef = useRef();
 
   const handlePrint = useReactToPrint({
-    content: () => barcodeRef.current,
+    contentRef: barcodeRef,
     documentTitle: isMulti ? 'Codigos-Barras-Seleccion' : `Codigos-Barras-${joya?.codigo}`,
   });
 
