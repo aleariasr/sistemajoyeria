@@ -1,10 +1,16 @@
 const { v2: cloudinary } = require('cloudinary');
 
 // Configuración de Cloudinary
+// SECURITY: Credentials must be provided via environment variables
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.warn('⚠️ Cloudinary credentials not configured. Image uploads will fail.');
+  console.warn('   Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.');
+}
+
 cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dekqptpft', 
-  api_key: process.env.CLOUDINARY_API_KEY || '127388563365697', 
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'GNr2ei6MF0Z_0hUsMHN-6ivTXbg'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 /**

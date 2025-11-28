@@ -51,9 +51,14 @@ class Joya {
 
     let query = supabase.from('joyas').select('*', { count: 'exact' });
 
-    // Búsqueda general
+    // Búsqueda general - sanitize input to prevent injection
     if (busqueda) {
-      query = query.or(`codigo.ilike.%${busqueda}%,nombre.ilike.%${busqueda}%,descripcion.ilike.%${busqueda}%,categoria.ilike.%${busqueda}%,proveedor.ilike.%${busqueda}%`);
+      // Escape special characters for ILIKE pattern
+      const sanitizedBusqueda = busqueda
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
+      query = query.or(`codigo.ilike.%${sanitizedBusqueda}%,nombre.ilike.%${sanitizedBusqueda}%,descripcion.ilike.%${sanitizedBusqueda}%,categoria.ilike.%${sanitizedBusqueda}%,proveedor.ilike.%${sanitizedBusqueda}%`);
     }
 
     // Filtro por categoría

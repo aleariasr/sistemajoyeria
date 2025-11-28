@@ -199,6 +199,37 @@ router.post('/orders', async (req, res) => {
       return res.status(400).json({ error: 'Order must have at least one item' });
     }
 
+    // Sanitize customer input to prevent XSS
+    const sanitizeString = (str) => {
+      if (typeof str !== 'string') return '';
+      return str.trim().substring(0, 500); // Limit length
+    };
+
+    const sanitizedCustomer = {
+      nombre: sanitizeString(customer.nombre),
+      telefono: sanitizeString(customer.telefono),
+      email: sanitizeString(customer.email),
+      cedula: customer.cedula ? sanitizeString(customer.cedula) : null,
+      direccion: customer.direccion ? sanitizeString(customer.direccion) : ''
+    };
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedCustomer.email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Validate phone format (basic validation)
+    const phoneRegex = /^[0-9+\-\s()]{6,20}$/;
+    if (!phoneRegex.test(sanitizedCustomer.telefono)) {
+      return res.status(400).json({ error: 'Invalid phone format' });
+    }
+
+    // Validate items array
+    if (!Array.isArray(items) || items.length > 100) {
+      return res.status(400).json({ error: 'Invalid items array' });
+    }
+
     // Validate and check stock for all items
     let subtotal = 0;
     const itemsValidados = [];
@@ -241,17 +272,17 @@ router.post('/orders', async (req, res) => {
     try {
       // First try to find by cedula if provided
       const clienteData = {
-        nombre: customer.nombre,
-        telefono: customer.telefono,
-        cedula: customer.cedula || generateWebOrderId(), // Generate unique cedula for web orders
-        direccion: customer.direccion || '',
-        email: customer.email,
+        nombre: sanitizedCustomer.nombre,
+        telefono: sanitizedCustomer.telefono,
+        cedula: sanitizedCustomer.cedula || generateWebOrderId(), // Generate unique cedula for web orders
+        direccion: sanitizedCustomer.direccion,
+        email: sanitizedCustomer.email,
         notas: 'Cliente desde tienda web'
       };
 
       // Check if customer with this cedula exists
-      if (customer.cedula) {
-        cliente = await Cliente.obtenerPorCedula(customer.cedula);
+      if (sanitizedCustomer.cedula) {
+        cliente = await Cliente.obtenerPorCedula(sanitizedCustomer.cedula);
       }
 
       if (!cliente) {
@@ -317,7 +348,7 @@ router.post('/orders', async (req, res) => {
         id: idVenta,
         total: subtotal,
         items_count: items.length,
-        customer_name: customer.nombre
+        customer_name: sanitizedCustomer.nombre
       }
     });
   } catch (error) {
