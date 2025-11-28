@@ -55,6 +55,22 @@ function FormularioCliente() {
       return;
     }
 
+    // Validar email si se proporciona
+    if (formData.email && formData.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('El email no tiene un formato válido');
+        return;
+      }
+    }
+
+    // Validar teléfono (8 dígitos para Costa Rica)
+    const telefonoLimpio = formData.telefono.replace(/\D/g, '');
+    if (telefonoLimpio.length < 8) {
+      setError('El teléfono debe tener al menos 8 dígitos');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
