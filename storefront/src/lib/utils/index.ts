@@ -54,8 +54,14 @@ export function optimizeCloudinaryImage(
     return '/placeholder-product.svg';
   }
 
-  // Check if it's a Cloudinary URL
-  if (!url.includes('cloudinary.com')) {
+  // Check if it's a Cloudinary URL with proper structure
+  if (!url.includes('cloudinary.com') || !url.includes('/upload/')) {
+    return url;
+  }
+
+  // Ensure the URL has exactly one /upload/ segment to avoid malformed URLs
+  const uploadCount = (url.match(/\/upload\//g) || []).length;
+  if (uploadCount !== 1) {
     return url;
   }
 
@@ -80,8 +86,7 @@ export function optimizeCloudinaryImage(
 
   const transformString = transforms.join(',');
 
-  // Insert transformations into URL
-  // Cloudinary URL format: .../upload/[transformations]/...
+  // Insert transformations into URL after /upload/
   return url.replace('/upload/', `/upload/${transformString}/`);
 }
 

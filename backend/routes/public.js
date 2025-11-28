@@ -10,12 +10,62 @@
  */
 
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const Joya = require('../models/Joya');
 const Venta = require('../models/Venta');
 const ItemVenta = require('../models/ItemVenta');
 const Cliente = require('../models/Cliente');
 const MovimientoInventario = require('../models/MovimientoInventario');
+
+/**
+ * Generate a URL-friendly slug from product code and name
+ * @param {string} codigo - Product code
+ * @param {string} nombre - Product name
+ * @returns {string} URL-safe slug
+ */
+function generateProductSlug(codigo, nombre) {
+  return `${codigo.toLowerCase()}-${nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+}
+
+/**
+ * Transform a joya (jewelry item) to a public product format
+ * Hides sensitive fields like cost and exact stock numbers
+ * @param {Object} joya - Raw joya object from database
+ * @param {boolean} includeStock - Whether to include exact stock count
+ * @returns {Object} Public product object
+ */
+function transformToPublicProduct(joya, includeStock = false) {
+  const product = {
+    id: joya.id,
+    codigo: joya.codigo,
+    nombre: joya.nombre,
+    descripcion: joya.descripcion,
+    categoria: joya.categoria,
+    precio: joya.precio_venta,
+    moneda: joya.moneda,
+    stock_disponible: joya.stock_actual > 0,
+    imagen_url: joya.imagen_url,
+    slug: generateProductSlug(joya.codigo, joya.nombre)
+  };
+  
+  // Include exact stock count only for product detail view
+  if (includeStock) {
+    product.stock = joya.stock_actual;
+  }
+  
+  return product;
+}
+
+/**
+ * Generate a unique identifier for web orders (for cedula field)
+ * Uses cryptographically secure random bytes for uniqueness
+ * @returns {string} Unique web order identifier
+ */
+function generateWebOrderId() {
+  const randomPart = crypto.randomBytes(4).toString('hex');
+  return `WEB-${Date.now()}-${randomPart}`;
+}
 
 /**
  * GET /api/public/products
@@ -41,19 +91,7 @@ router.get('/products', async (req, res) => {
     const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
 
     // Transform data for public consumption (hide sensitive fields)
-    const productos = productosDisponibles.map(joya => ({
-      id: joya.id,
-      codigo: joya.codigo,
-      nombre: joya.nombre,
-      descripcion: joya.descripcion,
-      categoria: joya.categoria,
-      precio: joya.precio_venta,
-      moneda: joya.moneda,
-      stock_disponible: joya.stock_actual > 0,
-      imagen_url: joya.imagen_url,
-      // Create a URL-friendly slug from the name
-      slug: `${joya.codigo.toLowerCase()}-${joya.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`
-    }));
+    const productos = productosDisponibles.map(joya => transformToPublicProduct(joya));
 
     res.json({
       products: productos,
@@ -86,18 +124,7 @@ router.get('/products/featured', async (req, res) => {
     // Filter to only show products with stock
     const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
 
-    const productos = productosDisponibles.slice(0, 8).map(joya => ({
-      id: joya.id,
-      codigo: joya.codigo,
-      nombre: joya.nombre,
-      descripcion: joya.descripcion,
-      categoria: joya.categoria,
-      precio: joya.precio_venta,
-      moneda: joya.moneda,
-      stock_disponible: joya.stock_actual > 0,
-      imagen_url: joya.imagen_url,
-      slug: `${joya.codigo.toLowerCase()}-${joya.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`
-    }));
+    const productos = productosDisponibles.slice(0, 8).map(joya => transformToPublicProduct(joya));
 
     res.json({ products: productos });
   } catch (error) {
@@ -123,20 +150,8 @@ router.get('/products/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not available' });
     }
 
-    const producto = {
-      id: joya.id,
-      codigo: joya.codigo,
-      nombre: joya.nombre,
-      descripcion: joya.descripcion,
-      categoria: joya.categoria,
-      precio: joya.precio_venta,
-      moneda: joya.moneda,
-      stock_disponible: joya.stock_actual > 0,
-      // Show exact stock count for cart validation
-      stock: joya.stock_actual,
-      imagen_url: joya.imagen_url,
-      slug: `${joya.codigo.toLowerCase()}-${joya.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`
-    };
+    // Include stock for cart validation
+    const producto = transformToPublicProduct(joya, true);
 
     res.json(producto);
   } catch (error) {
@@ -224,12 +239,11 @@ router.post('/orders', async (req, res) => {
     // Try to find existing customer by email or create new one
     let cliente = null;
     try {
-      // First try to find by email (if we had that method)
-      // For now, create a new customer each time or use a simplified approach
+      // First try to find by cedula if provided
       const clienteData = {
         nombre: customer.nombre,
         telefono: customer.telefono,
-        cedula: customer.cedula || `WEB-${Date.now()}`, // Generate temporary cedula for web orders
+        cedula: customer.cedula || generateWebOrderId(), // Generate unique cedula for web orders
         direccion: customer.direccion || '',
         email: customer.email,
         notas: 'Cliente desde tienda web'
@@ -242,7 +256,8 @@ router.post('/orders', async (req, res) => {
 
       if (!cliente) {
         const resultado = await Cliente.crear(clienteData);
-        cliente = await Cliente.obtenerPorId(resultado.id);
+        // Use the id from the create result instead of making a second query
+        cliente = { id: resultado.id, ...clienteData };
       }
     } catch (clienteError) {
       console.error('Error creating customer:', clienteError);

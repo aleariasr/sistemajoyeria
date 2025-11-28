@@ -25,12 +25,7 @@ import type {
  * Get the API base URL from environment or default
  */
 const getApiUrl = (): string => {
-  // Environment variable takes priority
-  if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  
-  // Server-side or default
+  // NEXT_PUBLIC_* variables are available on both client and server in Next.js
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
