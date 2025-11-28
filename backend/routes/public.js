@@ -75,41 +75,31 @@ function generateWebOrderId() {
 router.get('/products', async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina || req.query.page || 1);
-    const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 100);
+    const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 50);
     
     const filtros = {
       busqueda: req.query.busqueda || req.query.search,
       categoria: req.query.categoria || req.query.category,
       precio_min: req.query.precio_min || req.query.price_min,
       precio_max: req.query.precio_max || req.query.price_max,
-      // Only show active products for public storefront
+      // Only show active products with stock for public storefront
       estado: 'Activo',
-      // Get all products first, then filter by stock in JS
-      // since Supabase doesn't support gt filter in the same way
-      pagina: 1,
-      por_pagina: 1000 // Get all active products
+      con_stock: true, // Filter by stock > 0 in database query
+      pagina: pagina,
+      por_pagina: porPagina
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
 
-    // Filter to only show products with stock > 0 for public storefront
-    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
-
     // Transform data for public consumption (hide sensitive fields)
-    const todosProductos = productosDisponibles.map(joya => transformToPublicProduct(joya));
-
-    // Apply pagination after filtering
-    const totalProductos = todosProductos.length;
-    const totalPaginas = Math.ceil(totalProductos / porPagina);
-    const offset = (pagina - 1) * porPagina;
-    const productosPaginados = todosProductos.slice(offset, offset + porPagina);
+    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
 
     res.json({
-      products: productosPaginados,
-      total: totalProductos,
-      page: pagina,
-      per_page: porPagina,
-      total_pages: totalPaginas
+      products: productos,
+      total: resultado.total,
+      page: resultado.pagina,
+      per_page: resultado.por_pagina,
+      total_pages: resultado.total_paginas
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
@@ -126,17 +116,15 @@ router.get('/products/featured', async (req, res) => {
   try {
     const filtros = {
       estado: 'Activo',
+      con_stock: true, // Filter by stock > 0 in database query
       pagina: 1,
-      por_pagina: 100 // Get enough products to find 8 with stock
+      por_pagina: 8 // Get exactly 8 products
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
 
-    // Filter to only show products with stock
-    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
-
-    // Take first 8 products
-    const productos = productosDisponibles.slice(0, 8).map(joya => transformToPublicProduct(joya));
+    // Transform data for public consumption
+    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
 
     res.json({ products: productos });
   } catch (error) {
@@ -179,30 +167,8 @@ router.get('/products/:id', async (req, res) => {
  */
 router.get('/categories', async (req, res) => {
   try {
-    // Get all active products first
-    const filtros = {
-      estado: 'Activo',
-      pagina: 1,
-      por_pagina: 1000
-    };
-    
-    const resultado = await Joya.obtenerTodas(filtros);
-    
-    // Filter to only products with stock > 0
-    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
-    
-    // Extract unique categories from available products
-    const categoriasSet = new Set(
-      productosDisponibles
-        .map(j => j.categoria)
-        .filter(cat => cat && cat.trim() !== '')
-    );
-    
-    // Sort categories alphabetically
-    const categorias = Array.from(categoriasSet).sort((a, b) => 
-      a.localeCompare(b, 'es', { sensitivity: 'base' })
-    );
-    
+    // Use efficient database query to get categories from available products
+    const categorias = await Joya.obtenerCategoriasDisponibles();
     res.json({ categories: categorias });
   } catch (error) {
     console.error('Error fetching categories:', error);
