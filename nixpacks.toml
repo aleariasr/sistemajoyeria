@@ -1,0 +1,12 @@
+# Nixpacks configuration for Railway deployment
+# This file configures how the monorepo is built and run
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm"]
+
+[phases.install]
+# Use root npm install which handles workspaces automatically
+cmds = ["npm install"]
+
+[start]
+cmd = "cd backend && node server.js"
