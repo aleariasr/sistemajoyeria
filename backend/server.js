@@ -14,6 +14,22 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const HOST = process.env.HOST || '0.0.0.0';
 
 /* ============================================================
+   CONFIGURACIÓN DE COOKIES PARA CROSS-ORIGIN (Vercel + Railway)
+   ============================================================ */
+
+// En producción con FRONTEND_URL diferente, necesitamos sameSite: 'none' y secure: true
+const isProduction = NODE_ENV === 'production';
+const isCrossOrigin = isProduction && process.env.FRONTEND_URL;
+
+const cookieConfig = {
+  httpOnly: true,
+  maxAge: 24 * 60 * 60 * 1000, // 24 horas
+  // Cross-origin (Vercel frontend + Railway backend) requiere sameSite: 'none' y secure: true
+  secure: isProduction,
+  sameSite: isCrossOrigin ? 'none' : 'lax'
+};
+
+/* ============================================================
    REDIS SOLO EN PRODUCCIÓN (NO ROMPE NADA LOCAL)
    ============================================================ */
 let RedisStore = null;
@@ -34,12 +50,7 @@ if (NODE_ENV === 'production' && process.env.REDIS_URL) {
       secret: process.env.SESSION_SECRET || 'joyeria-secret-key-2024',
       resave: false,
       saveUninitialized: false,
-      cookie: {
-        secure: true,
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax'
-      }
+      cookie: cookieConfig
     }));
 
     console.log("🟢 Redis activado en producción");
@@ -52,23 +63,22 @@ if (NODE_ENV === 'production' && process.env.REDIS_URL) {
      SESIONES NORMALES (AMBIENTE LOCAL / SIN REDIS)
      ============================================================ */
   app.use(session({
-    secret: 'joyeria-secret-key-2024',
+    secret: process.env.SESSION_SECRET || 'joyeria-secret-key-2024',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      secure: false,
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-      sameSite: 'lax'
-    }
+    cookie: cookieConfig
   }));
 
   console.log("🟡 Sesiones locales activas (sin Redis)");
 }
 
+if (isCrossOrigin) {
+  console.log("🔐 Cookies configuradas para cross-origin (sameSite: none, secure: true)");
+}
+
 
 /* ============================================================
-   CORS — AHORA SIN ERRORES DE SINTAXIS
+   CORS — Soporte para Vercel + Railway
    ============================================================ */
 const corsOptions = {
   origin: function (origin, callback) {
@@ -79,20 +89,30 @@ const corsOptions = {
       'http://localhost',
       'http://localhost/',
       'http://localhost:80',
+      'http://localhost:3000',
       'http://127.0.0.1',
       'http://127.0.0.1:80',
-      'https://backend-production-cdd5.up.railway.app',
+      'http://127.0.0.1:3000',
+      'https://sistemajoyeria-production.up.railway.app',
+      // Patrones para red local
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
+      // Patrón para dominios de Vercel (preview y producción)
+      /^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/i
     ];
 
     // Agregar frontend real en producción
     if (process.env.FRONTEND_URL) {
-      allowedOrigins.push(process.env.FRONTEND_URL);
+      const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, ''); // Eliminar trailing slash si existe
+      allowedOrigins.push(frontendUrl);
     }
 
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') return origin === allowedOrigin;
+      if (typeof allowedOrigin === 'string') {
+        const normalizedOrigin = origin.replace(/\/$/, '');
+        const normalizedAllowed = allowedOrigin.replace(/\/$/, '');
+        return normalizedOrigin === normalizedAllowed;
+      }
       if (allowedOrigin instanceof RegExp) return allowedOrigin.test(origin);
       return false;
     });
@@ -100,6 +120,7 @@ const corsOptions = {
     if (isAllowed || NODE_ENV === 'development') {
       callback(null, true);
     } else {
+      console.log(`🚫 CORS bloqueado para origen: ${origin}`);
       callback(new Error('No permitido por CORS'));
     }
   },
