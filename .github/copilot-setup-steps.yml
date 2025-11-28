@@ -1,0 +1,18 @@
+# GitHub Copilot Coding Agent Setup Steps
+# This file configures the development environment for Copilot coding agent
+# See: https://docs.github.com/en/copilot/customizing-copilot/customizing-the-development-environment-for-copilot-coding-agent
+# Note: This is NOT a standard GitHub Actions workflow - it only contains steps that run before Copilot starts
+
+name: "Copilot Setup Steps"
+
+steps:
+  # Setup Node.js environment
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: "20"
+      cache: "npm"
+
+  # Install all workspace dependencies
+  - name: Install dependencies
+    run: npm install
