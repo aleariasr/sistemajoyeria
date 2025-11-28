@@ -35,6 +35,7 @@ function getApiUrl() {
     
     // Si es una IP local (192.168.x.x, 10.x.x.x, 172.16-31.x.x), usar la misma IP
     // Esto permite que dispositivos móviles en la red local se conecten
+    // Note: \d{1,3} technically allows 0-999 but invalid IPs won't resolve
     const localIpPattern = /^(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})$/;
     if (localIpPattern.test(hostname)) {
       return `${protocol}//${hostname}:3001/api`;

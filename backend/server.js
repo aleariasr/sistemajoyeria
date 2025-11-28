@@ -163,6 +163,13 @@ const corsOptions = {
       // - 192.168.x.x (Redes domésticas más comunes)
       // - 10.x.x.x (Redes empresariales y VPNs)
       // - 172.16.x.x - 172.31.x.x (Redes medianas)
+      // 
+      // Note: These regex patterns use \d{1,3} for each octet which technically
+      // allows values 0-999 instead of the valid range 0-255. This is acceptable
+      // for CORS allowlisting because:
+      // 1. Invalid IPs (e.g., 192.168.999.999) won't resolve to real hosts
+      // 2. Browsers can't connect to non-existent IPs, so no security risk
+      // 3. Strict validation (0-255) would make patterns much more complex
       // ============================================================
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
