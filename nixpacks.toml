@@ -9,4 +9,4 @@ nixPkgs = ["nodejs_20", "npm"]
 cmds = ["npm install"]
 
 [start]
-cmd = "cd backend && node server.js"
+cmd = "npm start --workspace=backend"
