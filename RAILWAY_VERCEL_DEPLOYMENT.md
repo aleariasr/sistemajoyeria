@@ -78,7 +78,7 @@ server = app.listen(PORT, HOST, () => {
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm start --workspace=backend",
+    "startCommand": "node backend/server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
@@ -86,9 +86,9 @@ server = app.listen(PORT, HOST, () => {
 ```
 
 **Key points:**
-- ❌ No `buildCommand` - let Nixpacks auto-detect (runs `npm install` at root)
-- ✅ `startCommand` uses `npm start --workspace=backend` - works reliably across environments
-- ✅ npm workspaces handle working directory and module resolution automatically
+- ❌ No `buildCommand` - let Nixpacks auto-detect (runs `npm ci` at root)
+- ✅ `startCommand` uses `node backend/server.js` - direct execution, no workspace dependency
+- ✅ More reliable than npm workspace commands which can fail in some Railway environments
 
 **`nixpacks.toml`:**
 ```toml
@@ -96,24 +96,36 @@ server = app.listen(PORT, HOST, () => {
 nixPkgs = ["nodejs_20", "npm"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm ci"]
 
 [start]
-cmd = "npm start --workspace=backend"
+cmd = "node backend/server.js"
 ```
 
 **`Procfile`:**
 ```text
-web: npm start --workspace=backend
+web: node backend/server.js
 ```
 
-### Why npm Workspace Commands Are Better
+### ⚠️ Important: Why Direct Node Commands Instead of npm Workspaces
 
-Instead of relying on shell `cd` commands, npm workspace commands:
-1. **Always work from root:** They don't depend on the current working directory
-2. **Proper module resolution:** npm sets up the environment correctly for hoisted dependencies
-3. **Cross-platform compatible:** Works the same on all platforms
-4. **Leverage package.json scripts:** The `backend/package.json` defines `"start": "node server.js"`
+In some Railway/Nixpacks environments, using `npm start --workspace=backend` can fail with:
+```
+npm warn config production Use `--omit=dev` instead.
+npm error No workspaces found:
+npm error   --workspace=backend
+```
+
+This happens because:
+1. Nixpacks may use the deprecated `--production` flag which triggers a warning
+2. In some configurations, npm workspaces are not properly recognized after install
+3. The workspace command requires npm to resolve paths which can fail in containerized builds
+
+**Solution:** Use direct `node backend/server.js` command instead of npm workspace commands:
+- ✅ More reliable - works in any environment
+- ✅ No npm overhead - faster startup
+- ✅ No workspace resolution issues
+- ✅ Same end result - runs the server
 
 ---
 
@@ -265,26 +277,64 @@ The server now uses a "bind first, connect later" pattern:
 3. Check that no other process is using the port
 4. Review the Railway service logs for startup errors
 
+### Issue: `No workspaces found: --workspace=backend`
+
+**Cause:** npm workspace commands fail in some Railway/Nixpacks environments. This error occurs when:
+1. Nixpacks uses the deprecated `--production` flag during install
+2. npm workspace resolution fails in the containerized build environment
+3. The workspace symlinks are not created correctly
+
+**Full error message:**
+```
+npm warn config production Use `--omit=dev` instead.
+npm error No workspaces found:
+npm error   --workspace=backend
+```
+
+**Solution:** Use direct node commands instead of npm workspace commands:
+1. **Update `railway.json`:**
+   ```json
+   "startCommand": "node backend/server.js"
+   ```
+
+2. **Update `nixpacks.toml`:**
+   ```toml
+   [start]
+   cmd = "node backend/server.js"
+   ```
+
+3. **Update `Procfile`:**
+   ```text
+   web: node backend/server.js
+   ```
+
+4. **Check Railway dashboard settings:**
+   - Go to: Service Settings → Deploy → Start Command
+   - Set to: `node backend/server.js`
+   - Or clear the field to use config file values
+
+This bypasses npm workspace resolution and runs the server directly.
+
 ### Issue: `cd: backend: No such file or directory`
 
 **Cause:** The `cd backend` shell command fails because Railway/Nixpacks runs from a different working directory, or the backend folder isn't in the expected location after build.
 
 **Solutions:**
-1. **Use npm workspace commands** (recommended):
+1. **Use direct node command** (recommended):
    ```json
    // railway.json
-   "startCommand": "npm start --workspace=backend"
+   "startCommand": "node backend/server.js"
    ```
    
 2. **Verify configuration files match:**
-   - `railway.json` → `"startCommand": "npm start --workspace=backend"`
-   - `nixpacks.toml` → `cmd = "npm start --workspace=backend"`
-   - `Procfile` → `web: npm start --workspace=backend`
+   - `railway.json` → `"startCommand": "node backend/server.js"`
+   - `nixpacks.toml` → `cmd = "node backend/server.js"`
+   - `Procfile` → `web: node backend/server.js`
 
 3. **Check Railway dashboard settings:**
    - Railway dashboard settings can override config files
    - Go to: Service Settings → Deploy → Start Command
-   - Ensure it's set to: `npm start --workspace=backend`
+   - Ensure it's set to: `node backend/server.js`
    - Or clear the field to use the config file values
 
 4. **Verify the backend directory exists in deployment:**
