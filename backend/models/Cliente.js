@@ -32,8 +32,13 @@ class Cliente {
     let query = supabase.from('clientes').select('*', { count: 'exact' });
 
     // Filtro de búsqueda por nombre, cédula o teléfono
+    // Sanitize input to prevent injection
     if (busqueda) {
-      query = query.or(`nombre.ilike.%${busqueda}%,cedula.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`);
+      const sanitizedBusqueda = busqueda
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
+      query = query.or(`nombre.ilike.%${sanitizedBusqueda}%,cedula.ilike.%${sanitizedBusqueda}%,telefono.ilike.%${sanitizedBusqueda}%`);
     }
 
     // Ordenar y paginar
@@ -127,10 +132,16 @@ class Cliente {
 
   // Buscar clientes por nombre o cédula
   static async buscar(termino) {
+    // Sanitize input to prevent injection
+    const sanitizedTermino = termino
+      .replace(/\\/g, '\\\\')
+      .replace(/%/g, '\\%')
+      .replace(/_/g, '\\_');
+    
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
-      .or(`nombre.ilike.%${termino}%,cedula.ilike.%${termino}%,telefono.ilike.%${termino}%`)
+      .or(`nombre.ilike.%${sanitizedTermino}%,cedula.ilike.%${sanitizedTermino}%,telefono.ilike.%${sanitizedTermino}%`)
       .order('nombre', { ascending: true })
       .limit(10);
 

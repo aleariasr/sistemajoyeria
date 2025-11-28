@@ -49,12 +49,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/catalog">
               <Button size="lg">
-                Ver Colección
-              </Button>
-            </Link>
-            <Link href="/catalog">
-              <Button variant="outline" size="lg">
-                Explorar Categorías
+                Ver Catálogo Completo
               </Button>
             </Link>
           </div>

@@ -41,7 +41,7 @@ class Joya {
   static async obtenerTodas(filtros = {}) {
     const {
       busqueda, categoria, precio_min, precio_max,
-      stock_bajo, sin_stock, estado,
+      stock_bajo, sin_stock, estado, con_stock,
       pagina = 1,
       por_pagina = 20
     } = filtros;
@@ -51,9 +51,14 @@ class Joya {
 
     let query = supabase.from('joyas').select('*', { count: 'exact' });
 
-    // Búsqueda general
+    // Búsqueda general - sanitize input to prevent injection
     if (busqueda) {
-      query = query.or(`codigo.ilike.%${busqueda}%,nombre.ilike.%${busqueda}%,descripcion.ilike.%${busqueda}%,categoria.ilike.%${busqueda}%,proveedor.ilike.%${busqueda}%`);
+      // Escape special characters for ILIKE pattern
+      const sanitizedBusqueda = busqueda
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
+      query = query.or(`codigo.ilike.%${sanitizedBusqueda}%,nombre.ilike.%${sanitizedBusqueda}%,descripcion.ilike.%${sanitizedBusqueda}%,categoria.ilike.%${sanitizedBusqueda}%,proveedor.ilike.%${sanitizedBusqueda}%`);
     }
 
     // Filtro por categoría
@@ -77,6 +82,11 @@ class Joya {
     // Filtro por sin stock
     if (sin_stock === 'true') {
       query = query.eq('stock_actual', 0);
+    }
+
+    // Filtro por productos con stock disponible (para storefront)
+    if (con_stock === true || con_stock === 'true') {
+      query = query.gt('stock_actual', 0);
     }
 
     // Filtro por estado
@@ -229,6 +239,31 @@ class Joya {
     // Extraer categorías únicas
     const categorias = [...new Set(data.map(row => row.categoria))];
     return categorias;
+  }
+
+  // Obtener categorías únicas de productos activos con stock
+  static async obtenerCategoriasDisponibles() {
+    const { data, error } = await supabase
+      .from('joyas')
+      .select('categoria')
+      .eq('estado', 'Activo')
+      .gt('stock_actual', 0)
+      .not('categoria', 'is', null)
+      .order('categoria');
+
+    if (error) {
+      throw error;
+    }
+
+    // Extraer categorías únicas y filtrar vacías
+    const categorias = [...new Set(
+      data
+        .map(row => row.categoria)
+        .filter(cat => cat && cat.trim() !== '')
+    )];
+    
+    // Ordenar alfabéticamente en español
+    return categorias.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   }
 }
 

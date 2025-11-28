@@ -1,8 +1,5 @@
 import axios from 'axios';
 
-// URL de producción del backend en Railway
-const PRODUCTION_API_URL = 'https://sistemajoyeria-production.up.railway.app/api';
-
 // Detectar URL del backend correctamente en CRA + Railway
 function getApiUrl() {
   // 1. Variable de entorno tiene prioridad
@@ -10,13 +7,14 @@ function getApiUrl() {
     return process.env.REACT_APP_API_URL;
   }
 
-  // 2. En producción (Vercel), usar la URL de Railway
-  if (window.location.hostname.includes('vercel.app') || 
-      window.location.hostname === 'sistemajoyeria-frontend.vercel.app') {
-    return PRODUCTION_API_URL;
+  // 2. In production, the REACT_APP_API_URL should be set
+  // Fall back to checking hostname patterns for legacy support
+  if (window.location.hostname.includes('vercel.app')) {
+    console.warn('⚠️ REACT_APP_API_URL not set. Configure it for production deployments.');
+    // Don't hardcode production URLs - rely on environment variable
   }
 
-  // 3. Local: usar :3001/api
+  // 3. Local development: use :3001/api
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
 

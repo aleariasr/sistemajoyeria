@@ -7,8 +7,16 @@ const {
   validarTipoMovimiento
 } = require('../utils/validaciones');
 
+// Middleware para verificar autenticación
+const requireAuth = (req, res, next) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+  next();
+};
+
 // GET /api/movimientos - Obtener todos los movimientos con filtros
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const filtros = {
       id_joya: req.query.id_joya,
@@ -28,7 +36,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/movimientos - Crear nuevo movimiento
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { id_joya, tipo_movimiento, cantidad, motivo, usuario } = req.body;
 

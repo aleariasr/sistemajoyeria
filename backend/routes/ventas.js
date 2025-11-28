@@ -97,6 +97,29 @@ router.post('/', requireAuth, async (req, res) => {
       monto_transferencia: monto_transferencia || 0
     };
 
+    // IMPORTANT: Validate stock BEFORE creating the sale to prevent race conditions
+    // Get all items and validate stock first
+    const itemsConJoya = [];
+    for (const item of items) {
+      const joya = await Joya.obtenerPorId(item.id_joya);
+      
+      if (!joya) {
+        return res.status(404).json({ error: `Joya con ID ${item.id_joya} no encontrada` });
+      }
+
+      // Verify there is enough stock
+      if (joya.stock_actual < item.cantidad) {
+        return res.status(400).json({ 
+          error: `Stock insuficiente para ${joya.nombre}. Stock disponible: ${joya.stock_actual}` 
+        });
+      }
+
+      itemsConJoya.push({
+        ...item,
+        joya
+      });
+    }
+
     // Si es venta a crédito, guardar directamente en la base de datos principal
     // Si es venta de contado, guardar en la base de datos del día
     let resultadoVenta;
@@ -114,7 +137,9 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Crear items de venta y actualizar stock
-    for (const item of items) {
+    for (const itemConJoya of itemsConJoya) {
+      const { joya, ...item } = itemConJoya;
+
       // Crear item de venta en la base de datos correspondiente
       if (esVentaCredito) {
         await ItemVenta.crear({
@@ -134,21 +159,7 @@ router.post('/', requireAuth, async (req, res) => {
         });
       }
 
-      // Obtener joya actual
-      const joya = await Joya.obtenerPorId(item.id_joya);
-      
-      if (!joya) {
-        return res.status(404).json({ error: `Joya con ID ${item.id_joya} no encontrada` });
-      }
-
-      // Verificar que hay suficiente stock
-      if (joya.stock_actual < item.cantidad) {
-        return res.status(400).json({ 
-          error: `Stock insuficiente para ${joya.nombre}. Stock disponible: ${joya.stock_actual}` 
-        });
-      }
-
-      // Actualizar stock
+      // Actualizar stock (joya was already validated above)
       const nuevoStock = joya.stock_actual - item.cantidad;
       await Joya.actualizarStock(item.id_joya, nuevoStock);
 

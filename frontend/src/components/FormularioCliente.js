@@ -55,6 +55,23 @@ function FormularioCliente() {
       return;
     }
 
+    // Validar email si se proporciona (same regex as backend)
+    if (formData.email && formData.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('El email no tiene un formato válido');
+        return;
+      }
+    }
+
+    // Validar teléfono (consistent with backend: only digits, plus, and parentheses after normalization)
+    const normalizedPhone = formData.telefono.replace(/[\s-]/g, '');
+    const phoneRegex = /^[0-9+()]{6,20}$/;
+    if (!phoneRegex.test(normalizedPhone)) {
+      setError('El teléfono debe tener entre 6 y 20 caracteres (solo números, +, y paréntesis)');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');

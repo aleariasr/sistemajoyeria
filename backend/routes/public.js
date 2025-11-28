@@ -74,6 +74,9 @@ function generateWebOrderId() {
  */
 router.get('/products', async (req, res) => {
   try {
+    const pagina = parseInt(req.query.pagina || req.query.page || 1);
+    const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 50);
+    
     const filtros = {
       busqueda: req.query.busqueda || req.query.search,
       categoria: req.query.categoria || req.query.category,
@@ -81,24 +84,22 @@ router.get('/products', async (req, res) => {
       precio_max: req.query.precio_max || req.query.price_max,
       // Only show active products with stock for public storefront
       estado: 'Activo',
-      pagina: req.query.pagina || req.query.page || 1,
-      por_pagina: req.query.por_pagina || req.query.per_page || 20
+      con_stock: true, // Filter by stock > 0 in database query
+      pagina: pagina,
+      por_pagina: porPagina
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
 
-    // Filter to only show products with stock > 0 for public storefront
-    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
-
     // Transform data for public consumption (hide sensitive fields)
-    const productos = productosDisponibles.map(joya => transformToPublicProduct(joya));
+    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
 
     res.json({
       products: productos,
-      total: productos.length,
-      page: parseInt(filtros.pagina),
-      per_page: parseInt(filtros.por_pagina),
-      total_pages: Math.ceil(productos.length / parseInt(filtros.por_pagina))
+      total: resultado.total,
+      page: resultado.pagina,
+      per_page: resultado.por_pagina,
+      total_pages: resultado.total_paginas
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
@@ -115,16 +116,15 @@ router.get('/products/featured', async (req, res) => {
   try {
     const filtros = {
       estado: 'Activo',
+      con_stock: true, // Filter by stock > 0 in database query
       pagina: 1,
-      por_pagina: 8
+      por_pagina: 8 // Get exactly 8 products
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
 
-    // Filter to only show products with stock
-    const productosDisponibles = resultado.joyas.filter(j => j.stock_actual > 0);
-
-    const productos = productosDisponibles.slice(0, 8).map(joya => transformToPublicProduct(joya));
+    // Transform data for public consumption
+    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
 
     res.json({ products: productos });
   } catch (error) {
@@ -163,10 +163,12 @@ router.get('/products/:id', async (req, res) => {
 /**
  * GET /api/public/categories
  * Get all product categories for filtering
+ * Only returns categories from active products with stock
  */
 router.get('/categories', async (req, res) => {
   try {
-    const categorias = await Joya.obtenerCategorias();
+    // Use efficient database query to get categories from available products
+    const categorias = await Joya.obtenerCategoriasDisponibles();
     res.json({ categories: categorias });
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -197,6 +199,49 @@ router.post('/orders', async (req, res) => {
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Order must have at least one item' });
+    }
+
+    // Sanitize customer input to prevent XSS and injection
+    const sanitizeString = (str) => {
+      if (typeof str !== 'string') return '';
+      // Escape HTML special characters and limit length
+      return str
+        .trim()
+        .substring(0, 500)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+    };
+
+    const sanitizedCustomer = {
+      nombre: sanitizeString(customer.nombre),
+      telefono: sanitizeString(customer.telefono),
+      email: sanitizeString(customer.email),
+      cedula: customer.cedula ? sanitizeString(customer.cedula) : null,
+      direccion: customer.direccion ? sanitizeString(customer.direccion) : ''
+    };
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sanitizedCustomer.email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Validate phone format - only allow digits, plus, and parentheses
+    const phoneRegex = /^[0-9+()]{6,20}$/;
+    // First remove spaces and hyphens from phone to normalize, then validate
+    const normalizedPhone = customer.telefono.replace(/[\s-]/g, '');
+    if (!phoneRegex.test(normalizedPhone)) {
+      return res.status(400).json({ error: 'Invalid phone format' });
+    }
+    // Update sanitized phone with normalized version
+    sanitizedCustomer.telefono = normalizedPhone;
+
+    // Validate items array
+    if (!Array.isArray(items) || items.length > 100) {
+      return res.status(400).json({ error: 'Invalid items array' });
     }
 
     // Validate and check stock for all items
@@ -241,17 +286,17 @@ router.post('/orders', async (req, res) => {
     try {
       // First try to find by cedula if provided
       const clienteData = {
-        nombre: customer.nombre,
-        telefono: customer.telefono,
-        cedula: customer.cedula || generateWebOrderId(), // Generate unique cedula for web orders
-        direccion: customer.direccion || '',
-        email: customer.email,
+        nombre: sanitizedCustomer.nombre,
+        telefono: sanitizedCustomer.telefono,
+        cedula: sanitizedCustomer.cedula || generateWebOrderId(), // Generate unique cedula for web orders
+        direccion: sanitizedCustomer.direccion,
+        email: sanitizedCustomer.email,
         notas: 'Cliente desde tienda web'
       };
 
       // Check if customer with this cedula exists
-      if (customer.cedula) {
-        cliente = await Cliente.obtenerPorCedula(customer.cedula);
+      if (sanitizedCustomer.cedula) {
+        cliente = await Cliente.obtenerPorCedula(sanitizedCustomer.cedula);
       }
 
       if (!cliente) {
@@ -317,7 +362,7 @@ router.post('/orders', async (req, res) => {
         id: idVenta,
         total: subtotal,
         items_count: items.length,
-        customer_name: customer.nombre
+        customer_name: sanitizedCustomer.nombre
       }
     });
   } catch (error) {

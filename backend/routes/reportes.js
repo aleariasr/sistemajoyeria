@@ -5,8 +5,16 @@ const Venta = require('../models/Venta');
 const Abono = require('../models/Abono');
 const MovimientoInventario = require('../models/MovimientoInventario');
 
+// Middleware para verificar autenticación
+const requireAuth = (req, res, next) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+  next();
+};
+
 // GET /api/reportes/inventario - Reporte de inventario actual
-router.get('/inventario', async (req, res) => {
+router.get('/inventario', requireAuth, async (req, res) => {
   try {
     const resultado = await Joya.obtenerTodas({ por_pagina: 10000 });
     
@@ -31,7 +39,7 @@ router.get('/inventario', async (req, res) => {
 });
 
 // GET /api/reportes/stock-bajo - Reporte de stock bajo
-router.get('/stock-bajo', async (req, res) => {
+router.get('/stock-bajo', requireAuth, async (req, res) => {
   try {
     const joyas = await Joya.obtenerStockBajo();
     
@@ -54,7 +62,7 @@ router.get('/stock-bajo', async (req, res) => {
 });
 
 // GET /api/reportes/movimientos-financieros - Reporte completo de movimientos financieros
-router.get('/movimientos-financieros', async (req, res) => {
+router.get('/movimientos-financieros', requireAuth, async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta } = req.query;
     
@@ -141,7 +149,7 @@ router.get('/movimientos-financieros', async (req, res) => {
 });
 
 // GET /api/reportes/historial-completo - Historial completo de todas las transacciones
-router.get('/historial-completo', async (req, res) => {
+router.get('/historial-completo', requireAuth, async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta, tipo } = req.query;
     

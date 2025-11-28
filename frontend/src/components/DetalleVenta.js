@@ -163,23 +163,23 @@ function DetalleVenta() {
           <h3>Resumen de Pago</h3>
           <div className="info-linea">
             <span className="label">Subtotal:</span>
-            <span>₡{venta.subtotal.toFixed(2)}</span>
+            <span>₡{(venta.subtotal || 0).toFixed(2)}</span>
           </div>
-          {venta.descuento > 0 && (
+          {(venta.descuento || 0) > 0 && (
             <div className="info-linea">
               <span className="label">Descuento:</span>
-              <span className="descuento">-₡{venta.descuento.toFixed(2)}</span>
+              <span className="descuento">-₡{(venta.descuento || 0).toFixed(2)}</span>
             </div>
           )}
           <div className="info-linea total">
             <span className="label">Total:</span>
-            <span>₡{venta.total.toFixed(2)}</span>
+            <span>₡{(venta.total || 0).toFixed(2)}</span>
           </div>
           {venta.metodo_pago === 'Efectivo' && venta.efectivo_recibido && (
             <>
               <div className="info-linea">
                 <span className="label">Efectivo Recibido:</span>
-                <span>₡{venta.efectivo_recibido.toFixed(2)}</span>
+                <span>₡{(venta.efectivo_recibido || 0).toFixed(2)}</span>
               </div>
               <div className="info-linea">
                 <span className="label">Cambio:</span>
@@ -211,8 +211,8 @@ function DetalleVenta() {
                   <td>{item.nombre}</td>
                   <td>{item.categoria}</td>
                   <td>{item.cantidad}</td>
-                  <td>₡{item.precio_unitario.toFixed(2)}</td>
-                  <td className="subtotal">₡{item.subtotal.toFixed(2)}</td>
+                  <td>₡{(item.precio_unitario || 0).toFixed(2)}</td>
+                  <td className="subtotal">₡{(item.subtotal || 0).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

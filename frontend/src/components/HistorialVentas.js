@@ -175,7 +175,7 @@ function HistorialVentas() {
                       </span>
                     </td>
                     <td>{formatearMetodoPago(venta.metodo_pago)}</td>
-                    <td className="precio">₡{venta.total.toFixed(2)}</td>
+                    <td className="precio">₡{(venta.total || 0).toFixed(2)}</td>
                     <td>
                       <button 
                         onClick={() => verDetalleVenta(venta.id)}
