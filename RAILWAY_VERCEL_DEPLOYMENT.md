@@ -36,10 +36,17 @@ This is a **monorepo with npm workspaces**. The root `package.json` defines:
 # Error: /bin/bash: line 1: cd: backend: No such file or directory
 ```
 
-**Root cause:** The `buildCommand` in `railway.json` included `cd backend && npm install`, which fails in the Nixpacks build context because:
-1. Nixpacks runs commands from the repository root
-2. The `cd backend` command was unnecessary and broken
-3. npm workspaces already handles all dependencies
+**Root cause:** Using `cd backend && node server.js` in the start command can fail in certain Railway/Nixpacks build contexts because:
+1. The working directory context may differ from the repository root
+2. The `cd backend` command may not find the directory in the build output
+3. Shell command chaining with `cd` is fragile across different environments
+
+### ✅ Solution: Use npm Workspace Commands
+
+The fix is to use npm workspace commands instead of `cd backend`:
+- `npm start --workspace=backend` runs from the root and properly sets the working directory
+- npm handles path resolution correctly regardless of the current directory
+- This is the recommended approach for monorepo deployments
 
 ### ✅ Current Configuration
 
@@ -51,7 +58,7 @@ This is a **monorepo with npm workspaces**. The root `package.json` defines:
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd backend && node server.js",
+    "startCommand": "npm start --workspace=backend",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
@@ -60,7 +67,8 @@ This is a **monorepo with npm workspaces**. The root `package.json` defines:
 
 **Key points:**
 - ❌ No `buildCommand` - let Nixpacks auto-detect (runs `npm install` at root)
-- ✅ `startCommand` uses `cd backend && node server.js` because `server.js` has relative requires (`./supabase-db`, `./routes/*`) that must resolve from the backend directory
+- ✅ `startCommand` uses `npm start --workspace=backend` - works reliably across environments
+- ✅ npm workspaces handle working directory and module resolution automatically
 
 **`nixpacks.toml`:**
 ```toml
@@ -71,23 +79,21 @@ nixPkgs = ["nodejs_20", "npm"]
 cmds = ["npm install"]
 
 [start]
-cmd = "cd backend && node server.js"
+cmd = "npm start --workspace=backend"
 ```
 
 **`Procfile`:**
 ```text
-web: cd backend && node server.js
+web: npm start --workspace=backend
 ```
 
-### Why `startCommand` needs `cd backend`
+### Why npm Workspace Commands Are Better
 
-The `server.js` file uses relative imports:
-```javascript
-const { initDatabase } = require('./supabase-db');  // relative to backend/
-const joyasRoutes = require('./routes/joyas');       // relative to backend/
-```
-
-These paths only resolve correctly when Node.js runs from the `backend/` directory.
+Instead of relying on shell `cd` commands, npm workspace commands:
+1. **Always work from root:** They don't depend on the current working directory
+2. **Proper module resolution:** npm sets up the environment correctly for hoisted dependencies
+3. **Cross-platform compatible:** Works the same on all platforms
+4. **Leverage package.json scripts:** The `backend/package.json` defines `"start": "node server.js"`
 
 ---
 
@@ -216,8 +222,29 @@ REACT_APP_API_URL=https://sistemajoyeria-production.up.railway.app/api
 
 ### Issue: `cd: backend: No such file or directory`
 
-**Cause:** Build command tries to `cd backend` in Nixpacks context  
-**Solution:** Remove `buildCommand` from `railway.json` - let npm workspaces handle installation
+**Cause:** The `cd backend` shell command fails because Railway/Nixpacks runs from a different working directory, or the backend folder isn't in the expected location after build.
+
+**Solutions:**
+1. **Use npm workspace commands** (recommended):
+   ```json
+   // railway.json
+   "startCommand": "npm start --workspace=backend"
+   ```
+   
+2. **Verify configuration files match:**
+   - `railway.json` → `"startCommand": "npm start --workspace=backend"`
+   - `nixpacks.toml` → `cmd = "npm start --workspace=backend"`
+   - `Procfile` → `web: npm start --workspace=backend`
+
+3. **Check Railway dashboard settings:**
+   - Railway dashboard settings can override config files
+   - Go to: Service Settings → Deploy → Start Command
+   - Ensure it's set to: `npm start --workspace=backend`
+   - Or clear the field to use the config file values
+
+4. **Verify the backend directory exists in deployment:**
+   - Check Railway build logs for any errors
+   - Ensure `.gitignore` or `.railwayignore` doesn't exclude `/backend`
 
 ### Issue: API not found on production
 
