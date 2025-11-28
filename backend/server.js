@@ -164,6 +164,8 @@ const clientesRoutes = require('./routes/clientes');
 const cuentasPorCobrarRoutes = require('./routes/cuentas-por-cobrar');
 const ingresosExtrasRoutes = require('./routes/ingresos-extras');
 const devolucionesRoutes = require('./routes/devoluciones');
+// Public routes for storefront (no authentication required)
+const publicRoutes = require('./routes/public');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -175,6 +177,8 @@ app.use('/api/clientes', clientesRoutes);
 app.use('/api/cuentas-por-cobrar', cuentasPorCobrarRoutes);
 app.use('/api/ingresos-extras', ingresosExtrasRoutes);
 app.use('/api/devoluciones', devolucionesRoutes);
+// Public API for storefront - accessible without authentication
+app.use('/api/public', publicRoutes);
 
 
 /* ============================================================
