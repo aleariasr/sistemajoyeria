@@ -98,20 +98,20 @@ const corsOptions = {
       'http://127.0.0.1',
       'http://127.0.0.1:80',
       'http://127.0.0.1:3000',
-      // Producción
-      'https://sistemajoyeria-production.up.railway.app',
-      'https://sistemajoyeria-frontend.vercel.app',
       // Patrones para red local
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
-      // Patrón para dominios de Vercel (preview deployments)
-      /^https:\/\/sistemajoyeria-frontend[a-zA-Z0-9._-]*\.vercel\.app$/i
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
     ];
 
-    // Agregar frontend real en producción
+    // Add production frontend URLs from environment variable
     if (process.env.FRONTEND_URL) {
-      const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, ''); // Eliminar trailing slash si existe
+      const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, ''); // Remove trailing slash if exists
       allowedOrigins.push(frontendUrl);
+      // Support Vercel preview deployments if main domain is on Vercel
+      if (frontendUrl.includes('.vercel.app')) {
+        const baseDomain = frontendUrl.replace('https://', '').split('.')[0];
+        allowedOrigins.push(new RegExp(`^https:\\/\\/${baseDomain}[a-zA-Z0-9._-]*\\.vercel\\.app$`, 'i'));
+      }
     }
 
     const isAllowed = allowedOrigins.some(allowedOrigin => {
@@ -144,9 +144,8 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
    SECURITY HEADERS
    ============================================================ */
 app.use((req, res, next) => {
-  // Prevent XSS attacks
+  // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   // Only allow HTTPS in production

@@ -199,10 +199,18 @@ router.post('/orders', async (req, res) => {
       return res.status(400).json({ error: 'Order must have at least one item' });
     }
 
-    // Sanitize customer input to prevent XSS
+    // Sanitize customer input to prevent XSS and injection
     const sanitizeString = (str) => {
       if (typeof str !== 'string') return '';
-      return str.trim().substring(0, 500); // Limit length
+      // Escape HTML special characters and limit length
+      return str
+        .trim()
+        .substring(0, 500)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
     };
 
     const sanitizedCustomer = {
@@ -219,11 +227,15 @@ router.post('/orders', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Validate phone format (basic validation)
-    const phoneRegex = /^[0-9+\-\s()]{6,20}$/;
-    if (!phoneRegex.test(sanitizedCustomer.telefono)) {
+    // Validate phone format - only allow digits, plus, and parentheses
+    const phoneRegex = /^[0-9+()]{6,20}$/;
+    // First remove spaces and hyphens from phone to normalize, then validate
+    const normalizedPhone = customer.telefono.replace(/[\s-]/g, '');
+    if (!phoneRegex.test(normalizedPhone)) {
       return res.status(400).json({ error: 'Invalid phone format' });
     }
+    // Update sanitized phone with normalized version
+    sanitizedCustomer.telefono = normalizedPhone;
 
     // Validate items array
     if (!Array.isArray(items) || items.length > 100) {
