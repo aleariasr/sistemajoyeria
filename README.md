@@ -13,9 +13,44 @@ Sistema completo de gestión para joyerías con:
 - 💳 Ventas a crédito con cuentas por cobrar
 - 📊 Cierre de caja y reportes
 - 🛒 Tienda online con carrito de compras
-- 📱 Multi-dispositivo
+- 📱 **Multi-dispositivo**: Acceso desde celulares/tablets en red local
+- 🌐 **Híbrido**: Funciona local o en la nube (Railway + Vercel)
 
-## 🚀 Instalación Local
+## 🚀 Modos de Uso
+
+### Modo Local (Red Interna)
+Ideal para tiendas físicas con computadora principal y dispositivos móviles auxiliares.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   RED LOCAL (WiFi)                       │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌───────────────┐     ┌───────────────┐                │
+│  │  Computadora  │────▶│   Backend     │                │
+│  │  Principal    │     │   (Puerto     │                │
+│  │  Windows/Mac/ │     │    3001)      │                │
+│  │  Linux        │     └───────┬───────┘                │
+│  └───────────────┘             │                        │
+│                                ▼                        │
+│  ┌───────────────┐     ┌───────────────┐                │
+│  │  Tablet/Móvil │────▶│   Frontend    │                │
+│  │  POS Auxiliar │     │   POS         │                │
+│  │  192.168.x.x  │     │   (Puerto     │                │
+│  └───────────────┘     │    3000)      │                │
+│                        └───────────────┘                │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Modo Producción (Internet)
+Para acceso desde cualquier lugar vía internet.
+
+```
+Internet ──▶ Vercel (Frontend/Storefront) ──▶ Railway (Backend) ──▶ Supabase/Cloudinary
+```
+
+## 🚀 Instalación Rápida (Desarrollo Local)
 
 ```bash
 # Clonar e instalar
@@ -25,13 +60,27 @@ npm install
 
 # Configurar variables de entorno
 cp backend/.env.example backend/.env
-# Editar backend/.env con tus credenciales
+# Editar backend/.env con credenciales de Supabase y Cloudinary
 
-# Iniciar desarrollo
-npm run start:backend   # Puerto 3001
-npm run start:frontend  # Puerto 3000
-npm run start:storefront # Puerto 3002
+# Iniciar servicios (3 terminales separadas)
+npm run start:backend    # Puerto 3001 - API
+npm run start:frontend   # Puerto 3000 - POS
+npm run start:storefront # Puerto 3002 - Tienda Online
 ```
+
+### 📱 Acceso desde Dispositivos Móviles
+
+Al iniciar el backend, verá la IP local para conectar otros dispositivos:
+```
+📱 Acceso multi-dispositivo (red local):
+   Backend API: http://192.168.1.100:3001
+
+📋 Para conectar dispositivos móviles en la misma red:
+   1. Asegúrese de que todos los dispositivos estén en la misma red WiFi
+   2. Acceda desde el móvil a: http://192.168.1.100:3000
+```
+
+Ver [DEVELOPMENT.md](DEVELOPMENT.md) para instrucciones detalladas.
 
 ### Login por Defecto
 - **Admin:** `admin` / `admin123`
@@ -55,17 +104,21 @@ CLOUDINARY_CLOUD_NAME=tu-cloud-name
 CLOUDINARY_API_KEY=tu-api-key
 CLOUDINARY_API_SECRET=tu-api-secret
 
-# Producción
-FRONTEND_URL=https://tu-frontend.vercel.app
+# Producción (múltiples URLs separadas por coma)
+FRONTEND_URL=https://pos.vercel.app,https://tienda.vercel.app
 ```
 
-### Frontend (`frontend/.env`)
+### Frontend POS (`frontend/.env`)
 ```bash
+# En desarrollo local, se detecta automáticamente
+# Solo configurar para producción:
 REACT_APP_API_URL=http://localhost:3001/api
 ```
 
 ### Storefront (`storefront/.env.local`)
 ```bash
+# En desarrollo local, se detecta automáticamente
+# Solo configurar para producción:
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 

@@ -94,37 +94,88 @@ if (isProduction) {
 
 
 /* ============================================================
-   CORS — Soporte para Vercel + Railway
+   CORS — Soporte para Local (Windows/Mac/Linux + Móviles) + Producción (Vercel + Railway)
    ============================================================ */
+
+/**
+ * Parse FRONTEND_URL which can contain multiple URLs separated by commas
+ * This allows supporting both POS frontend and Storefront in production
+ * Example: FRONTEND_URL=https://pos.vercel.app,https://tienda.vercel.app
+ */
+function parseAllowedFrontendUrls() {
+  const urls = [];
+  
+  // Support comma-separated list of URLs in FRONTEND_URL
+  if (process.env.FRONTEND_URL) {
+    const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
+    for (const url of frontendUrls) {
+      if (url) {
+        const normalizedUrl = url.replace(/\/$/, ''); // Remove trailing slash
+        urls.push(normalizedUrl);
+        
+        // Support Vercel preview deployments
+        if (normalizedUrl.includes('.vercel.app')) {
+          const baseDomain = normalizedUrl.replace('https://', '').split('.')[0];
+          urls.push(new RegExp(`^https:\\/\\/${baseDomain}[a-zA-Z0-9._-]*\\.vercel\\.app$`, 'i'));
+        }
+      }
+    }
+  }
+  
+  // Also check STOREFRONT_URL for backwards compatibility
+  if (process.env.STOREFRONT_URL) {
+    const storefrontUrl = process.env.STOREFRONT_URL.replace(/\/$/, '');
+    if (storefrontUrl && !urls.includes(storefrontUrl)) {
+      urls.push(storefrontUrl);
+      if (storefrontUrl.includes('.vercel.app')) {
+        const baseDomain = storefrontUrl.replace('https://', '').split('.')[0];
+        urls.push(new RegExp(`^https:\\/\\/${baseDomain}[a-zA-Z0-9._-]*\\.vercel\\.app$`, 'i'));
+      }
+    }
+  }
+  
+  return urls;
+}
+
 const corsOptions = {
   origin: function (origin, callback) {
-    
+    // Allow requests with no origin (like mobile apps, curl, or same-origin requests)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
-      // Desarrollo local
+      // ============================================================
+      // Desarrollo local - localhost
+      // ============================================================
       'http://localhost',
-      'http://localhost/',
       'http://localhost:80',
-      'http://localhost:3000',
+      'http://localhost:3000',  // Frontend POS (React)
+      'http://localhost:3001',  // Backend (for testing)
+      'http://localhost:3002',  // Storefront (Next.js)
       'http://127.0.0.1',
       'http://127.0.0.1:80',
       'http://127.0.0.1:3000',
-      // Patrones para red local
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:3002',
+      
+      // ============================================================
+      // Red local - Dispositivos móviles y otras computadoras
+      // Soporta los tres rangos de IP privadas estándar:
+      // - 192.168.x.x (Redes domésticas más comunes)
+      // - 10.x.x.x (Redes empresariales y VPNs)
+      // - 172.16.x.x - 172.31.x.x (Redes medianas)
+      // ============================================================
       /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}$/,
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/,
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:\d{1,5}$/,
+      
+      // ============================================================
+      // Producción - URLs desde variables de entorno
+      // ============================================================
+      ...parseAllowedFrontendUrls()
     ];
-
-    // Add production frontend URLs from environment variable
-    if (process.env.FRONTEND_URL) {
-      const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, ''); // Remove trailing slash if exists
-      allowedOrigins.push(frontendUrl);
-      // Support Vercel preview deployments if main domain is on Vercel
-      if (frontendUrl.includes('.vercel.app')) {
-        const baseDomain = frontendUrl.replace('https://', '').split('.')[0];
-        allowedOrigins.push(new RegExp(`^https:\\/\\/${baseDomain}[a-zA-Z0-9._-]*\\.vercel\\.app$`, 'i'));
-      }
-    }
 
     const isAllowed = allowedOrigins.some(allowedOrigin => {
       if (typeof allowedOrigin === 'string') {
@@ -303,20 +354,31 @@ server = app.listen(PORT, HOST, () => {
   console.log(`📊 Ambiente: ${NODE_ENV}`);
   console.log(`🌐 Host: ${HOST}`);
   
-  // En desarrollo, mostrar IP de red local para acceso multi-dispositivo
-  if (NODE_ENV === 'development') {
-    const interfaces = os.networkInterfaces();
-    const addresses = [];
-    for (const k in interfaces) {
-      for (const k2 in interfaces[k]) {
-        const address = interfaces[k][k2];
-        if (address.family === 'IPv4' && !address.internal) {
-          addresses.push(address.address);
-        }
+  // Mostrar IPs de red local para acceso multi-dispositivo
+  // Esto es útil tanto en desarrollo como en producción local
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const k in interfaces) {
+    for (const k2 in interfaces[k]) {
+      const address = interfaces[k][k2];
+      if (address.family === 'IPv4' && !address.internal) {
+        addresses.push(address.address);
       }
     }
-    if (addresses.length > 0) {
-      console.log(`📱 Acceso desde red local: http://${addresses[0]}:${PORT}`);
+  }
+  
+  if (addresses.length > 0) {
+    console.log(`\n📱 Acceso multi-dispositivo (red local):`);
+    addresses.forEach(addr => {
+      console.log(`   Backend API: http://${addr}:${PORT}`);
+    });
+    if (NODE_ENV === 'development') {
+      console.log(`\n📋 Para conectar dispositivos móviles en la misma red:`);
+      console.log(`   1. Asegúrese de que todos los dispositivos estén en la misma red WiFi`);
+      console.log(`   2. Configure la variable de entorno en el frontend:`);
+      console.log(`      REACT_APP_API_URL=http://${addresses[0]}:${PORT}/api`);
+      console.log(`   3. Para el storefront:`);
+      console.log(`      NEXT_PUBLIC_API_URL=http://${addresses[0]}:${PORT}/api`);
     }
   }
   
