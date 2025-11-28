@@ -1,13 +1,22 @@
 import axios from 'axios';
 
+// URL de producción del backend en Railway
+const PRODUCTION_API_URL = 'https://sistemajoyeria-production.up.railway.app/api';
+
 // Detectar URL del backend correctamente en CRA + Railway
 function getApiUrl() {
-  // 1. Producción (Railway) usando variable REACT_APP_API_URL
+  // 1. Variable de entorno tiene prioridad
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
 
-  // 2. Local: usar :3001/api siempre
+  // 2. En producción (Vercel), usar la URL de Railway
+  if (window.location.hostname.includes('vercel.app') || 
+      window.location.hostname === 'sistemajoyeria-frontend.vercel.app') {
+    return PRODUCTION_API_URL;
+  }
+
+  // 3. Local: usar :3001/api
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
 
