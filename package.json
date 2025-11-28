@@ -5,20 +5,28 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "storefront"
   ],
   "scripts": {
     "install:all": "npm install",
     "install:backend": "npm install --workspace=backend",
     "install:frontend": "npm install --workspace=frontend",
+    "install:storefront": "npm install --workspace=storefront",
     "start:backend": "npm start --workspace=backend",
     "start:frontend": "npm start --workspace=frontend",
+    "start:storefront": "npm start --workspace=storefront",
     "dev:backend": "npm run dev --workspace=backend",
+    "dev:storefront": "npm run dev --workspace=storefront",
     "build:frontend": "npm run build --workspace=frontend",
+    "build:storefront": "npm run build --workspace=storefront",
+    "lint:storefront": "npm run lint --workspace=storefront",
     "test:backend": "npm run test --workspace=backend",
+    "test:storefront": "npm run test --workspace=storefront",
     "audit:backend": "npm audit --workspace=backend",
     "audit:frontend": "npm audit --workspace=frontend",
-    "start": "echo 'Please run backend and frontend separately:' && echo '  npm run start:backend' && echo '  npm run start:frontend'"
+    "audit:storefront": "npm audit --workspace=storefront",
+    "start": "echo 'Please run backend and frontend separately:' && echo '  npm run start:backend' && echo '  npm run start:frontend' && echo '  npm run start:storefront'"
   },
   "keywords": [
     "joyeria",
