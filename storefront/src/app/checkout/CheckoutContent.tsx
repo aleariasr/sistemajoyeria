@@ -94,8 +94,8 @@ export default function CheckoutContent() {
 
     if (!formData.telefono.trim()) {
       newErrors.telefono = 'El teléfono es obligatorio';
-    } else if (!/^[0-9+\-\s()]+$/.test(formData.telefono)) {
-      newErrors.telefono = 'Ingresa un número de teléfono válido';
+    } else if (!/^[0-9+()]+$/.test(formData.telefono.replace(/[\s-]/g, ''))) {
+      newErrors.telefono = 'Ingresa un número de teléfono válido (solo dígitos, +, paréntesis)';
     }
 
     if (!formData.email.trim()) {
