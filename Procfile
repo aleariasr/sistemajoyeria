@@ -1,1 +1,1 @@
-web: npm start --workspace=backend
+web: node backend/server.js

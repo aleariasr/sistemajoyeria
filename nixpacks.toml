@@ -6,7 +6,11 @@ nixPkgs = ["nodejs_20", "npm"]
 
 [phases.install]
 # Use root npm install which handles workspaces automatically
-cmds = ["npm install"]
+# Using --include=dev temporarily to ensure all dependencies are installed correctly
+# NOTE: Do not use --production flag as it's deprecated. Use --omit=dev if needed.
+cmds = ["npm ci"]
 
 [start]
-cmd = "npm start --workspace=backend"
+# Using direct node command instead of npm workspace to avoid
+# "No workspaces found" error in some Railway/Nixpacks environments
+cmd = "node backend/server.js"
