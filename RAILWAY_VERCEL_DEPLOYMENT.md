@@ -48,6 +48,26 @@ The fix is to use npm workspace commands instead of `cd backend`:
 - npm handles path resolution correctly regardless of the current directory
 - This is the recommended approach for monorepo deployments
 
+### ✅ Server Startup Pattern
+
+The server uses a **"bind first, connect later"** pattern optimized for cloud deployments:
+
+1. **HTTP server binds immediately** - Responds to health checks within milliseconds
+2. **Database connects asynchronously** - Happens in background without blocking
+3. **Health endpoint shows connection status** - `/health` includes `databaseConnected: true/false`
+
+This ensures Railway's health checks pass quickly, even if database connection takes several seconds.
+
+```javascript
+// Server binds first
+server = app.listen(PORT, HOST, () => {
+  // Then database connects asynchronously
+  Promise.all([initDatabase(), initDatabaseDia()])
+    .then(() => { databaseReady = true; })
+    .catch((err) => { /* Server stays up for debugging */ });
+});
+```
+
 ### ✅ Current Configuration
 
 **`railway.json`:**
@@ -219,6 +239,31 @@ REACT_APP_API_URL=https://sistemajoyeria-production.up.railway.app/api
 ---
 
 ## Common Issues & Solutions
+
+### Issue: `Application failed to respond` 
+
+**Cause:** Railway health checks timeout because the server takes too long to start (typically waiting for database initialization before binding to the port).
+
+**How it's fixed:**
+The server now uses a "bind first, connect later" pattern:
+1. The HTTP server binds to the port immediately when the app starts
+2. Database initialization happens asynchronously in the background
+3. Health checks pass immediately while database connects
+
+**Health check endpoint behavior:**
+```json
+// Before database connects:
+{"status":"ok","databaseConnected":false,...}
+
+// After database connects:
+{"status":"ok","databaseConnected":true,...}
+```
+
+**If this issue persists:**
+1. Check Railway build logs for errors during `npm install`
+2. Verify environment variables are set correctly
+3. Check that no other process is using the port
+4. Review the Railway service logs for startup errors
 
 ### Issue: `cd: backend: No such file or directory`
 

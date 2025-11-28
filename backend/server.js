@@ -13,6 +13,9 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Railway usa 0.0.0.0 por defecto, que está bien
 const HOST = process.env.HOST || '0.0.0.0';
 
+// Database connection state (used for health check)
+let databaseReady = false;
+
 /* ============================================================
    CONFIGURACIÓN DE COOKIES PARA CROSS-ORIGIN (Vercel + Railway)
    ============================================================ */
@@ -178,11 +181,14 @@ app.use('/api/devoluciones', devolucionesRoutes);
    HEALTHCHECK
    ============================================================ */
 app.get('/health', (req, res) => {
+  // Always return 200 for Railway health checks (server is up)
+  // Include database status for debugging
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
-    database: 'Supabase (PostgreSQL)'
+    database: 'Supabase (PostgreSQL)',
+    databaseConnected: databaseReady
   });
 });
 
@@ -257,38 +263,44 @@ console.log('📊 Base de datos: Supabase (PostgreSQL)');
 console.log('🖼️  Imágenes: Cloudinary');
 console.log('🛒 E-commerce Ready: Sí');
 
-Promise.all([initDatabase(), initDatabaseDia()])
-  .then(() => crearUsuariosIniciales())
-  .then(() => {
-
-    server = app.listen(PORT, HOST, () => {
-      console.log(`\n${'='.repeat(60)}`);
-      console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-      console.log(`📊 Ambiente: ${NODE_ENV}`);
-      console.log(`🌐 Host: ${HOST}`);
-      console.log(`✅ Conexión a Supabase establecida`);
-      
-      // En desarrollo, mostrar IP de red local para acceso multi-dispositivo
-      if (NODE_ENV === 'development') {
-        const interfaces = os.networkInterfaces();
-        const addresses = [];
-        for (const k in interfaces) {
-          for (const k2 in interfaces[k]) {
-            const address = interfaces[k][k2];
-            if (address.family === 'IPv4' && !address.internal) {
-              addresses.push(address.address);
-            }
-          }
-        }
-        if (addresses.length > 0) {
-          console.log(`📱 Acceso desde red local: http://${addresses[0]}:${PORT}`);
+// Railway/Cloud deployment pattern: Start server FIRST, then initialize database
+// This ensures health checks pass quickly while database connects in background
+server = app.listen(PORT, HOST, () => {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📊 Ambiente: ${NODE_ENV}`);
+  console.log(`🌐 Host: ${HOST}`);
+  
+  // En desarrollo, mostrar IP de red local para acceso multi-dispositivo
+  if (NODE_ENV === 'development') {
+    const interfaces = os.networkInterfaces();
+    const addresses = [];
+    for (const k in interfaces) {
+      for (const k2 in interfaces[k]) {
+        const address = interfaces[k][k2];
+        if (address.family === 'IPv4' && !address.internal) {
+          addresses.push(address.address);
         }
       }
-      
-      console.log(`${'='.repeat(60)}\n`);
+    }
+    if (addresses.length > 0) {
+      console.log(`📱 Acceso desde red local: http://${addresses[0]}:${PORT}`);
+    }
+  }
+  
+  console.log(`${'='.repeat(60)}\n`);
+  console.log('⏳ Conectando a base de datos...');
+  
+  // Initialize database after server is listening (async, non-blocking)
+  Promise.all([initDatabase(), initDatabaseDia()])
+    .then(() => crearUsuariosIniciales())
+    .then(() => {
+      databaseReady = true;
+      console.log('✅ Base de datos inicializada correctamente');
+    })
+    .catch((err) => {
+      console.error('❌ Error al inicializar la base de datos:', err);
+      // Don't exit - server can still respond to health checks
+      // API calls will fail until database is ready
     });
-  })
-  .catch((err) => {
-    console.error('❌ Error al inicializar la aplicación:', err);
-    process.exit(1);
-  });
+});
