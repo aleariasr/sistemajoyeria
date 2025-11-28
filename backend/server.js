@@ -141,6 +141,23 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 
 /* ============================================================
+   SECURITY HEADERS
+   ============================================================ */
+app.use((req, res, next) => {
+  // Prevent XSS attacks
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Only allow HTTPS in production
+  if (isProduction) {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+
+/* ============================================================
    LOGS SOLO EN DESARROLLO
    ============================================================ */
 if (NODE_ENV === 'development') {
