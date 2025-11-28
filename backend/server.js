@@ -24,6 +24,18 @@ let databaseReady = false;
 // porque el frontend (Vercel) y backend (Railway) están en dominios diferentes
 const isProduction = NODE_ENV === 'production';
 
+/*
+ * SECURITY NOTE: CSRF Protection
+ * 
+ * This application uses session cookies for authentication with the following protections:
+ * 1. sameSite: 'none' + secure: true in production (HTTPS required)
+ * 2. Strict CORS origin checking with allowlist
+ * 3. JSON-based API (not susceptible to classic form-based CSRF)
+ * 4. httpOnly cookies (not accessible via JavaScript)
+ * 
+ * For additional security, consider implementing CSRF tokens for state-changing operations.
+ * However, the current configuration provides adequate protection for this JSON API architecture.
+ */
 const cookieConfig = {
   httpOnly: true,
   maxAge: 24 * 60 * 60 * 1000, // 24 horas
