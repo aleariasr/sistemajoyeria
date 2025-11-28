@@ -71,10 +71,13 @@ NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
 ## 🌐 Deploy
 
-Ver [DEPLOY.md](DEPLOY.md) para instrucciones completas de:
-- Backend en Railway
-- Frontend POS en Vercel
-- Storefront en Vercel
+**Arquitectura:**
+- **Backend**: Railway (Node.js + Express)
+- **Frontend POS**: Vercel (React)
+- **Storefront**: Vercel (Next.js)
+- **Base de Datos**: Supabase (PostgreSQL)
+
+Ver [DEPLOY.md](DEPLOY.md) para instrucciones completas.
 
 ## 📁 Estructura
 
@@ -105,10 +108,11 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 ## 🔒 Seguridad
 
 - ✅ Sesiones con cookies httpOnly
-- ✅ Contraseñas bcrypt
-- ✅ CORS dinámico
-- ✅ Headers de seguridad
-- ✅ SQL injection prevention
+- ✅ Contraseñas bcrypt (12 rounds)
+- ✅ CORS dinámico desde `FRONTEND_URL`
+- ✅ Headers de seguridad (HSTS, X-Frame-Options, X-Content-Type-Options)
+- ✅ SQL injection: queries parametrizadas + escape en ILIKE
+- ✅ XSS prevention: escape de HTML en entradas de usuario
 
 ---
 
