@@ -15,9 +15,8 @@ function CierreCaja() {
   const ticketRef = useRef();
 
   const handlePrintTicket = useReactToPrint({
-    content: () => ticketRef.current,
+    contentRef: ticketRef,
     documentTitle: `Cierre-Caja-${new Date().toISOString().slice(0,10)}`,
-    removeAfterPrint: false,
   });
 
   const triggerPrintCierre = () => {
