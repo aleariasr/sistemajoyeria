@@ -186,7 +186,7 @@ const allowedOrigins = [
 
 **Required:**
 ```bash
-NODE_ENV=production
+NODE_ENV=production       # CRITICAL: Enables cross-origin cookie settings
 SUPABASE_URL=<your-supabase-url>
 SUPABASE_KEY=<your-supabase-anon-key>
 SESSION_SECRET=<random-secure-secret>
@@ -197,9 +197,11 @@ CLOUDINARY_API_SECRET=<your-cloudinary-secret>
 
 **Optional:**
 ```bash
-FRONTEND_URL=https://sistemajoyeria-frontend.vercel.app  # For cross-origin cookies
+FRONTEND_URL=https://sistemajoyeria-frontend.vercel.app  # For additional CORS origin
 REDIS_URL=<redis-url>  # For session persistence across restarts
 ```
+
+> **Note:** `NODE_ENV=production` is the most critical variable. Without it, cookies will use `sameSite: 'lax'` which breaks cross-origin login.
 
 ### Vercel (Frontend)
 
@@ -227,10 +229,77 @@ REACT_APP_API_URL=https://sistemajoyeria-production.up.railway.app/api
 **Cause:** Backend not allowing frontend origin  
 **Solution:** Ensure `https://sistemajoyeria-frontend.vercel.app` is in `allowedOrigins` array in `server.js`
 
-### Issue: Login not working (cookies)
+### Issue: "Error al iniciar sesión. Por favor, intenta de nuevo."
 
-**Cause:** Cross-origin cookies need special configuration  
-**Solution:** Ensure `FRONTEND_URL` is set in Railway and cookies use `sameSite: 'none'` + `secure: true`
+**This is the most common production issue.** It occurs when cross-origin cookies don't work between Vercel (frontend) and Railway (backend).
+
+**Root Causes:**
+
+1. **Missing cross-origin cookie configuration**
+   - Vercel and Railway are on different domains
+   - Cookies require `sameSite: 'none'` and `secure: true` for cross-origin requests
+   
+2. **Missing CORS credentials**
+   - Frontend must send `withCredentials: true` in axios requests
+   - Backend must respond with `Access-Control-Allow-Credentials: true`
+
+3. **Browser blocking third-party cookies**
+   - Some browsers (Safari, Firefox with enhanced tracking protection) block cross-origin cookies by default
+   - This is a browser security feature, not a bug
+
+**Solutions:**
+
+1. **Verify backend cookie configuration** (`backend/server.js`):
+   ```javascript
+   // In production, always use cross-origin settings
+   const cookieConfig = {
+     httpOnly: true,
+     maxAge: 24 * 60 * 60 * 1000,
+     secure: isProduction,           // true in production
+     sameSite: isProduction ? 'none' : 'lax'  // 'none' in production
+   };
+   ```
+
+2. **Verify CORS configuration** (`backend/server.js`):
+   ```javascript
+   const corsOptions = {
+     origin: [...allowedOrigins],
+     credentials: true  // CRITICAL: Allow cookies
+   };
+   ```
+
+3. **Verify frontend axios configuration** (`frontend/src/services/api.js`):
+   ```javascript
+   const api = axios.create({
+     baseURL: API_URL,
+     withCredentials: true  // CRITICAL: Send cookies
+   });
+   ```
+
+4. **For users with blocked third-party cookies**, consider:
+   - Using same-domain deployment (e.g., Railway for both frontend and backend)
+   - Or using token-based authentication (JWT in localStorage) instead of session cookies
+
+**Debugging Steps:**
+
+1. Check Railway logs for CORS blocking messages:
+   ```
+   🚫 CORS bloqueado para origen: https://...
+   ```
+
+2. Check browser console for cookie warnings
+
+3. Test the health endpoint directly:
+   ```bash
+   curl https://sistemajoyeria-production.up.railway.app/health
+   ```
+
+4. Test login endpoint directly:
+   ```bash
+   curl -X POST https://sistemajoyeria-production.up.railway.app/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"your-password"}'
+   ```
 
 ---
 
@@ -238,9 +307,10 @@ REACT_APP_API_URL=https://sistemajoyeria-production.up.railway.app/api
 
 ### Railway
 - [ ] Push to main/production branch
-- [ ] Verify environment variables are set
+- [ ] Verify environment variables are set (see Environment Variables section)
 - [ ] Check build logs for errors
 - [ ] Test health endpoint: `/health`
+- [ ] Verify `NODE_ENV=production` is set
 
 ### Vercel
 - [ ] Push to main/production branch
@@ -248,10 +318,30 @@ REACT_APP_API_URL=https://sistemajoyeria-production.up.railway.app/api
 - [ ] Test all routes work (SPA rewrite)
 - [ ] Test API connectivity
 
-### Post-Deployment
-- [ ] Test login functionality (cross-origin cookies)
+### Post-Deployment Testing
+- [ ] Open browser DevTools → Network tab
+- [ ] Attempt login and check:
+  - [ ] Request sent to correct Railway URL
+  - [ ] Response status is 200 (not CORS error)
+  - [ ] `Set-Cookie` header present in response
+  - [ ] Cookie appears in browser storage
 - [ ] Verify database operations work
 - [ ] Check image uploads (Cloudinary)
+
+### If Login Still Fails
+
+1. **Check Railway Environment Variables:**
+   - `NODE_ENV=production` ← MUST be set
+   - `SUPABASE_URL` and `SUPABASE_KEY` ← Required for database
+   - `SESSION_SECRET` ← Required for sessions
+
+2. **Check Browser Settings:**
+   - Try in Chrome (most permissive for third-party cookies)
+   - Disable tracking protection temporarily for testing
+   - Clear all cookies and try again
+
+3. **Check CORS:**
+   - Verify frontend origin is in `allowedOrigins` array in `server.js`
 
 ---
 

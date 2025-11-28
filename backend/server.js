@@ -17,16 +17,17 @@ const HOST = process.env.HOST || '0.0.0.0';
    CONFIGURACIÓN DE COOKIES PARA CROSS-ORIGIN (Vercel + Railway)
    ============================================================ */
 
-// En producción con FRONTEND_URL diferente, necesitamos sameSite: 'none' y secure: true
+// En producción (Railway + Vercel), siempre necesitamos sameSite: 'none' y secure: true
+// porque el frontend (Vercel) y backend (Railway) están en dominios diferentes
 const isProduction = NODE_ENV === 'production';
-const isCrossOrigin = isProduction && process.env.FRONTEND_URL;
 
 const cookieConfig = {
   httpOnly: true,
   maxAge: 24 * 60 * 60 * 1000, // 24 horas
   // Cross-origin (Vercel frontend + Railway backend) requiere sameSite: 'none' y secure: true
+  // En producción SIEMPRE usar configuración cross-origin
   secure: isProduction,
-  sameSite: isCrossOrigin ? 'none' : 'lax'
+  sameSite: isProduction ? 'none' : 'lax'
 };
 
 /* ============================================================
@@ -72,7 +73,7 @@ if (NODE_ENV === 'production' && process.env.REDIS_URL) {
   console.log("🟡 Sesiones locales activas (sin Redis)");
 }
 
-if (isCrossOrigin) {
+if (isProduction) {
   console.log("🔐 Cookies configuradas para cross-origin (sameSite: none, secure: true)");
 }
 
