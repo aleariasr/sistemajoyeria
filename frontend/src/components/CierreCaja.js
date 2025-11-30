@@ -508,18 +508,23 @@ function CierreCaja() {
                       className="btn btn-primary"
                       onClick={triggerPrintCierre}
                       disabled={!resumen}
+                      title="Abre el diálogo de impresión de Windows (puede guardar como PDF)"
                     >
-                      🖨️ Imprimir Ticket de Cierre
+                      🖨️ Imprimir / Guardar PDF
                     </button>
                     <button
                       className="btn btn-secondary"
                       onClick={printCierreUSB}
                       disabled={!resumen}
                       style={{ marginLeft: '10px' }}
+                      title="Imprime directamente en impresora térmica POS80 vía USB"
                     >
-                      🔌 Imprimir por USB (Térmica)
+                      🔌 Impresora Térmica USB
                     </button>
                   </div>
+                  <p style={{ marginTop: '10px', color: '#888', fontSize: '0.85rem' }}>
+                    💡 Use "Imprimir / Guardar PDF" para abrir el diálogo de Windows donde puede seleccionar guardar como PDF
+                  </p>
                   <p style={{ marginTop: '15px', color: '#666', fontSize: '0.9rem' }}>
                     Al realizar el cierre, todas las ventas del día, abonos e ingresos extras se transferirán a la base de datos principal
                   </p>

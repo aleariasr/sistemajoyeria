@@ -55,6 +55,12 @@ function HistorialCierres() {
       <div className="card">
         {loading ? (
           <div className="loading"><div className="spinner"></div><p>Cargando cierres...</p></div>
+        ) : cierres.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+            <p style={{ fontSize: '1.5rem', marginBottom: '10px' }}>📭</p>
+            <p style={{ fontSize: '1.2rem' }}>No hay cierres de caja registrados</p>
+            <p style={{ marginTop: '10px' }}>Los cierres de caja aparecerán aquí después de realizar el primer cierre</p>
+          </div>
         ) : (
           <div className="table-container">
             <table>

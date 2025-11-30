@@ -297,8 +297,8 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
   }
 });
 
-// Histórico de cierres de caja
-router.get('/historico', requireAuth, requireAdmin, async (req, res) => {
+// Histórico de cierres de caja (accesible para todos los usuarios autenticados)
+router.get('/historico', requireAuth, async (req, res) => {
   try {
     const {
       pagina = 1,
