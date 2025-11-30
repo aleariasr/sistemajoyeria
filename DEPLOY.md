@@ -1,9 +1,46 @@
 # 🚀 Guía de Deploy - Sistema de Joyería
 
-Este documento explica cómo desplegar el sistema completo:
+Este documento explica cómo desplegar el sistema completo en producción:
 - **Backend**: Railway
 - **Frontend POS**: Vercel
 - **Storefront (Tienda Online)**: Vercel
+
+Para desarrollo local, consulte [DEVELOPMENT.md](DEVELOPMENT.md).
+
+---
+
+## 🏗️ Arquitectura de Producción
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         INTERNET                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────┐    ┌──────────────────┐                   │
+│  │  Frontend POS    │    │   Storefront     │                   │
+│  │  (Vercel)        │    │   (Vercel)       │                   │
+│  │  React           │    │   Next.js        │                   │
+│  └────────┬─────────┘    └────────┬─────────┘                   │
+│           │                       │                              │
+│           └───────────┬───────────┘                              │
+│                       │                                          │
+│                       ▼                                          │
+│           ┌──────────────────────┐                               │
+│           │    Backend API       │                               │
+│           │    (Railway)         │                               │
+│           │    Node.js/Express   │                               │
+│           └────────┬─────────────┘                               │
+│                    │                                             │
+│           ┌────────┴───────────┐                                 │
+│           │                    │                                 │
+│           ▼                    ▼                                 │
+│  ┌─────────────────┐  ┌─────────────────┐                       │
+│  │   Supabase      │  │   Cloudinary    │                       │
+│  │   (PostgreSQL)  │  │   (Imágenes)    │                       │
+│  └─────────────────┘  └─────────────────┘                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -71,7 +108,7 @@ SUPABASE_KEY=<tu-key-de-supabase>
 CLOUDINARY_CLOUD_NAME=<tu-cloud-name>
 CLOUDINARY_API_KEY=<tu-api-key>
 CLOUDINARY_API_SECRET=<tu-api-secret>
-FRONTEND_URL=<url-de-vercel-del-frontend-pos>
+FRONTEND_URL=<urls-de-vercel-separadas-por-coma>
 ```
 
 > 💡 **Tip**: Para generar SESSION_SECRET:
@@ -79,10 +116,19 @@ FRONTEND_URL=<url-de-vercel-del-frontend-pos>
 > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > ```
 
+> 🔗 **FRONTEND_URL**: Puede incluir múltiples URLs separadas por comas para soportar
+> tanto el Frontend POS como el Storefront:
+> ```env
+> FRONTEND_URL=https://pos.vercel.app,https://tienda.vercel.app
+> ```
+
 ### 2.4 Verificar Deploy
 1. Railway desplegará automáticamente
 2. Una vez listo, copiar la URL del servicio (ej: `https://sistemajoyeria-production.up.railway.app`)
-3. Verificar que `/health` responde correctamente
+3. Verificar que `/health` responde correctamente:
+   ```bash
+   curl https://tu-backend.railway.app/health
+   ```
 
 ---
 

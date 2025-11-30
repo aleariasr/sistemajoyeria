@@ -1,24 +1,52 @@
 import axios from 'axios';
 
-// Detectar URL del backend correctamente en CRA + Railway
+/**
+ * Detectar URL del backend automáticamente
+ * 
+ * Orden de prioridad:
+ * 1. Variable de entorno REACT_APP_API_URL (para producción)
+ * 2. Detección automática basada en el hostname actual
+ *    - Si accede desde localhost: usa localhost:3001
+ *    - Si accede desde IP local (192.168.x.x, 10.x.x.x, etc): usa la misma IP con puerto 3001
+ *    - Si está en Vercel: requiere REACT_APP_API_URL configurada
+ */
 function getApiUrl() {
-  // 1. Variable de entorno tiene prioridad
+  // 1. Variable de entorno tiene prioridad máxima
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL;
   }
 
-  // 2. In production, the REACT_APP_API_URL should be set
-  // Fall back to checking hostname patterns for legacy support
-  if (window.location.hostname.includes('vercel.app')) {
-    console.warn('⚠️ REACT_APP_API_URL not set. Configure it for production deployments.');
-    // Don't hardcode production URLs - rely on environment variable
+  // 2. Detectar entorno de producción (Vercel)
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    console.warn('⚠️ REACT_APP_API_URL no configurada. Configure esta variable para el deploy en producción.');
+    // En producción sin configurar, las llamadas fallarán
+    return '/api'; // Fallback que causará error 404, pero es mejor que hardcodear URLs
   }
 
-  // 3. Local development: use :3001/api
-  const protocol = window.location.protocol;
-  const hostname = window.location.hostname;
+  // 3. Desarrollo local - detectar automáticamente basado en cómo se accede
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    // Si es localhost o 127.0.0.1, usar el mismo para el backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}:3001/api`;
+    }
+    
+    // Si es una IP local (192.168.x.x, 10.x.x.x, 172.16-31.x.x), usar la misma IP
+    // Esto permite que dispositivos móviles en la red local se conecten
+    // Note: \d{1,3} technically allows 0-999 but invalid IPs won't resolve
+    const localIpPattern = /^(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})$/;
+    if (localIpPattern.test(hostname)) {
+      return `${protocol}//${hostname}:3001/api`;
+    }
+    
+    // Fallback: usar el hostname actual con puerto 3001
+    return `${protocol}//${hostname}:3001/api`;
+  }
 
-  return `${protocol}//${hostname}:3001/api`;
+  // Fallback para SSR o contextos sin window
+  return 'http://localhost:3001/api';
 }
 
 const API_URL = getApiUrl();

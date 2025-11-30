@@ -7,9 +7,10 @@
  * - Retry logic with exponential backoff
  * - Timeout handling
  * - TypeScript strict types
+ * - Auto-detection of local network IPs for mobile device access
  */
 
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import type {
   Product,
   ProductsResponse,
@@ -22,16 +23,48 @@ import type {
 } from '../types';
 
 /**
- * Get the API base URL from environment or default
+ * Get the API base URL from environment or auto-detect for local development
+ * 
+ * Priority:
+ * 1. NEXT_PUBLIC_API_URL environment variable (production)
+ * 2. Auto-detection based on current hostname (local development)
  */
 const getApiUrl = (): string => {
-  // NEXT_PUBLIC_* variables are available on both client and server in Next.js
+  // 1. Environment variable has highest priority
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Development default - backend runs on port 3001
-  return 'http://localhost:3001/api';
+  // 2. Server-side rendering: use localhost
+  if (typeof window === 'undefined') {
+    return 'http://localhost:3001/api';
+  }
+  
+  // 3. Client-side: detect based on hostname
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // If on Vercel production, warn about missing config
+  if (hostname.includes('vercel.app')) {
+    console.warn('⚠️ NEXT_PUBLIC_API_URL no configurada. Configure esta variable para producción.');
+    return '/api'; // Will cause 404 but better than hardcoding
+  }
+  
+  // If localhost or 127.0.0.1
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `${protocol}//${hostname}:3001/api`;
+  }
+  
+  // If local network IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+  // This allows mobile devices on the same network to connect
+  // Note: \d{1,3} technically allows 0-999 but invalid IPs won't resolve
+  const localIpPattern = /^(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})$/;
+  if (localIpPattern.test(hostname)) {
+    return `${protocol}//${hostname}:3001/api`;
+  }
+  
+  // Fallback: use current hostname with port 3001
+  return `${protocol}//${hostname}:3001/api`;
 };
 
 /**
