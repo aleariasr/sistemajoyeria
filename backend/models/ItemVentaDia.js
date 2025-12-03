@@ -3,16 +3,17 @@ const { supabase } = require('../supabase-db');
 class ItemVentaDia {
   // Crear nuevo item de venta del día
   static async crear(itemData) {
-    const { id_venta_dia, id_joya, cantidad, precio_unitario, subtotal } = itemData;
+    const { id_venta_dia, id_joya, cantidad, precio_unitario, subtotal, descripcion_item } = itemData;
 
     const { data, error } = await supabase
       .from('items_venta_dia')
       .insert([{
         id_venta_dia,
-        id_joya,
+        id_joya: id_joya || null,
         cantidad,
         precio_unitario,
-        subtotal
+        subtotal,
+        descripcion_item: descripcion_item || null
       }])
       .select()
       .single();
@@ -41,9 +42,9 @@ class ItemVentaDia {
     // Formatear para mantener compatibilidad
     return data.map(item => ({
       ...item,
-      codigo: item.joyas?.codigo,
-      nombre: item.joyas?.nombre,
-      moneda: item.joyas?.moneda
+      codigo: item.joyas?.codigo || null,
+      nombre: item.joyas?.nombre || item.descripcion_item || 'Otros',
+      moneda: item.joyas?.moneda || 'CRC'
     }));
   }
 

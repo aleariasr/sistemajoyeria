@@ -4,17 +4,18 @@ class ItemVenta {
   // Crear nuevo item de venta
   static async crear(itemData) {
     const {
-      id_venta, id_joya, cantidad, precio_unitario, subtotal
+      id_venta, id_joya, cantidad, precio_unitario, subtotal, descripcion_item
     } = itemData;
 
     const { data, error } = await supabase
       .from('items_venta')
       .insert([{
         id_venta,
-        id_joya,
+        id_joya: id_joya || null,
         cantidad,
         precio_unitario,
-        subtotal
+        subtotal,
+        descripcion_item: descripcion_item || null
       }])
       .select()
       .single();
@@ -44,9 +45,9 @@ class ItemVenta {
     // Formatear datos para mantener compatibilidad
     return data.map(item => ({
       ...item,
-      codigo: item.joyas?.codigo,
-      nombre: item.joyas?.nombre,
-      categoria: item.joyas?.categoria
+      codigo: item.joyas?.codigo || null,
+      nombre: item.joyas?.nombre || item.descripcion_item || 'Otros',
+      categoria: item.joyas?.categoria || null
     }));
   }
 
@@ -54,10 +55,11 @@ class ItemVenta {
   static async crearMultiples(items) {
     const itemsToInsert = items.map(item => ({
       id_venta: item.id_venta,
-      id_joya: item.id_joya,
+      id_joya: item.id_joya || null,
       cantidad: item.cantidad,
       precio_unitario: item.precio_unitario,
-      subtotal: item.subtotal
+      subtotal: item.subtotal,
+      descripcion_item: item.descripcion_item || null
     }));
 
     const { data, error } = await supabase

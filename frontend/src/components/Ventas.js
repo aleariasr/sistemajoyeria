@@ -147,10 +147,47 @@ function Ventas() {
     setJoyas([]);
   };
 
+  const agregarOtroItem = () => {
+    const monto = parseFloat(busqueda.trim());
+    if (isNaN(monto) || monto <= 0) {
+      setMensaje({ tipo: 'error', texto: 'Debe ingresar un monto válido' });
+      setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
+      return;
+    }
+
+    // Generar un ID temporal único para el item "Otros"
+    const idTemporal = `otros-${Date.now()}`;
+
+    setCarrito([...carrito, {
+      id: idTemporal,
+      id_joya: null, // Sin referencia a joya
+      codigo: null,
+      nombre: 'Otros',
+      descripcion_item: 'Otros',
+      precio_unitario: monto,
+      cantidad: 1,
+      stock_disponible: null, // Sin stock, es un item especial
+      moneda: 'CRC'
+    }]);
+
+    setBusqueda('');
+    setJoyas([]);
+    setMensaje({ tipo: 'success', texto: `Item "Otros" agregado por ₡${monto.toFixed(2)}` });
+    setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
+  };
+
+  const esMontoValido = () => {
+    const valor = busqueda.trim();
+    if (valor === '' || joyas.length > 0) return false;
+    const monto = parseFloat(valor);
+    return !isNaN(monto) && monto > 0;
+  };
+
   const actualizarCantidad = (id, nuevaCantidad) => {
     const item = carrito.find(i => i.id === id);
     
-    if (nuevaCantidad > item.stock_disponible) {
+    // Si el item tiene stock_disponible (no es "Otros"), validar el stock
+    if (item.stock_disponible !== null && nuevaCantidad > item.stock_disponible) {
       setMensaje({ tipo: 'error', texto: 'No hay suficiente stock disponible' });
       setTimeout(() => setMensaje({ tipo: '', texto: '' }), 3000);
       return;
@@ -394,11 +431,30 @@ function Ventas() {
           <div className="busqueda-input-container">
             <input
               type="text"
-              placeholder="Buscar por código, nombre, categoría..."
+              placeholder="Buscar por código, nombre, categoría o monto..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               className="busqueda-input"
             />
+            {esMontoValido() && (
+              <button 
+                onClick={agregarOtroItem}
+                className="btn-agregar-otro"
+                style={{
+                  marginLeft: '10px',
+                  padding: '8px 16px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600'
+                }}
+              >
+                ➕ Agregar Otro (₡{parseFloat(busqueda).toFixed(2)})
+              </button>
+            )}
           </div>
 
           {joyas.length > 0 && (
@@ -440,9 +496,14 @@ function Ventas() {
                 {carrito.map(item => (
                   <div key={item.id} className="carrito-item">
                     <div className="item-info">
-                      <strong>{item.codigo}</strong>
+                      <strong>{item.codigo || 'N/A'}</strong>
                       <div>{item.nombre}</div>
-                      <small>Stock disponible: {item.stock_disponible}</small>
+                      {item.stock_disponible !== null && (
+                        <small>Stock disponible: {item.stock_disponible}</small>
+                      )}
+                      {item.stock_disponible === null && (
+                        <small style={{ color: '#6c757d', fontStyle: 'italic' }}>Item especial</small>
+                      )}
                     </div>
                     <div className="item-cantidad">
                       <button 
@@ -457,7 +518,7 @@ function Ventas() {
                         onChange={(e) => actualizarCantidad(item.id, parseInt(e.target.value) || 0)}
                         className="input-cantidad"
                         min="1"
-                        max={item.stock_disponible}
+                        max={item.stock_disponible || 999}
                       />
                       <button 
                         onClick={() => actualizarCantidad(item.id, item.cantidad + 1)}
