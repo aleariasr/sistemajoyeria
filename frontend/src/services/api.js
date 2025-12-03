@@ -84,6 +84,11 @@ export const actualizarJoya = (id, data) => api.put(`/joyas/${id}`, data);
 export const eliminarJoya = (id) => api.delete(`/joyas/${id}`);
 export const obtenerCategorias = () => api.get('/joyas/categorias');
 export const obtenerJoyasStockBajo = () => api.get('/joyas/stock-bajo');
+export const verificarCodigoJoya = (codigo, excluirId = null) => {
+  const params = { codigo };
+  if (excluirId) params.excluir_id = excluirId;
+  return api.get('/joyas/verificar-codigo', { params });
+};
 
 // ------- MOVIMIENTOS -------
 export const obtenerMovimientos = (filtros = {}) => api.get('/movimientos', { params: filtros });

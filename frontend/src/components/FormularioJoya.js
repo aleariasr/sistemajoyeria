@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { crearJoya, actualizarJoya, obtenerJoya } from '../services/api';
+import { crearJoya, actualizarJoya, obtenerJoya, verificarCodigoJoya } from '../services/api';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
@@ -38,6 +38,14 @@ function FormularioJoya() {
   const [imagenPreview, setImagenPreview] = useState(null);
   const [imagenActual, setImagenActual] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Estados para validación de código
+  const [codigoValidacion, setCodigoValidacion] = useState({
+    validando: false,
+    existe: false,
+    similares: []
+  });
+  const validacionTimeoutRef = useRef(null);
 
   const cargarJoya = useCallback(async () => {
     try {
@@ -82,7 +90,61 @@ function FormularioJoya() {
       ...formData,
       [name]: value
     });
+
+    // Si es el campo código, validar en tiempo real
+    if (name === 'codigo') {
+      validarCodigoEnTiempoReal(value);
+    }
   };
+
+  // Validar código en tiempo real mientras el usuario escribe
+  const validarCodigoEnTiempoReal = useCallback((codigo) => {
+    // Limpiar timeout anterior
+    if (validacionTimeoutRef.current) {
+      clearTimeout(validacionTimeoutRef.current);
+    }
+
+    // Si el código está vacío, limpiar validación
+    if (!codigo || codigo.trim().length === 0) {
+      setCodigoValidacion({
+        validando: false,
+        existe: false,
+        similares: []
+      });
+      return;
+    }
+
+    // Indicar que se está validando
+    setCodigoValidacion(prev => ({ ...prev, validando: true }));
+
+    // Esperar 500ms después de que el usuario deje de escribir
+    validacionTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await verificarCodigoJoya(codigo.trim(), id);
+        setCodigoValidacion({
+          validando: false,
+          existe: response.data.existe,
+          similares: response.data.similares || []
+        });
+      } catch (error) {
+        console.error('Error al verificar código:', error);
+        setCodigoValidacion({
+          validando: false,
+          existe: false,
+          similares: []
+        });
+      }
+    }, 500);
+  }, [id]);
+
+  // Limpiar timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (validacionTimeoutRef.current) {
+        clearTimeout(validacionTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleImagenChange = (e) => {
     const file = e.target.files[0];
@@ -123,6 +185,12 @@ function FormularioJoya() {
     e.preventDefault();
     setErrores([]);
     setMensaje(null);
+
+    // Validar que no exista código duplicado antes de enviar
+    if (codigoValidacion.existe) {
+      setErrores(['El código ya existe en el inventario. Por favor usa un código diferente.']);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -208,7 +276,52 @@ function FormularioJoya() {
                 onChange={handleChange}
                 placeholder="Ej: AN-0001"
                 required
+                style={{
+                  borderColor: codigoValidacion.existe ? '#dc3545' : 
+                               (codigoValidacion.similares.length > 0 && formData.codigo.length > 0) ? '#ffc107' : 
+                               ''
+                }}
               />
+              {codigoValidacion.validando && (
+                <small style={{ color: '#6c757d', display: 'block', marginTop: '5px' }}>
+                  🔍 Verificando código...
+                </small>
+              )}
+              {codigoValidacion.existe && !codigoValidacion.validando && (
+                <small style={{ color: '#dc3545', display: 'block', marginTop: '5px', fontWeight: '500' }}>
+                  ⚠️ Este código ya existe en el inventario
+                </small>
+              )}
+              {!codigoValidacion.existe && codigoValidacion.similares.length > 0 && !codigoValidacion.validando && (
+                <div style={{ 
+                  marginTop: '8px', 
+                  padding: '10px', 
+                  backgroundColor: '#fff3cd', 
+                  border: '1px solid #ffc107',
+                  borderRadius: '4px'
+                }}>
+                  <small style={{ color: '#856404', fontWeight: '500' }}>
+                    💡 Códigos similares encontrados:
+                  </small>
+                  <ul style={{ 
+                    margin: '5px 0 0 0', 
+                    paddingLeft: '20px',
+                    fontSize: '13px',
+                    color: '#856404'
+                  }}>
+                    {codigoValidacion.similares.slice(0, 5).map(joya => (
+                      <li key={joya.id}>
+                        <strong>{joya.codigo}</strong> - {joya.nombre}
+                      </li>
+                    ))}
+                  </ul>
+                  {codigoValidacion.similares.length > 5 && (
+                    <small style={{ color: '#856404', display: 'block', marginTop: '5px' }}>
+                      ... y {codigoValidacion.similares.length - 5} más
+                    </small>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-group">

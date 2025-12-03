@@ -85,6 +85,39 @@ router.get('/categorias', async (req, res) => {
   }
 });
 
+// GET /api/joyas/verificar-codigo - Verificar si un código existe o buscar similares
+router.get('/verificar-codigo', async (req, res) => {
+  try {
+    const { codigo, excluir_id } = req.query;
+    
+    if (!codigo) {
+      return res.status(400).json({ error: 'El código es requerido' });
+    }
+
+    // Buscar códigos similares (case-insensitive)
+    const codigosSimilares = await Joya.buscarCodigosSimilares(codigo);
+    
+    // Filtrar el ID a excluir (útil en edición)
+    const codigosFiltrados = excluir_id 
+      ? codigosSimilares.filter(j => j.id.toString() !== excluir_id.toString())
+      : codigosSimilares;
+    
+    // Verificar si existe código exacto (case-insensitive)
+    const codigoExacto = codigosFiltrados.find(
+      j => j.codigo.toLowerCase() === codigo.toLowerCase()
+    );
+
+    res.json({
+      existe: !!codigoExacto,
+      codigo_existente: codigoExacto || null,
+      similares: codigosFiltrados
+    });
+  } catch (error) {
+    console.error('Error al verificar código:', error);
+    res.status(500).json({ error: 'Error al verificar código' });
+  }
+});
+
 // GET /api/joyas/stock-bajo - Obtener joyas con stock bajo
 router.get('/stock-bajo', async (req, res) => {
   try {
@@ -207,16 +240,14 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
-    // Verificar que el código no esté duplicado (excepto para la misma joya)
-    if (joyaData.codigo !== joyaExistente.codigo) {
-      const joyaConCodigo = await Joya.obtenerPorCodigo(joyaData.codigo);
-      if (joyaConCodigo) {
-        // Limpiar archivo temporal si existe
-        if (req.file) {
-          cleanupTempFile(req.file.path);
-        }
-        return res.status(400).json({ errores: ['El código ya existe'] });
+    // Verificar que el código no esté duplicado en otra joya (case-insensitive)
+    const joyaConCodigo = await Joya.obtenerPorCodigo(joyaData.codigo);
+    if (joyaConCodigo && joyaConCodigo.id.toString() !== req.params.id) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
       }
+      return res.status(400).json({ errores: ['El código ya existe en otra joya'] });
     }
 
     // Subir nueva imagen a Cloudinary si se proporcionó

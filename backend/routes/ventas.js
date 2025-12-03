@@ -101,6 +101,17 @@ router.post('/', requireAuth, async (req, res) => {
     // Get all items and validate stock first
     const itemsConJoya = [];
     for (const item of items) {
+      // Si es un item tipo "Otros" (sin id_joya), agregarlo directamente
+      if (!item.id_joya) {
+        itemsConJoya.push({
+          ...item,
+          joya: null, // No tiene joya asociada
+          // Usar nombre del item si está disponible, sino descripcion_item, sino "Otros"
+          descripcion_item: item.nombre || item.descripcion_item || 'Otros'
+        });
+        continue;
+      }
+
       const joya = await Joya.obtenerPorId(item.id_joya);
       
       if (!joya) {
@@ -144,36 +155,41 @@ router.post('/', requireAuth, async (req, res) => {
       if (esVentaCredito) {
         await ItemVenta.crear({
           id_venta: idVenta,
-          id_joya: item.id_joya,
+          id_joya: item.id_joya || null,
           cantidad: item.cantidad,
           precio_unitario: item.precio_unitario,
-          subtotal: item.precio_unitario * item.cantidad
+          subtotal: item.precio_unitario * item.cantidad,
+          descripcion_item: item.descripcion_item || null
         });
       } else {
         await ItemVentaDia.crear({
           id_venta_dia: idVenta,
-          id_joya: item.id_joya,
+          id_joya: item.id_joya || null,
           cantidad: item.cantidad,
           precio_unitario: item.precio_unitario,
-          subtotal: item.precio_unitario * item.cantidad
+          subtotal: item.precio_unitario * item.cantidad,
+          descripcion_item: item.descripcion_item || null
         });
       }
 
-      // Actualizar stock (joya was already validated above)
-      const nuevoStock = joya.stock_actual - item.cantidad;
-      await Joya.actualizarStock(item.id_joya, nuevoStock);
+      // Actualizar stock y registrar movimiento solo si hay joya asociada
+      if (joya) {
+        // Actualizar stock (joya was already validated above)
+        const nuevoStock = joya.stock_actual - item.cantidad;
+        await Joya.actualizarStock(item.id_joya, nuevoStock);
 
-      // Registrar movimiento de inventario
-      const motivoVenta = esVentaCredito ? `Venta a crédito #${idVenta}` : `Venta del día #${idVenta}`;
-      await MovimientoInventario.crear({
-        id_joya: item.id_joya,
-        tipo_movimiento: 'Salida',
-        cantidad: item.cantidad,
-        motivo: motivoVenta,
-        usuario: req.session.username,
-        stock_antes: joya.stock_actual,
-        stock_despues: nuevoStock
-      });
+        // Registrar movimiento de inventario
+        const motivoVenta = esVentaCredito ? `Venta a crédito #${idVenta}` : `Venta del día #${idVenta}`;
+        await MovimientoInventario.crear({
+          id_joya: item.id_joya,
+          tipo_movimiento: 'Salida',
+          cantidad: item.cantidad,
+          motivo: motivoVenta,
+          usuario: req.session.username,
+          stock_antes: joya.stock_actual,
+          stock_despues: nuevoStock
+        });
+      }
     }
 
     // Si es venta a crédito, crear cuenta por cobrar

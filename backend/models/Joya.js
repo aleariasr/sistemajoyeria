@@ -131,12 +131,12 @@ class Joya {
     return data;
   }
 
-  // Obtener una joya por código
+  // Obtener una joya por código (case-insensitive)
   static async obtenerPorCodigo(codigo) {
     const { data, error } = await supabase
       .from('joyas')
       .select('*')
-      .eq('codigo', codigo)
+      .ilike('codigo', codigo)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -144,6 +144,22 @@ class Joya {
     }
 
     return data;
+  }
+
+  // Buscar códigos similares (para autocomplete y prevenir duplicados)
+  static async buscarCodigosSimilares(codigoParteial) {
+    const { data, error } = await supabase
+      .from('joyas')
+      .select('id, codigo, nombre')
+      .ilike('codigo', `%${codigoParteial}%`)
+      .order('codigo', { ascending: true })
+      .limit(10);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
   }
 
   // Actualizar joya
