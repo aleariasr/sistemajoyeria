@@ -156,7 +156,8 @@ function Ventas() {
     }
 
     // Generar un ID temporal único para el item "Otros"
-    const idTemporal = `otros-${Date.now()}`;
+    // Usar timestamp + random para evitar colisiones
+    const idTemporal = `otros-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     setCarrito([...carrito, {
       id: idTemporal,

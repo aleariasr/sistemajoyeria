@@ -106,6 +106,7 @@ router.post('/', requireAuth, async (req, res) => {
         itemsConJoya.push({
           ...item,
           joya: null, // No tiene joya asociada
+          // Usar nombre del item si está disponible, sino descripcion_item, sino "Otros"
           descripcion_item: item.nombre || item.descripcion_item || 'Otros'
         });
         continue;
