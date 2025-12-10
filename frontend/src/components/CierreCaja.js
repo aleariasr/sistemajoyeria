@@ -117,17 +117,7 @@ function CierreCaja() {
       // Abrir diálogo de impresión automáticamente después de actualizar el estado
       // Usar setTimeout para asegurar que el componente TicketPrint se renderice con los datos actualizados
       setTimeout(() => {
-        if (ticketRef.current) {
-          try {
-            handlePrintTicket();
-          } catch (e) {
-            console.warn('Error al imprimir automáticamente:', e);
-            // Intentar con window.print como fallback
-            window.print();
-          }
-        } else {
-          console.warn('Ref de ticket no disponible para impresión automática');
-        }
+        triggerPrintCierre();
       }, 500);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al realizar el cierre de caja');
