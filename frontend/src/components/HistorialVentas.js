@@ -50,13 +50,16 @@ function HistorialVentas() {
   };
 
   const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Usar la fecha tal como viene del servidor sin conversión de timezone
+    // El servidor ya guarda en hora de Costa Rica
+    const date = new Date(fecha);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const formatearMetodoPago = (metodo) => {

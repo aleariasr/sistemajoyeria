@@ -65,13 +65,19 @@ function DetalleVenta() {
   }, [cargarVenta]);
 
   const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Usar la fecha tal como viene del servidor sin conversión de timezone
+    // El servidor ya guarda en hora de Costa Rica
+    const date = new Date(fecha);
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day} de ${month} de ${year}, ${hours}:${minutes}`;
   };
 
   if (loading) {

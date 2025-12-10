@@ -18,7 +18,20 @@ function Login() {
       await login(username, password);
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      if (error.response && error.response.data && error.response.data.error) {
+      
+      // Mensajes de error más descriptivos
+      if (error.code === 'ERR_NETWORK' || !error.response) {
+        // Error de red - no se puede conectar al servidor
+        const apiUrl = localStorage.getItem('lastApiUrl') || window.location.hostname;
+        setError(
+          `No se puede conectar al servidor backend.\n\n` +
+          `Verifique:\n` +
+          `1. Que el backend esté ejecutándose en el servidor\n` +
+          `2. Que esté en la misma red WiFi (si usa iPad/móvil)\n` +
+          `3. URL detectada: ${apiUrl}:3001\n\n` +
+          `Consulte la documentación para configurar el acceso desde red local.`
+        );
+      } else if (error.response && error.response.data && error.response.data.error) {
         setError(error.response.data.error);
       } else {
         setError('Error al iniciar sesión. Por favor, intenta de nuevo.');
@@ -61,7 +74,7 @@ function Login() {
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message" style={{ whiteSpace: 'pre-line' }}>{error}</div>}
 
           <button type="submit" className="btn-login" disabled={loading}>
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}

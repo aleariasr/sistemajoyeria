@@ -108,15 +108,27 @@ function CierreCaja() {
       
       alert(`Cierre realizado exitosamente.\n\nVentas transferidas: ${response.data.resumen.total_ventas}\nAbonos cerrados: ${response.data.resumen.total_abonos_cerrados}\nIngresos extras cerrados: ${response.data.resumen.total_ingresos_extras_cerrados}\nTotal: ${formatearMoneda(response.data.resumen.total_general)}`);
       
+      // Actualizar el resumen primero
+      setResumen(response.data.resumen);
+      
       // Recargar datos
       await cargarVentasDia();
-      // Intentar imprimir ticket automático
-      try {
-        setResumen(response.data.resumen);
-        setTimeout(() => triggerPrintCierre(), 300);
-      } catch (e) {
-        console.warn('No se pudo imprimir el ticket de cierre automáticamente:', e);
-      }
+      
+      // Abrir diálogo de impresión automáticamente después de actualizar el estado
+      // Usar setTimeout para asegurar que el componente TicketPrint se renderice con los datos actualizados
+      setTimeout(() => {
+        if (ticketRef.current) {
+          try {
+            handlePrintTicket();
+          } catch (e) {
+            console.warn('Error al imprimir automáticamente:', e);
+            // Intentar con window.print como fallback
+            window.print();
+          }
+        } else {
+          console.warn('Ref de ticket no disponible para impresión automática');
+        }
+      }, 500);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al realizar el cierre de caja');
       console.error(err);
@@ -134,14 +146,16 @@ function CierreCaja() {
   };
 
   const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      timeZone: 'America/Costa_Rica',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Usar la fecha tal como viene del servidor sin conversión de timezone
+    // El servidor ya guarda en hora de Costa Rica
+    const date = new Date(fecha);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   // Separar ventas por método de pago
