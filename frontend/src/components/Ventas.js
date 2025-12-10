@@ -44,6 +44,15 @@ function Ventas() {
       setJoyas([]);
       return;
     }
+    
+    // No mostrar autocomplete si la búsqueda contiene solo números
+    // Esto permite escribir montos para items "Otros" sin interferencia del autocomplete
+    // Acepta números enteros (5000) y decimales (5000.50)
+    if (/^\d+\.?\d*$/.test(q)) {
+      setJoyas([]);
+      return;
+    }
+    
     try {
       const response = await api.get('/joyas', {
         params: { busqueda: q, estado: 'Activo', por_pagina: 20 }
