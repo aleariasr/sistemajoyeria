@@ -62,6 +62,10 @@ npm install
 cp backend/.env.example backend/.env
 # Editar backend/.env con credenciales de Supabase y Cloudinary
 
+# 📱 IMPORTANTE para acceso desde móviles/tablets:
+cp frontend/.env.example frontend/.env
+# El archivo frontend/.env debe contener HOST=0.0.0.0
+
 # Iniciar servicios (3 terminales separadas)
 npm run start:backend    # Puerto 3001 - API
 npm run start:frontend   # Puerto 3000 - POS
@@ -70,17 +74,21 @@ npm run start:storefront # Puerto 3002 - Tienda Online
 
 ### 📱 Acceso desde Dispositivos Móviles
 
-Al iniciar el backend, verá la IP local para conectar otros dispositivos:
+**Requisito**: El archivo `frontend/.env` debe existir con `HOST=0.0.0.0` (ver arriba).
+
+Al iniciar el backend y frontend, verá las IPs locales para conectar otros dispositivos:
 ```
 📱 Acceso multi-dispositivo (red local):
-   Backend API: http://192.168.1.100:3001
+   Backend API:  http://192.168.1.100:3001
+   Frontend POS: http://192.168.1.100:3000
 
 📋 Para conectar dispositivos móviles en la misma red:
    1. Asegúrese de que todos los dispositivos estén en la misma red WiFi
    2. Acceda desde el móvil a: http://192.168.1.100:3000
+   3. El frontend detectará automáticamente el backend
 ```
 
-Ver [DEVELOPMENT.md](DEVELOPMENT.md) para instrucciones detalladas.
+Ver [CONFIGURACION_RED_LOCAL.md](CONFIGURACION_RED_LOCAL.md) para guía paso a paso detallada.
 
 ### Login por Defecto
 - **Admin:** `admin` / `admin123`

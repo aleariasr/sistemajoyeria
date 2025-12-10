@@ -60,12 +60,22 @@ CLOUDINARY_API_SECRET=tu-api-secret
 cp frontend/.env.example frontend/.env
 ```
 
-Para desarrollo local con detección automática de IP, puede dejarlo vacío o usar:
+**🚨 IMPORTANTE para acceso desde dispositivos móviles/tablets:**
+
+El archivo `frontend/.env` debe contener:
 ```env
-# En desarrollo local, la URL se detecta automáticamente
-# Solo configure esto para producción
-# REACT_APP_API_URL=http://localhost:3001/api
+# REQUERIDO para acceso multi-dispositivo
+HOST=0.0.0.0
+
+# La URL del backend se detecta automáticamente
+# - localhost:3000 → localhost:3001/api
+# - 192.168.1.100:3000 → 192.168.1.100:3001/api
+# 
+# Solo configure REACT_APP_API_URL para producción:
+# REACT_APP_API_URL=https://tu-backend.railway.app/api
 ```
+
+Sin `HOST=0.0.0.0`, el frontend solo será accesible en localhost del mismo equipo.
 
 ### Storefront (`storefront/.env.local`)
 
