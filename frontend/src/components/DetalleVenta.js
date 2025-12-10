@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import TicketPrint, { useThermalPrint } from './TicketPrint';
+import { formatearFechaLarga } from '../utils/dateFormatter';
 import '../styles/DetalleVenta.css';
 
 function DetalleVenta() {
@@ -64,22 +65,6 @@ function DetalleVenta() {
     cargarVenta();
   }, [cargarVenta]);
 
-  const formatearFecha = (fecha) => {
-    // Usar la fecha tal como viene del servidor sin conversión de timezone
-    // El servidor ya guarda en hora de Costa Rica
-    const date = new Date(fecha);
-    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
-                    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${day} de ${month} de ${year}, ${hours}:${minutes}`;
-  };
-
   if (loading) {
     return <div className="loading">Cargando detalle de venta...</div>;
   }
@@ -100,7 +85,7 @@ function DetalleVenta() {
       <div className="page-header">
         <div>
           <h1>📄 Detalle de Venta #{venta.id}</h1>
-          <p>{formatearFecha(venta.fecha_venta)}</p>
+          <p>{formatearFechaLarga(venta.fecha_venta)}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {mensajePrint && (

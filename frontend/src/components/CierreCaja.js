@@ -3,6 +3,7 @@ import api from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import TicketPrint from './TicketPrint';
 import thermalPrinterService from '../services/thermalPrinterService';
+import { formatearFechaCorta } from '../utils/dateFormatter';
 
 function CierreCaja() {
   const [ventasDia, setVentasDia] = useState([]);
@@ -137,19 +138,6 @@ function CierreCaja() {
     }).format(valor || 0);
   };
 
-  const formatearFecha = (fecha) => {
-    // Usar la fecha tal como viene del servidor sin conversión de timezone
-    // El servidor ya guarda en hora de Costa Rica
-    const date = new Date(fecha);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
-
   // Separar ventas por método de pago
   const ventasEfectivo = ventasDia.filter(v => v.metodo_pago === 'Efectivo');
   const ventasTransferencia = ventasDia.filter(v => v.metodo_pago === 'Transferencia');
@@ -256,7 +244,7 @@ function CierreCaja() {
                         {ventasEfectivo.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -297,7 +285,7 @@ function CierreCaja() {
                         {ventasTransferencia.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -336,7 +324,7 @@ function CierreCaja() {
                         {ventasTarjeta.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -376,7 +364,7 @@ function CierreCaja() {
                         {ventasMixto.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
                             <td>{formatearMoneda(venta.monto_efectivo || 0)}</td>
                             <td>{formatearMoneda(venta.monto_tarjeta || 0)}</td>
@@ -417,7 +405,7 @@ function CierreCaja() {
                       <tbody>
                         {abonosDia.map((abono) => (
                           <tr key={abono.id}>
-                            <td>{formatearFecha(abono.fecha_abono)}</td>
+                            <td>{formatearFechaCorta(abono.fecha_abono)}</td>
                             <td>{abono.nombre_cliente || 'N/A'}</td>
                             <td><strong>{formatearMoneda(abono.monto)}</strong></td>
                             <td>
@@ -467,7 +455,7 @@ function CierreCaja() {
                         {ingresosExtras.map((ingreso) => (
                           <tr key={ingreso.id}>
                             <td><strong>{ingreso.id}</strong></td>
-                            <td>{formatearFecha(ingreso.fecha_ingreso)}</td>
+                            <td>{formatearFechaCorta(ingreso.fecha_ingreso)}</td>
                             <td>
                               <span style={{
                                 padding: '4px 8px',
