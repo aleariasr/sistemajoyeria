@@ -46,7 +46,8 @@ function Ventas() {
     }
     
     // No mostrar autocomplete si la búsqueda contiene solo números
-    // Esto permite escribir montos sin interferencia del autocomplete
+    // Esto permite escribir montos para items "Otros" sin interferencia del autocomplete
+    // Acepta números enteros (5000) y decimales (5000.50)
     if (/^\d+\.?\d*$/.test(q)) {
       setJoyas([]);
       return;
