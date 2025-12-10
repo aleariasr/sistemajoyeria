@@ -44,6 +44,14 @@ function Ventas() {
       setJoyas([]);
       return;
     }
+    
+    // No mostrar autocomplete si la búsqueda contiene solo números
+    // Esto permite escribir montos sin interferencia del autocomplete
+    if (/^\d+\.?\d*$/.test(q)) {
+      setJoyas([]);
+      return;
+    }
+    
     try {
       const response = await api.get('/joyas', {
         params: { busqueda: q, estado: 'Activo', por_pagina: 20 }

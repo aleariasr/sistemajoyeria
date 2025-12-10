@@ -1,19 +1,80 @@
 # Configuración para Acceso desde Red Local (iPad, Móviles, etc.)
 
 ## Problema
-Al intentar acceder al sistema desde un iPad u otro dispositivo en la red local, aparece un error de conexión.
+Al intentar acceder al sistema desde un iPad u otro dispositivo en la red local, aparece un error de conexión: "No se puede conectar al servidor backend".
 
 ## Causa
-El sistema necesita que tanto el backend como el frontend estén accesibles desde la misma red local, y el frontend debe saber cómo conectarse al backend usando la IP de la red local.
+El frontend React por defecto solo se ejecuta en `localhost`, lo que significa que solo es accesible desde el mismo equipo. Para acceder desde otros dispositivos (móviles, tablets) en la red local, el frontend debe configurarse para escuchar en todas las interfaces de red.
 
-## Solución
+## Solución Rápida
+
+### Configuración Inicial (Solo se hace una vez)
+
+1. **Crear archivo de configuración del frontend:**
+   ```bash
+   cd frontend
+   cp .env.example .env
+   ```
+
+   Esto creará un archivo `.env` con `HOST=0.0.0.0`, que permite acceso desde otros dispositivos.
+
+2. **Verificar la configuración:**
+   Abra `frontend/.env` y asegúrese de que contenga:
+   ```
+   HOST=0.0.0.0
+   ```
+
+### Uso Diario
+
+1. **Iniciar el backend** (desde la raíz del proyecto):
+   ```bash
+   npm run start:backend
+   ```
+
+   El backend mostrará las IPs disponibles:
+   ```
+   🚀 Servidor corriendo en puerto 3001
+   🌐 Host: 0.0.0.0
+   📱 Acceso multi-dispositivo (red local):
+      Backend API: http://192.168.1.100:3001
+   ```
+
+   **Importante**: Anote la dirección IP mostrada (ej: `192.168.1.100`).
+
+2. **Iniciar el frontend** (desde la raíz del proyecto):
+   ```bash
+   npm run start:frontend
+   ```
+
+   El frontend mostrará:
+   ```
+   You can now view sistemajoyeria-frontend in the browser.
+
+     Local:            http://localhost:3000
+     On Your Network:  http://192.168.1.100:3000
+   ```
+
+   **Importante**: Use la dirección "On Your Network" para acceder desde móviles.
+
+3. **Acceder desde su dispositivo móvil/tablet:**
+   - Asegúrese de que el dispositivo esté en la **misma red WiFi**
+   - Abra el navegador y vaya a: `http://192.168.1.100:3000`
+   - Debería ver la pantalla de login
+   - El frontend detectará automáticamente el backend en `http://192.168.1.100:3001/api`
+
+## Solución Detallada
 
 ### 1. Verificar que Backend esté Ejecutándose
 
-El backend debe estar corriendo en modo que acepte conexiones de la red local:
+El backend ya está configurado para aceptar conexiones de la red local:
 
 ```bash
-# En el servidor/PC donde corre el backend
+# Desde la raíz del proyecto
+npm run start:backend
+```
+
+O si está dentro de la carpeta backend:
+```bash
 cd backend
 npm start
 ```
@@ -30,32 +91,9 @@ El backend debe mostrar algo como:
 
 ### 2. Configurar Frontend para Red Local
 
-El frontend tiene **detección automática de IP**, pero para asegurar funcionamiento óptimo:
+🚨 **PASO CRÍTICO**: El frontend debe tener configurado `HOST=0.0.0.0` para ser accesible desde otros dispositivos.
 
-#### Opción A: Detección Automática (Recomendado)
-
-El frontend detecta automáticamente la IP cuando se accede desde un navegador. Solo necesita:
-
-1. Iniciar el frontend:
-   ```bash
-   cd frontend
-   npm start
-   ```
-
-2. En lugar de abrir `localhost:3000`, use la IP del servidor:
-   ```
-   http://192.168.1.100:3000
-   ```
-   (Reemplace `192.168.1.100` con su IP real)
-
-3. El frontend automáticamente detectará que está accediendo por IP y usará:
-   ```
-   http://192.168.1.100:3001/api
-   ```
-
-#### Opción B: Configuración Manual (Si la automática falla)
-
-Si la detección automática no funciona:
+#### Configuración Requerida (Primera vez)
 
 1. Crear archivo `.env` en la carpeta `frontend/`:
    ```bash
@@ -63,15 +101,58 @@ Si la detección automática no funciona:
    cp .env.example .env
    ```
 
-2. Editar `frontend/.env` y configurar:
+2. Verificar que `frontend/.env` contenga:
    ```
+   HOST=0.0.0.0
+   ```
+
+   Sin esta configuración, el frontend solo será accesible en `localhost` del mismo equipo.
+
+#### Iniciar el Frontend
+
+1. Desde la raíz del proyecto:
+   ```bash
+   npm run start:frontend
+   ```
+
+   O desde la carpeta frontend:
+   ```bash
+   cd frontend
+   npm start
+   ```
+
+2. El frontend mostrará las direcciones disponibles:
+   ```
+   You can now view sistemajoyeria-frontend in the browser.
+
+     Local:            http://localhost:3000
+     On Your Network:  http://192.168.1.100:3000
+   ```
+
+3. **Use la dirección "On Your Network"** para acceder desde móviles.
+
+#### Detección Automática de la API
+
+El frontend detecta automáticamente la dirección del backend:
+- Si accede desde `localhost:3000` → usará `localhost:3001/api`
+- Si accede desde `192.168.1.100:3000` → usará `192.168.1.100:3001/api`
+
+No necesita configurar `REACT_APP_API_URL` en desarrollo local.
+
+#### Opción B: Configuración Manual (Si la automática falla)
+
+Si la detección automática no funciona, puede configurar manualmente:
+
+1. Editar `frontend/.env` y agregar:
+   ```
+   HOST=0.0.0.0
    REACT_APP_API_URL=http://192.168.1.100:3001/api
    ```
    (Reemplace `192.168.1.100` con la IP de su servidor)
 
-3. Reiniciar el frontend:
+2. Reiniciar el frontend:
    ```bash
-   npm start
+   npm run start:frontend
    ```
 
 ### 3. Acceder desde iPad u otro Dispositivo
@@ -119,11 +200,12 @@ Para verificar que todo está configurado correctamente:
 
 ### Windows Firewall
 
-Si el backend está en Windows, debe permitir conexiones:
+Si el backend/frontend está en Windows, debe permitir conexiones en ambos puertos:
 
 ```powershell
 # Ejecutar como Administrador en PowerShell
 New-NetFirewallRule -DisplayName "Node Backend" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+New-NetFirewallRule -DisplayName "React Frontend" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
 ```
 
 ### macOS Firewall
@@ -132,12 +214,13 @@ New-NetFirewallRule -DisplayName "Node Backend" -Direction Inbound -Protocol TCP
 # macOS normalmente permite conexiones locales por defecto
 # Si tiene problemas, vaya a:
 # Sistema > Seguridad y Privacidad > Firewall > Opciones
-# Y permita conexiones entrantes para Node
+# Y permita conexiones entrantes para Node y React
 ```
 
 ### Linux (ufw)
 
 ```bash
+sudo ufw allow 3000/tcp
 sudo ufw allow 3001/tcp
 ```
 
@@ -145,12 +228,32 @@ sudo ufw allow 3001/tcp
 
 ### Error: "No se puede conectar al servidor backend"
 
-**Posibles causas:**
-1. Backend no está corriendo → Iniciar backend
-2. IP incorrecta → Verificar IP con `ipconfig` (Windows) o `ifconfig` (Mac/Linux)
-3. Firewall bloqueando → Configurar firewall (ver arriba)
-4. Red WiFi diferente → Conectar ambos dispositivos a la misma red
-5. VPN activa → Desactivar VPN en uno de los dispositivos
+**Posibles causas y soluciones:**
+
+1. **Frontend no tiene HOST=0.0.0.0 configurado** ❌ MÁS COMÚN
+   - Verificar que existe el archivo `frontend/.env`
+   - Verificar que contenga `HOST=0.0.0.0`
+   - Si no existe, ejecutar: `cd frontend && cp .env.example .env`
+   - Reiniciar el frontend
+
+2. **Backend no está corriendo**
+   - Iniciar backend: `npm run start:backend`
+   - Verificar que muestre las IPs de red local
+
+3. **IP incorrecta**
+   - Verificar IP con `ipconfig` (Windows) o `ifconfig` (Mac/Linux)
+   - Usar la IP que muestra el backend al iniciar
+
+4. **Firewall bloqueando**
+   - Configurar firewall (ver sección Firewall abajo)
+   - Puertos que deben estar abiertos: 3000 (frontend) y 3001 (backend)
+
+5. **Red WiFi diferente**
+   - Conectar ambos dispositivos a la misma red
+   - Algunos routers tienen "aislamiento de clientes" activado - desactivarlo
+
+6. **VPN activa**
+   - Desactivar VPN en uno de los dispositivos
 
 ### Error: "CORS bloqueado"
 
