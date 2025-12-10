@@ -89,7 +89,9 @@ function CierreCaja() {
     }
   };
 
-  
+  // Constante para el tiempo de espera antes de imprimir
+  // Permite que React actualice el DOM con los nuevos datos del resumen
+  const PRINT_DELAY_MS = 500;
 
   const realizarCierre = async () => {
     if (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0) {
@@ -118,7 +120,7 @@ function CierreCaja() {
       // Usar setTimeout para asegurar que el componente TicketPrint se renderice con los datos actualizados
       setTimeout(() => {
         triggerPrintCierre();
-      }, 500);
+      }, PRINT_DELAY_MS);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al realizar el cierre de caja');
       console.error(err);

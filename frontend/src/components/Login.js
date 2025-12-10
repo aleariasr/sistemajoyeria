@@ -22,7 +22,14 @@ function Login() {
       // Mensajes de error más descriptivos
       if (error.code === 'ERR_NETWORK' || !error.response) {
         // Error de red - no se puede conectar al servidor
-        const apiUrl = localStorage.getItem('lastApiUrl') || window.location.hostname;
+        let apiUrl = window.location.hostname;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            apiUrl = localStorage.getItem('lastApiUrl') || apiUrl;
+          }
+        } catch (e) {
+          console.warn('localStorage no disponible:', e);
+        }
         setError(
           `No se puede conectar al servidor backend.\n\n` +
           `Verifique:\n` +

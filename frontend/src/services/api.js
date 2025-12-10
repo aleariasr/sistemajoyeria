@@ -57,7 +57,11 @@ console.log("🔗 Protocolo:", typeof window !== 'undefined' ? window.location.p
 
 // Guardar la URL para referencia en caso de errores
 if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-  localStorage.setItem('lastApiUrl', API_URL);
+  try {
+    localStorage.setItem('lastApiUrl', API_URL);
+  } catch (e) {
+    console.warn('No se pudo guardar API URL en localStorage:', e);
+  }
 }
 
 // Crear instancia de axios
