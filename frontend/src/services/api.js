@@ -52,6 +52,17 @@ function getApiUrl() {
 const API_URL = getApiUrl();
 
 console.log("🌐 API_URL detectada:", API_URL);
+console.log("📱 Hostname actual:", typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+console.log("🔗 Protocolo:", typeof window !== 'undefined' ? window.location.protocol : 'N/A');
+
+// Guardar la URL para referencia en caso de errores
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  try {
+    localStorage.setItem('lastApiUrl', API_URL);
+  } catch (e) {
+    console.warn('No se pudo guardar API URL en localStorage:', e);
+  }
+}
 
 // Crear instancia de axios
 const api = axios.create({
@@ -64,9 +75,10 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response) {
-      console.error("❌ Error servidor:", err.response.data);
+      console.error("❌ Error servidor:", err.response.status, err.response.data);
     } else if (err.request) {
-      console.error("❌ No hay respuesta del backend");
+      console.error("❌ No hay respuesta del backend. URL intentada:", API_URL);
+      console.error("❌ Verifique que el backend esté ejecutándose y sea accesible desde este dispositivo");
     } else {
       console.error("❌ Error:", err.message);
     }

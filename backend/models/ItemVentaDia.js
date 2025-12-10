@@ -31,7 +31,7 @@ class ItemVentaDia {
       .from('items_venta_dia')
       .select(`
         *,
-        joyas!items_venta_dia_id_joya_fkey (codigo, nombre, moneda)
+        joyas!items_venta_dia_id_joya_fkey (codigo, nombre, categoria, moneda)
       `)
       .eq('id_venta_dia', idVentaDia);
 
@@ -44,6 +44,7 @@ class ItemVentaDia {
       ...item,
       codigo: item.joyas?.codigo || null,
       nombre: item.joyas?.nombre || item.descripcion_item || 'Otros',
+      categoria: item.joyas?.categoria || null,
       moneda: item.joyas?.moneda || 'CRC'
     }));
   }

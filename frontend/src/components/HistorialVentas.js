@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { formatearFechaCorta } from '../utils/dateFormatter';
 import '../styles/HistorialVentas.css';
 
 function HistorialVentas() {
@@ -47,16 +48,6 @@ function HistorialVentas() {
 
   const verDetalleVenta = (id) => {
     navigate(`/venta/${id}`);
-  };
-
-  const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const formatearMetodoPago = (metodo) => {
@@ -161,7 +152,7 @@ function HistorialVentas() {
                         </span>
                       )}
                     </td>
-                    <td>{formatearFecha(venta.fecha_venta)}</td>
+                    <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                     {isAdmin() && <td>{venta.nombre_usuario || venta.usuario}</td>}
                     <td>
                       <span style={{

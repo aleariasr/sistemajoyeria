@@ -3,6 +3,11 @@ import api from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import TicketPrint from './TicketPrint';
 import thermalPrinterService from '../services/thermalPrinterService';
+import { formatearFechaCorta } from '../utils/dateFormatter';
+
+// Constante para el tiempo de espera antes de imprimir
+// Permite que React actualice el DOM con los nuevos datos del resumen
+const PRINT_DELAY_MS = 500;
 
 function CierreCaja() {
   const [ventasDia, setVentasDia] = useState([]);
@@ -89,8 +94,6 @@ function CierreCaja() {
     }
   };
 
-  
-
   const realizarCierre = async () => {
     if (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0) {
       setError('No hay ventas, abonos ni ingresos extras para cerrar');
@@ -108,15 +111,17 @@ function CierreCaja() {
       
       alert(`Cierre realizado exitosamente.\n\nVentas transferidas: ${response.data.resumen.total_ventas}\nAbonos cerrados: ${response.data.resumen.total_abonos_cerrados}\nIngresos extras cerrados: ${response.data.resumen.total_ingresos_extras_cerrados}\nTotal: ${formatearMoneda(response.data.resumen.total_general)}`);
       
+      // Actualizar el resumen primero
+      setResumen(response.data.resumen);
+      
       // Recargar datos
       await cargarVentasDia();
-      // Intentar imprimir ticket automático
-      try {
-        setResumen(response.data.resumen);
-        setTimeout(() => triggerPrintCierre(), 300);
-      } catch (e) {
-        console.warn('No se pudo imprimir el ticket de cierre automáticamente:', e);
-      }
+      
+      // Abrir diálogo de impresión automáticamente después de actualizar el estado
+      // Usar setTimeout para asegurar que el componente TicketPrint se renderice con los datos actualizados
+      setTimeout(() => {
+        triggerPrintCierre();
+      }, PRINT_DELAY_MS);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al realizar el cierre de caja');
       console.error(err);
@@ -131,17 +136,6 @@ function CierreCaja() {
       currency: 'CRC',
       minimumFractionDigits: 0
     }).format(valor || 0);
-  };
-
-  const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      timeZone: 'America/Costa_Rica',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   // Separar ventas por método de pago
@@ -250,7 +244,7 @@ function CierreCaja() {
                         {ventasEfectivo.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -291,7 +285,7 @@ function CierreCaja() {
                         {ventasTransferencia.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -330,7 +324,7 @@ function CierreCaja() {
                         {ventasTarjeta.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td>{formatearMoneda(venta.subtotal)}</td>
                             <td>{formatearMoneda(venta.descuento)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
@@ -370,7 +364,7 @@ function CierreCaja() {
                         {ventasMixto.map((venta) => (
                           <tr key={venta.id}>
                             <td><strong>{venta.id}</strong></td>
-                            <td>{formatearFecha(venta.fecha_venta)}</td>
+                            <td>{formatearFechaCorta(venta.fecha_venta)}</td>
                             <td><strong>{formatearMoneda(venta.total)}</strong></td>
                             <td>{formatearMoneda(venta.monto_efectivo || 0)}</td>
                             <td>{formatearMoneda(venta.monto_tarjeta || 0)}</td>
@@ -411,7 +405,7 @@ function CierreCaja() {
                       <tbody>
                         {abonosDia.map((abono) => (
                           <tr key={abono.id}>
-                            <td>{formatearFecha(abono.fecha_abono)}</td>
+                            <td>{formatearFechaCorta(abono.fecha_abono)}</td>
                             <td>{abono.nombre_cliente || 'N/A'}</td>
                             <td><strong>{formatearMoneda(abono.monto)}</strong></td>
                             <td>
@@ -461,7 +455,7 @@ function CierreCaja() {
                         {ingresosExtras.map((ingreso) => (
                           <tr key={ingreso.id}>
                             <td><strong>{ingreso.id}</strong></td>
-                            <td>{formatearFecha(ingreso.fecha_ingreso)}</td>
+                            <td>{formatearFechaCorta(ingreso.fecha_ingreso)}</td>
                             <td>
                               <span style={{
                                 padding: '4px 8px',

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import TicketPrint, { useThermalPrint } from './TicketPrint';
+import { formatearFechaLarga } from '../utils/dateFormatter';
 import '../styles/DetalleVenta.css';
 
 function DetalleVenta() {
@@ -64,16 +65,6 @@ function DetalleVenta() {
     cargarVenta();
   }, [cargarVenta]);
 
-  const formatearFecha = (fecha) => {
-    return new Date(fecha).toLocaleString('es-CR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   if (loading) {
     return <div className="loading">Cargando detalle de venta...</div>;
   }
@@ -94,7 +85,7 @@ function DetalleVenta() {
       <div className="page-header">
         <div>
           <h1>📄 Detalle de Venta #{venta.id}</h1>
-          <p>{formatearFecha(venta.fecha_venta)}</p>
+          <p>{formatearFechaLarga(venta.fecha_venta)}</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {mensajePrint && (
