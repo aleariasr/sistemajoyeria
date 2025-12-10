@@ -22,10 +22,13 @@ function Login() {
       // Mensajes de error más descriptivos
       if (error.code === 'ERR_NETWORK' || !error.response) {
         // Error de red - no se puede conectar al servidor
-        let apiUrl = window.location.hostname;
+        let apiUrl = `${window.location.hostname}:3001`;
         try {
           if (typeof localStorage !== 'undefined') {
-            apiUrl = localStorage.getItem('lastApiUrl') || apiUrl;
+            const storedUrl = localStorage.getItem('lastApiUrl');
+            if (storedUrl) {
+              apiUrl = storedUrl;
+            }
           }
         } catch (e) {
           console.warn('localStorage no disponible:', e);
@@ -35,7 +38,7 @@ function Login() {
           `Verifique:\n` +
           `1. Que el backend esté ejecutándose en el servidor\n` +
           `2. Que esté en la misma red WiFi (si usa iPad/móvil)\n` +
-          `3. URL detectada: ${apiUrl}:3001\n\n` +
+          `3. URL detectada: ${apiUrl}\n\n` +
           `Consulte la documentación para configurar el acceso desde red local.`
         );
       } else if (error.response && error.response.data && error.response.data.error) {

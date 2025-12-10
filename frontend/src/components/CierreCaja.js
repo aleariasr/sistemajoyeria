@@ -5,6 +5,10 @@ import TicketPrint from './TicketPrint';
 import thermalPrinterService from '../services/thermalPrinterService';
 import { formatearFechaCorta } from '../utils/dateFormatter';
 
+// Constante para el tiempo de espera antes de imprimir
+// Permite que React actualice el DOM con los nuevos datos del resumen
+const PRINT_DELAY_MS = 500;
+
 function CierreCaja() {
   const [ventasDia, setVentasDia] = useState([]);
   const [abonosDia, setAbonosDia] = useState([]);
@@ -89,10 +93,6 @@ function CierreCaja() {
       setLoading(false);
     }
   };
-
-  // Constante para el tiempo de espera antes de imprimir
-  // Permite que React actualice el DOM con los nuevos datos del resumen
-  const PRINT_DELAY_MS = 500;
 
   const realizarCierre = async () => {
     if (ventasDia.length === 0 && abonosDia.length === 0 && ingresosExtras.length === 0) {
