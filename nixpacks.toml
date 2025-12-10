@@ -2,7 +2,7 @@
 # This file configures how the monorepo is built and run
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm"]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 # Use root npm install which handles workspaces automatically
