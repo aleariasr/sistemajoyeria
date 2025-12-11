@@ -152,7 +152,8 @@ router.get('/ventas-dia', requireAuth, async (req, res) => {
 // Obtener resumen de ventas del día
 router.get('/resumen-dia', requireAuth, async (req, res) => {
   try {
-    const data = await construirResumenDelDia();
+    const fecha = req.query.fecha || null;
+    const data = await construirResumenDelDia(fecha);
     res.json(data);
   } catch (error) {
     console.error('Error al obtener resumen del día:', error);
@@ -165,7 +166,7 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
     const resumenDetallado = await construirResumenDelDia();
     // Obtener todas las ventas del día (solo ventas de contado) - filtradas por fecha actual
-    const ventasDia = await VentaDia.obtenerTodas();
+    const ventasDia = await VentaDia.obtenerTodas(null); // null = fecha actual
 
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
