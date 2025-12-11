@@ -239,8 +239,12 @@ router.get('/', requireAuth, async (req, res) => {
     const resultadoHistorial = await Venta.obtenerTodas(filtros);
 
     // Obtener ventas del día (aún no cerradas) - filtradas por fecha si se proporciona
-    // Si hay filtros de fecha, usar el fecha_desde como referencia, sino obtener del día actual
-    const fechaParaVentasDia = filtros.fecha_desde ? filtros.fecha_desde.split('T')[0] : null;
+    // Si hay filtros de fecha, extraer solo la parte YYYY-MM-DD
+    let fechaParaVentasDia = null;
+    if (filtros.fecha_desde) {
+      // Extraer fecha en formato YYYY-MM-DD, manejando tanto ISO (YYYY-MM-DDTHH:MM:SS) como simple (YYYY-MM-DD)
+      fechaParaVentasDia = filtros.fecha_desde.substring(0, 10);
+    }
     const ventasDia = await VentaDia.obtenerTodas(fechaParaVentasDia);
 
     // Marcar las ventas del día para distinguirlas

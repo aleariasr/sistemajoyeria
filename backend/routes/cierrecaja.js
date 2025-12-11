@@ -164,15 +164,17 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
 // Cerrar caja (transferir ventas de contado del día a la base de datos principal)
 router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
-    const resumenDetallado = await construirResumenDelDia();
+    // Usar null (fecha actual) de manera consistente en todas las operaciones
+    const fechaCierre = null; // null = fecha actual de Costa Rica
+    const resumenDetallado = await construirResumenDelDia(fechaCierre);
     // Obtener todas las ventas del día (solo ventas de contado) - filtradas por fecha actual
-    const ventasDia = await VentaDia.obtenerTodas(null); // null = fecha actual
+    const ventasDia = await VentaDia.obtenerTodas(fechaCierre);
 
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
 
     // Obtener abonos del día que NO han sido cerrados
-    const rangoHoy = obtenerRangoDia();
+    const rangoHoy = obtenerRangoDia(fechaCierre);
     const { data: abonosDelDia, error: abonosError } = await supabase
       .from('abonos')
       .select('*')
