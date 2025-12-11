@@ -28,8 +28,8 @@ const requireAdmin = (req, res, next) => {
 
 // Helper para construir resumen del día con totales combinados
 async function construirResumenDelDia(fecha = null) {
-  const resumen = await VentaDia.obtenerResumen();
-  const ventas = await VentaDia.obtenerTodas();
+  const resumen = await VentaDia.obtenerResumen(fecha);
+  const ventas = await VentaDia.obtenerTodas(fecha);
   const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
 
   const rangoDia = obtenerRangoDia(fecha);
@@ -129,7 +129,8 @@ async function construirResumenDelDia(fecha = null) {
 // Obtener todas las ventas del día
 router.get('/ventas-dia', requireAuth, async (req, res) => {
   try {
-    const ventas = await VentaDia.obtenerTodas();
+    const fecha = req.query.fecha || null;
+    const ventas = await VentaDia.obtenerTodas(fecha);
     
     const ventasConItems = await Promise.all(
       ventas.map(async (venta) => {
@@ -151,7 +152,8 @@ router.get('/ventas-dia', requireAuth, async (req, res) => {
 // Obtener resumen de ventas del día
 router.get('/resumen-dia', requireAuth, async (req, res) => {
   try {
-    const data = await construirResumenDelDia();
+    const fecha = req.query.fecha || null;
+    const data = await construirResumenDelDia(fecha);
     res.json(data);
   } catch (error) {
     console.error('Error al obtener resumen del día:', error);
@@ -162,15 +164,17 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
 // Cerrar caja (transferir ventas de contado del día a la base de datos principal)
 router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
-    const resumenDetallado = await construirResumenDelDia();
-    // Obtener todas las ventas del día (solo ventas de contado)
-    const ventasDia = await VentaDia.obtenerTodas();
+    // Usar null (fecha actual) de manera consistente en todas las operaciones
+    const fechaCierre = null; // null = fecha actual de Costa Rica
+    const resumenDetallado = await construirResumenDelDia(fechaCierre);
+    // Obtener todas las ventas del día (solo ventas de contado) - filtradas por fecha actual
+    const ventasDia = await VentaDia.obtenerTodas(fechaCierre);
 
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
     const ventasContado = ventasDia.filter(v => v.tipo_venta !== 'Credito');
 
     // Obtener abonos del día que NO han sido cerrados
-    const rangoHoy = obtenerRangoDia();
+    const rangoHoy = obtenerRangoDia(fechaCierre);
     const { data: abonosDelDia, error: abonosError } = await supabase
       .from('abonos')
       .select('*')

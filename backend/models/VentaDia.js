@@ -1,5 +1,5 @@
 const { supabase } = require('../supabase-db');
-const { formatearFechaSQL } = require('../utils/timezone');
+const { formatearFechaSQL, obtenerRangoDia } = require('../utils/timezone');
 
 class VentaDia {
   // Crear nueva venta del día
@@ -42,10 +42,14 @@ class VentaDia {
   }
 
   // Obtener todas las ventas del día
-  static async obtenerTodas() {
+  static async obtenerTodas(fecha = null) {
+    const rangoDia = obtenerRangoDia(fecha);
+    
     const { data, error } = await supabase
       .from('ventas_dia')
       .select('*')
+      .gte('fecha_venta', rangoDia.fecha_desde)
+      .lte('fecha_venta', rangoDia.fecha_hasta)
       .order('fecha_venta', { ascending: false });
 
     if (error) {
@@ -71,10 +75,14 @@ class VentaDia {
   }
 
   // Obtener resumen de ventas del día (solo ventas de contado)
-  static async obtenerResumen() {
+  static async obtenerResumen(fecha = null) {
+    const rangoDia = obtenerRangoDia(fecha);
+    
     const { data, error } = await supabase
       .from('ventas_dia')
       .select('*')
+      .gte('fecha_venta', rangoDia.fecha_desde)
+      .lte('fecha_venta', rangoDia.fecha_hasta)
       .or('tipo_venta.eq.Contado,tipo_venta.is.null');
 
     if (error) {
