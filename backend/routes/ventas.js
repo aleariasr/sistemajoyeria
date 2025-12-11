@@ -238,8 +238,10 @@ router.get('/', requireAuth, async (req, res) => {
     // Obtener ventas del historial (ya cerradas)
     const resultadoHistorial = await Venta.obtenerTodas(filtros);
 
-    // Obtener ventas del día (aún no cerradas)
-    const ventasDia = await VentaDia.obtenerTodas();
+    // Obtener ventas del día (aún no cerradas) - filtradas por fecha si se proporciona
+    // Si hay filtros de fecha, usar el fecha_desde como referencia, sino obtener del día actual
+    const fechaParaVentasDia = filtros.fecha_desde ? filtros.fecha_desde.split('T')[0] : null;
+    const ventasDia = await VentaDia.obtenerTodas(fechaParaVentasDia);
 
     // Marcar las ventas del día para distinguirlas
     const ventasDiaMarcadas = ventasDia.map(venta => ({

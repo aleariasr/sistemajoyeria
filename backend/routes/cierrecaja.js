@@ -28,8 +28,8 @@ const requireAdmin = (req, res, next) => {
 
 // Helper para construir resumen del día con totales combinados
 async function construirResumenDelDia(fecha = null) {
-  const resumen = await VentaDia.obtenerResumen();
-  const ventas = await VentaDia.obtenerTodas();
+  const resumen = await VentaDia.obtenerResumen(fecha);
+  const ventas = await VentaDia.obtenerTodas(fecha);
   const ventasContado = ventas.filter(v => v.tipo_venta !== 'Credito');
 
   const rangoDia = obtenerRangoDia(fecha);
@@ -129,7 +129,8 @@ async function construirResumenDelDia(fecha = null) {
 // Obtener todas las ventas del día
 router.get('/ventas-dia', requireAuth, async (req, res) => {
   try {
-    const ventas = await VentaDia.obtenerTodas();
+    const fecha = req.query.fecha || null;
+    const ventas = await VentaDia.obtenerTodas(fecha);
     
     const ventasConItems = await Promise.all(
       ventas.map(async (venta) => {
@@ -163,7 +164,7 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
 router.post('/cerrar-caja', requireAuth, async (req, res) => {
   try {
     const resumenDetallado = await construirResumenDelDia();
-    // Obtener todas las ventas del día (solo ventas de contado)
+    // Obtener todas las ventas del día (solo ventas de contado) - filtradas por fecha actual
     const ventasDia = await VentaDia.obtenerTodas();
 
     // Filtrar solo ventas de contado (excluir crédito aunque no deberían estar aquí)
