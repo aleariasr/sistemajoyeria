@@ -30,7 +30,7 @@ async function apiCall(method, endpoint, data = null, cookie = '') {
 
 async function runTest() {
   console.log('\n🧪 Test: Datos de factura antes del cierre de caja\n');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
 
   // 1. Login como admin
   console.log('\n📝 Step 1: Login...');
