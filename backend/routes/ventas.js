@@ -279,29 +279,56 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const esVentaDiaParam = req.query.es_venta_dia === 'true';
 
-    // 🔍 Logging temporal para debugging (según issue #fix-invoice-data-mismatch)
+    // 🔍 Logging temporal para debugging
     // TODO: Remover después de verificar que el fix funciona correctamente
-    console.log(`[VENTAS] Buscando venta ID: ${id}`);
+    console.log(`[VENTAS] Buscando venta ID: ${id}, es_venta_dia: ${esVentaDiaParam}`);
 
-    // Buscar primero en ventas del historial
-    let venta = await Venta.obtenerPorId(id);
+    let venta = null;
     let items = null;
     let esVentaDia = false;
 
-    if (venta) {
-      // Encontrada en historial
-      console.log(`[VENTAS] Encontrada en historial`);
-      items = await ItemVenta.obtenerPorVenta(id);
-      console.log(`[VENTAS] Items historial: ${items?.length || 0}`);
-    } else {
+    // Si viene el parámetro es_venta_dia, buscar directamente en la tabla correcta
+    if (esVentaDiaParam) {
       // Buscar en ventas del día
       venta = await VentaDia.obtenerPorId(id);
       if (venta) {
         esVentaDia = true;
-        console.log(`[VENTAS] Encontrada en ventas_dia`);
+        console.log(`[VENTAS] Encontrada en ventas_dia (por parámetro)`);
         items = await ItemVentaDia.obtenerPorVenta(id);
         console.log(`[VENTAS] Items del día: ${items?.length || 0}`);
+      }
+    } else {
+      // Buscar en historial
+      venta = await Venta.obtenerPorId(id);
+      if (venta) {
+        console.log(`[VENTAS] Encontrada en historial (por parámetro)`);
+        items = await ItemVenta.obtenerPorVenta(id);
+        console.log(`[VENTAS] Items historial: ${items?.length || 0}`);
+      }
+    }
+
+    // Fallback: Si no se encontró con el parámetro, intentar búsqueda inversa
+    // Esto mantiene compatibilidad con llamadas antiguas sin el parámetro
+    if (!venta) {
+      console.log(`[VENTAS] No encontrada con parámetro, intentando búsqueda inversa...`);
+      
+      // Buscar primero en ventas del día (más recientes)
+      venta = await VentaDia.obtenerPorId(id);
+      if (venta) {
+        esVentaDia = true;
+        console.log(`[VENTAS] Encontrada en ventas_dia (fallback)`);
+        items = await ItemVentaDia.obtenerPorVenta(id);
+        console.log(`[VENTAS] Items del día: ${items?.length || 0}`);
+      } else {
+        // Si no está en el día, buscar en historial
+        venta = await Venta.obtenerPorId(id);
+        if (venta) {
+          console.log(`[VENTAS] Encontrada en historial (fallback)`);
+          items = await ItemVenta.obtenerPorVenta(id);
+          console.log(`[VENTAS] Items historial: ${items?.length || 0}`);
+        }
       }
     }
     
