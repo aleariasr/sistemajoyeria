@@ -14,8 +14,8 @@ const EMAIL_CONFIG = {
   fromName: process.env.EMAIL_FROM_NAME || 'Cuero&Perla',
   adminEmail: process.env.ADMIN_EMAIL,
   storeName: process.env.STORE_NAME || 'Cuero&Perla',
-  storeUrl: process.env.STORE_URL || 'https://tudominio.com',
-  storePhone: process.env.STORE_PHONE || '+506-1234-5678'
+  storeUrl: process.env.STORE_URL || 'https://cueroyperla.com',
+  storePhone: process.env.STORE_PHONE || '+506 7269-7050'
 };
 
 /**
@@ -29,11 +29,16 @@ function createTransporter() {
   }
 
   try {
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: EMAIL_CONFIG.user,
         pass: EMAIL_CONFIG.password
+      },
+      tls: {
+        rejectUnauthorized: true
       }
     });
 
@@ -44,7 +49,9 @@ function createTransporter() {
   }
 }
 
-const transporter = createTransporter();
+function getTransporter() {
+  return createTransporter();
+}
 
 /**
  * Get base HTML template for emails
@@ -252,8 +259,9 @@ function generateOrderItemsHTML(items) {
  * Sent immediately when order is created
  */
 async function enviarConfirmacionPedido(pedido, items) {
+  const transporter = getTransporter();
   if (!transporter) {
-    console.log('📧 Email service not configured - skipping confirmation email');
+    console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
 
@@ -314,8 +322,9 @@ async function enviarConfirmacionPedido(pedido, items) {
  * Alerts admin team of new orders requiring attention
  */
 async function notificarNuevoPedido(pedido, items) {
+  const transporter = getTransporter();
   if (!transporter || !EMAIL_CONFIG.adminEmail) {
-    console.log('📧 Admin email not configured - skipping admin notification');
+    console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
 
@@ -376,8 +385,9 @@ async function notificarNuevoPedido(pedido, items) {
  * Sent when admin approves the order
  */
 async function enviarConfirmacionPago(pedido, items) {
+  const transporter = getTransporter();
   if (!transporter) {
-    console.log('📧 Email service not configured - skipping payment confirmation');
+    console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
 
@@ -429,8 +439,9 @@ async function enviarConfirmacionPago(pedido, items) {
  * Sent when order is marked as shipped
  */
 async function enviarNotificacionEnvio(pedido, items) {
+  const transporter = getTransporter();
   if (!transporter) {
-    console.log('📧 Email service not configured - skipping shipping notification');
+    console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
 
@@ -483,8 +494,9 @@ async function enviarNotificacionEnvio(pedido, items) {
  * Sent when order is cancelled
  */
 async function enviarCancelacionPedido(pedido, motivo = '') {
+  const transporter = getTransporter();
   if (!transporter) {
-    console.log('📧 Email service not configured - skipping cancellation email');
+    console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
 

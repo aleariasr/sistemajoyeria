@@ -22,7 +22,7 @@ export const STORE_CONFIG = {
   },
   contact: {
     email: 'contacto@cueroyperla.com',
-    phone: '+506 0000-0000',
+    phone: '+506 7269-7050',
   },
   social: {
     facebook: 'https://facebook.com/cueroyperla',
