@@ -538,10 +538,102 @@ async function enviarCancelacionPedido(pedido, motivo = '') {
   }
 }
 
+/**
+ * Send sales receipt from POS to customer email
+ * Sent when user clicks "Send Email" from sale detail in POS
+ */
+async function enviarTicketVentaPOS(venta, items, emailDestino) {
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log('📧 Email service not configured');
+    return { sent: false, reason: 'not_configured' };
+  }
+
+  // Format payment information
+  let paymentInfo = '';
+  if (venta.metodo_pago === 'Mixto') {
+    paymentInfo = `
+      <div class="info-box">
+        <p><strong>💳 Pago Mixto:</strong></p>
+        ${venta.monto_efectivo > 0 ? `<p>• Efectivo: ${formatCurrency(venta.monto_efectivo)}</p>` : ''}
+        ${venta.monto_tarjeta > 0 ? `<p>• Tarjeta: ${formatCurrency(venta.monto_tarjeta)}</p>` : ''}
+        ${venta.monto_transferencia > 0 ? `<p>• Transferencia: ${formatCurrency(venta.monto_transferencia)}</p>` : ''}
+      </div>
+    `;
+  } else if (venta.metodo_pago === 'Efectivo' && venta.efectivo_recibido) {
+    paymentInfo = `
+      <div class="info-box">
+        <p><strong>💵 Efectivo Recibido:</strong> ${formatCurrency(venta.efectivo_recibido)}</p>
+        <p><strong>Cambio:</strong> ${formatCurrency(venta.cambio || 0)}</p>
+      </div>
+    `;
+  }
+
+  const content = `
+    <h2>🧾 Comprobante de Venta</h2>
+    <p>Gracias por su compra. A continuación encontrará los detalles de su transacción:</p>
+    
+    <div class="info-box">
+      <p><strong>Ticket:</strong> #${venta.id}</p>
+      <p><strong>Fecha:</strong> ${new Date(venta.fecha_venta).toLocaleString('es-CR')}</p>
+      <p><strong>Vendedor:</strong> ${venta.nombre_usuario || venta.usuario || 'N/A'}</p>
+      ${venta.nombre_cliente ? `<p><strong>Cliente:</strong> ${venta.nombre_cliente}</p>` : ''}
+      <p><strong>Método de Pago:</strong> ${venta.metodo_pago}</p>
+    </div>
+
+    <div class="order-summary">
+      <h3 style="margin-top: 0;">Detalle de Productos</h3>
+      ${generateOrderItemsHTML(items)}
+      ${(venta.descuento || 0) > 0 ? `
+        <div class="order-item">
+          <div class="order-item-name" style="color: #f59e0b;">Descuento</div>
+          <div class="order-item-price" style="color: #f59e0b;">-${formatCurrency(venta.descuento)}</div>
+        </div>
+      ` : ''}
+      <div class="order-total">
+        <span>Total:</span>
+        <span>${formatCurrency(venta.total)}</span>
+      </div>
+    </div>
+
+    ${paymentInfo}
+
+    ${venta.notas ? `
+    <div class="info-box">
+      <p><strong>Notas:</strong></p>
+      <p>${venta.notas}</p>
+    </div>
+    ` : ''}
+
+    <div class="info-box success">
+      <p><strong>✓ Venta realizada exitosamente</strong></p>
+      <p>Conserve este comprobante como respaldo de su compra.</p>
+    </div>
+
+    <p style="margin-top: 30px;">Cualquier consulta, contáctenos al ${EMAIL_CONFIG.storePhone}</p>
+  `;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+      to: emailDestino,
+      subject: `Comprobante de Venta #${venta.id} - ${EMAIL_CONFIG.storeName}`,
+      html: getBaseTemplate(content)
+    });
+
+    console.log('✅ POS receipt email sent:', info.messageId);
+    return { sent: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Error sending POS receipt email:', error);
+    return { sent: false, error: error.message };
+  }
+}
+
 module.exports = {
   enviarConfirmacionPedido,
   notificarNuevoPedido,
   enviarConfirmacionPago,
   enviarNotificacionEnvio,
-  enviarCancelacionPedido
+  enviarCancelacionPedido,
+  enviarTicketVentaPOS
 };

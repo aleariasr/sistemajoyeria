@@ -14,6 +14,12 @@ function DetalleVenta() {
   const [mensajePrint, setMensajePrint] = useState('');
   const ticketRef = useRef();
   
+  // Estados para envío de email
+  const [mostrarModalEmail, setMostrarModalEmail] = useState(false);
+  const [emailCliente, setEmailCliente] = useState('');
+  const [enviandoEmail, setEnviandoEmail] = useState(false);
+  const [mensajeEmail, setMensajeEmail] = useState('');
+  
   // Hook para impresión térmica (3nstar RPT008)
   const thermalPrint = useThermalPrint();
 
@@ -47,6 +53,47 @@ function DetalleVenta() {
       imprimirTermico();
     } else {
       handlePrint();
+    }
+  };
+
+  // Función para enviar comprobante por email
+  const enviarPorEmail = async () => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailCliente || !emailRegex.test(emailCliente)) {
+      setMensajeEmail('⚠️ Por favor ingrese un email válido');
+      return;
+    }
+
+    setEnviandoEmail(true);
+    setMensajeEmail('Enviando...');
+
+    try {
+      // Get es_venta_dia parameter from URL
+      const searchParams = new URLSearchParams(window.location.search);
+      const esVentaDia = searchParams.get('es_venta_dia') === 'true';
+      const queryParam = esVentaDia ? '?es_venta_dia=true' : '';
+
+      const response = await api.post(`/ventas/${id}/enviar-email${queryParam}`, {
+        email: emailCliente
+      });
+
+      if (response.data.success) {
+        setMensajeEmail('✓ Comprobante enviado exitosamente');
+        setTimeout(() => {
+          setMostrarModalEmail(false);
+          setEmailCliente('');
+          setMensajeEmail('');
+        }, 2000);
+      } else {
+        setMensajeEmail('❌ ' + (response.data.error || 'Error al enviar'));
+      }
+    } catch (error) {
+      console.error('Error al enviar email:', error);
+      const errorMsg = error.response?.data?.error || 'Error al enviar el comprobante';
+      setMensajeEmail('❌ ' + errorMsg);
+    } finally {
+      setEnviandoEmail(false);
     }
   };
 
@@ -120,6 +167,14 @@ function DetalleVenta() {
               📄 Navegador
             </button>
           )}
+          <button 
+            onClick={() => setMostrarModalEmail(true)} 
+            className="btn-imprimir"
+            style={{ backgroundColor: '#17a2b8' }}
+            title="Enviar comprobante por email"
+          >
+            📧 Enviar Email
+          </button>
           <button onClick={() => navigate('/historial-ventas')} className="btn-volver">
             ← Volver
           </button>
@@ -226,6 +281,97 @@ function DetalleVenta() {
           tipo="venta"
         />
       </div>
+
+      {/* Modal para enviar email */}
+      {mostrarModalEmail && (
+        <div 
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target.className === 'modal-overlay') {
+              setMostrarModalEmail(false);
+              setEmailCliente('');
+              setMensajeEmail('');
+            }
+          }}
+        >
+          <div className="modal-content">
+            <h2>📧 Enviar Comprobante por Email</h2>
+            <p>Ingrese el correo electrónico del cliente:</p>
+            
+            <input
+              type="email"
+              className="input-email"
+              placeholder="correo@ejemplo.com"
+              value={emailCliente}
+              onChange={(e) => setEmailCliente(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !enviandoEmail) {
+                  enviarPorEmail();
+                }
+              }}
+              disabled={enviandoEmail}
+              autoFocus
+            />
+            
+            {mensajeEmail && (
+              <div style={{
+                marginTop: '15px',
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: mensajeEmail.includes('✓') ? '#d4edda' : 
+                               mensajeEmail.includes('❌') ? '#f8d7da' : '#fff3cd',
+                color: mensajeEmail.includes('✓') ? '#155724' : 
+                       mensajeEmail.includes('❌') ? '#721c24' : '#856404',
+                textAlign: 'center',
+                fontWeight: '500'
+              }}>
+                {mensajeEmail}
+              </div>
+            )}
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              marginTop: '20px',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => {
+                  setMostrarModalEmail(false);
+                  setEmailCliente('');
+                  setMensajeEmail('');
+                }}
+                disabled={enviandoEmail}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  border: '1px solid #ddd',
+                  backgroundColor: '#fff',
+                  cursor: enviandoEmail ? 'not-allowed' : 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={enviarPorEmail}
+                disabled={enviandoEmail || !emailCliente}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: enviandoEmail || !emailCliente ? '#ccc' : '#17a2b8',
+                  color: 'white',
+                  cursor: enviandoEmail || !emailCliente ? 'not-allowed' : 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {enviandoEmail ? 'Enviando...' : '📤 Enviar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
