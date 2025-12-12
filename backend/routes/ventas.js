@@ -8,6 +8,7 @@ const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
 const CuentaPorCobrar = require('../models/CuentaPorCobrar');
 const Cliente = require('../models/Cliente');
+const { enviarTicketVentaPOS } = require('../services/emailService');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -447,9 +448,6 @@ router.post('/:id/enviar-email', requireAuth, async (req, res) => {
     if (!items || !Array.isArray(items)) {
       items = [];
     }
-
-    // Import emailService
-    const { enviarTicketVentaPOS } = require('../services/emailService');
 
     // Send email
     const resultado = await enviarTicketVentaPOS(venta, items, email);
