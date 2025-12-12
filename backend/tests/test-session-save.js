@@ -1,44 +1,20 @@
 /**
  * Test for session save fix
- * Verifies that req.session.save() is properly called during login
+ * DEPRECATED: This test was for express-session with explicit save() calls.
+ * The application now uses cookie-session which saves automatically.
+ * See test-cookie-session.js for current session tests.
  */
 
-console.log('🧪 Testing Session Save Fix...\n');
+console.log('⚠️  DEPRECATED: This test is for express-session (old implementation)\n');
+console.log('📋 Current implementation uses cookie-session');
+console.log('✅ See test-cookie-session.js for current session tests\n');
 
-// Test 1: Verify auth.js contains req.session.save()
 const fs = require('fs');
 const path = require('path');
 
-const authFilePath = path.join(__dirname, '..', 'routes', 'auth.js');
-const authContent = fs.readFileSync(authFilePath, 'utf8');
-
 let allPassed = true;
 
-// Test that session save is called
-if (authContent.includes('req.session.save(')) {
-  console.log('✅ PASS: req.session.save() is present in auth.js');
-} else {
-  console.log('❌ FAIL: req.session.save() is NOT present in auth.js');
-  allPassed = false;
-}
-
-// Test that error handling exists
-if (authContent.includes('Error al guardar sesión')) {
-  console.log('✅ PASS: Error handling for session save is present');
-} else {
-  console.log('❌ FAIL: Error handling for session save is missing');
-  allPassed = false;
-}
-
-// Test that success logging exists
-if (authContent.includes('Sesión guardada correctamente')) {
-  console.log('✅ PASS: Success logging for session save is present');
-} else {
-  console.log('❌ FAIL: Success logging for session save is missing');
-  allPassed = false;
-}
-
-// Test 2: Verify server.js contains environment validation
+// Test 1: Verify server.js contains environment validation
 const serverFilePath = path.join(__dirname, '..', 'server.js');
 const serverContent = fs.readFileSync(serverFilePath, 'utf8');
 
@@ -72,17 +48,11 @@ if (serverContent.includes('Login request recibido')) {
   allPassed = false;
 }
 
-if (serverContent.includes('Guardando sesión')) {
-  console.log('✅ PASS: Session save debugging is present');
-} else {
-  console.log('❌ FAIL: Session save debugging is missing');
-  allPassed = false;
-}
-
 // Summary
 console.log('\n' + '='.repeat(60));
 if (allPassed) {
-  console.log('✅ All session save fix tests passed!');
+  console.log('✅ All tests passed!');
+  console.log('\n💡 Note: For full session testing, run: node tests/test-cookie-session.js');
   process.exit(0);
 } else {
   console.log('❌ Some tests failed!');
