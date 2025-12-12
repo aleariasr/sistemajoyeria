@@ -33,7 +33,7 @@ class ItemVenta {
       .from('items_venta')
       .select(`
         *,
-        joyas!items_venta_id_joya_fkey (codigo, nombre, categoria)
+        joyas (codigo, nombre, categoria)
       `)
       .eq('id_venta', id_venta)
       .order('id', { ascending: true });
