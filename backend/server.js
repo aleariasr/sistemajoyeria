@@ -17,6 +17,22 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Railway usa 0.0.0.0 por defecto, que está bien
 const HOST = process.env.HOST || '0.0.0.0';
 
+// Validar variables de entorno críticas en producción
+if (NODE_ENV === 'production') {
+  const requiredVars = ['SESSION_SECRET', 'FRONTEND_URL', 'SUPABASE_URL', 'SUPABASE_KEY'];
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    console.error('❌ FATAL: Variables de entorno faltantes:', missingVars.join(', '));
+    console.error('   Configure estas variables en Railway antes de continuar');
+    process.exit(1);
+  }
+  
+  console.log('✅ Variables de entorno validadas correctamente');
+  console.log('🔐 SESSION_SECRET: Configurado');
+  console.log('🌐 FRONTEND_URL configurado:', process.env.FRONTEND_URL);
+}
+
 // Database connection state (used for health check)
 let databaseReady = false;
 
@@ -94,6 +110,33 @@ if (NODE_ENV === 'production' && process.env.REDIS_URL) {
 
 if (isProduction) {
   console.log("🔐 Cookies configuradas para cross-origin (sameSite: none, secure: true)");
+}
+
+// Logs de debugging para sesiones en producción
+if (NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // Log para peticiones de login
+    if (req.path.includes('/auth/login') && req.method === 'POST') {
+      console.log('🔐 Login request recibido:');
+      console.log('  - Origin:', req.headers.origin);
+      console.log('  - Time:', new Date().toISOString());
+    }
+    
+    // Log cuando se guarda una sesión en login
+    if (req.path.includes('/auth/login') && req.session && !req.session._saveLogged) {
+      const originalSave = req.session.save.bind(req.session);
+      req.session.save = function(callback) {
+        console.log('💾 Guardando sesión:', {
+          sessionID: req.sessionID,
+          userId: req.session.userId
+        });
+        return originalSave(callback);
+      };
+      req.session._saveLogged = true;
+    }
+    
+    next();
+  });
 }
 
 
