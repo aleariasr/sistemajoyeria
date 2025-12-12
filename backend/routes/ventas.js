@@ -280,6 +280,10 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
+    // 🔍 Logging temporal para debugging (según issue #fix-invoice-data-mismatch)
+    // TODO: Remover después de verificar que el fix funciona correctamente
+    console.log(`[VENTAS] Buscando venta ID: ${id}`);
+
     // Buscar primero en ventas del historial
     let venta = await Venta.obtenerPorId(id);
     let items = null;
@@ -287,18 +291,27 @@ router.get('/:id', requireAuth, async (req, res) => {
 
     if (venta) {
       // Encontrada en historial
+      console.log(`[VENTAS] Encontrada en historial`);
       items = await ItemVenta.obtenerPorVenta(id);
+      console.log(`[VENTAS] Items historial: ${items?.length || 0}`);
     } else {
       // Buscar en ventas del día
       venta = await VentaDia.obtenerPorId(id);
       if (venta) {
         esVentaDia = true;
+        console.log(`[VENTAS] Encontrada en ventas_dia`);
         items = await ItemVentaDia.obtenerPorVenta(id);
+        console.log(`[VENTAS] Items del día: ${items?.length || 0}`);
       }
     }
     
     if (!venta) {
       return res.status(404).json({ error: 'Venta no encontrada' });
+    }
+
+    // Asegurar que items nunca sea null, siempre array
+    if (!items || !Array.isArray(items)) {
+      items = [];
     }
 
     res.json({

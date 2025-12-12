@@ -31,15 +31,16 @@ class ItemVentaDia {
       .from('items_venta_dia')
       .select(`
         *,
-        joyas!items_venta_dia_id_joya_fkey (codigo, nombre, categoria, moneda)
+        joyas (codigo, nombre, categoria, moneda)
       `)
-      .eq('id_venta_dia', idVentaDia);
+      .eq('id_venta_dia', idVentaDia)
+      .order('id', { ascending: true });
 
     if (error) {
       throw error;
     }
 
-    // Formatear para mantener compatibilidad
+    // Formatear para mantener compatibilidad, manejando items sin joya
     return data.map(item => ({
       ...item,
       codigo: item.joyas?.codigo || null,
