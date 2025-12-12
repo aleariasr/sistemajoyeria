@@ -18,7 +18,7 @@ async function apiCall(method, endpoint, data = null, cookie = '') {
       data
     };
     const response = await axios(config);
-    return { success: true, data: response.data, status: response.status };
+    return { success: true, data: response.data, status: response.status, headers: response.headers };
   } catch (error) {
     return { 
       success: false, 
@@ -44,6 +44,9 @@ async function runTest() {
     console.log('Error:', login.error);
     process.exit(1);
   }
+  
+  // Extraer cookie de sesión
+  testCookie = login.headers['set-cookie']?.[0] || '';
   console.log('✅ Login exitoso');
 
   // 2. Crear una joya de prueba

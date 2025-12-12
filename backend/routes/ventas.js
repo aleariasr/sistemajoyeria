@@ -280,7 +280,8 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Logging para debugging
+    // 🔍 Logging temporal para debugging (según issue #fix-invoice-data-mismatch)
+    // TODO: Remover después de verificar que el fix funciona correctamente
     console.log(`[VENTAS] Buscando venta ID: ${id}`);
 
     // Buscar primero en ventas del historial
