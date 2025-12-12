@@ -235,7 +235,8 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
           id_joya: itemDia.id_joya,
           cantidad: itemDia.cantidad,
           precio_unitario: itemDia.precio_unitario,
-          subtotal: itemDia.subtotal
+          subtotal: itemDia.subtotal,
+          descripcion_item: itemDia.descripcion_item
         });
       }
 
