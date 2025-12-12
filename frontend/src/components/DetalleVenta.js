@@ -52,7 +52,13 @@ function DetalleVenta() {
 
   const cargarVenta = useCallback(async () => {
     try {
-      const response = await api.get(`/ventas/${id}`);
+      // Obtener el parámetro de la URL
+      const searchParams = new URLSearchParams(window.location.search);
+      const esVentaDia = searchParams.get('es_venta_dia') === 'true';
+      
+      // Pasar el parámetro al backend si existe
+      const queryParam = esVentaDia ? '?es_venta_dia=true' : '';
+      const response = await api.get(`/ventas/${id}${queryParam}`);
       setVenta(response.data);
     } catch (error) {
       console.error('Error al cargar venta:', error);
