@@ -46,8 +46,10 @@ function HistorialVentas() {
     cargarVentas();
   }, [cargarVentas]);
 
-  const verDetalleVenta = (id) => {
-    navigate(`/venta/${id}`);
+  const verDetalleVenta = (venta) => {
+    // Agregar parámetro es_venta_dia si la venta es del día
+    const queryParam = venta.es_venta_dia ? '?es_venta_dia=true' : '';
+    navigate(`/venta/${venta.id}${queryParam}`);
   };
 
   const formatearMetodoPago = (metodo) => {
@@ -169,7 +171,7 @@ function HistorialVentas() {
                     <td className="precio">₡{(venta.total || 0).toFixed(2)}</td>
                     <td>
                       <button 
-                        onClick={() => verDetalleVenta(venta.id)}
+                        onClick={() => verDetalleVenta(venta)}
                         className="btn-ver"
                       >
                         Ver Detalle
