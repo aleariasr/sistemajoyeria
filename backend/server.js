@@ -128,7 +128,7 @@ if (NODE_ENV === 'production') {
         console.log('  - Set-Cookie:', res.getHeader('set-cookie') || 'NO SET');
         console.log('  - Secure context:', req.secure);
         console.log('  - Protocol:', req.protocol);
-        oldWriteHead.apply(res, args);
+        return oldWriteHead.apply(res, args);
       };
     }
     
