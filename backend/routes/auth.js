@@ -31,14 +31,28 @@ router.post('/login', async (req, res) => {
     req.session.role = usuario.role;
     req.session.fullName = usuario.full_name;
 
-    res.json({
-      mensaje: 'Login exitoso',
-      usuario: {
-        id: usuario.id,
-        username: usuario.username,
-        role: usuario.role,
-        full_name: usuario.full_name
+    // Guardar explícitamente antes de responder (Fix para Railway proxy)
+    req.session.save((err) => {
+      if (err) {
+        console.error('❌ Error al guardar sesión:', err);
+        return res.status(500).json({ error: 'Error al guardar sesión' });
       }
+      
+      console.log('✅ Sesión guardada correctamente:', {
+        sessionID: req.sessionID,
+        userId: req.session.userId,
+        username: req.session.username
+      });
+      
+      res.json({
+        mensaje: 'Login exitoso',
+        usuario: {
+          id: usuario.id,
+          username: usuario.username,
+          role: usuario.role,
+          full_name: usuario.full_name
+        }
+      });
     });
   } catch (error) {
     console.error('Error en login:', error);
