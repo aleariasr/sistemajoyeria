@@ -5,7 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const os = require('os');
 const { initDatabase, initDatabaseDia } = require('./supabase-db');
 const { crearUsuariosIniciales } = require('./init-users');
@@ -56,60 +56,34 @@ const isProduction = NODE_ENV === 'production';
  * For additional security, consider implementing CSRF tokens for state-changing operations.
  * However, the current configuration provides adequate protection for this JSON API architecture.
  */
-const cookieConfig = {
-  httpOnly: true,
-  maxAge: 24 * 60 * 60 * 1000, // 24 horas
-  // Cross-origin (Vercel frontend + Railway backend) requiere sameSite: 'none' y secure: true
-  // En producción SIEMPRE usar configuración cross-origin
-  secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax'
-};
 
 /* ============================================================
-   REDIS SOLO EN PRODUCCIÓN (NO ROMPE NADA LOCAL)
+   COOKIE-SESSION CONFIGURATION (Stateless Sessions)
    ============================================================ */
-let RedisStore = null;
-let redis = null;
 
-if (NODE_ENV === 'production' && process.env.REDIS_URL) {
-  try {
-    RedisStore = require('connect-redis').default;
-    redis = require('redis').createClient({
-      url: process.env.REDIS_URL
-    });
+// Configure cookie-session for stateless session management
+// This stores the session directly in the cookie (encrypted), eliminating
+// the need for server-side storage (Redis/MemoryStore) and avoiding issues
+// with Railway proxy edge that doesn't maintain session affinity
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || 'joyeria-secret-key-2024'],
+  
+  // Cookie configuration
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  
+  // Cross-origin configuration (for Railway + Vercel)
+  secure: isProduction, // Only HTTPS in production
+  httpOnly: true, // Not accessible from JavaScript
+  sameSite: isProduction ? 'none' : 'lax', // Allow cross-origin in production
+  
+  // Path
+  path: '/',
+}));
 
-    // Conectar cliente Redis
-    redis.connect().catch(console.error);
-
-    app.use(session({
-      store: new RedisStore({ client: redis }),
-      secret: process.env.SESSION_SECRET || 'joyeria-secret-key-2024',
-      resave: false,
-      saveUninitialized: false,
-      cookie: cookieConfig
-    }));
-
-    console.log("🟢 Redis activado en producción");
-
-  } catch (err) {
-    console.error("❌ Error inicializando Redis:", err);
-  }
-} else {
-  /* ============================================================
-     SESIONES NORMALES (AMBIENTE LOCAL / SIN REDIS)
-     ============================================================ */
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'joyeria-secret-key-2024',
-    resave: false,
-    saveUninitialized: false,
-    cookie: cookieConfig
-  }));
-
-  console.log("🟡 Sesiones locales activas (sin Redis)");
-}
-
+console.log("✅ Cookie-session configured for cross-origin");
 if (isProduction) {
-  console.log("🔐 Cookies configuradas para cross-origin (sameSite: none, secure: true)");
+  console.log("🔐 Cookies configured for cross-origin (sameSite: none, secure: true)");
 }
 
 // Logs de debugging para sesiones en producción
@@ -122,16 +96,9 @@ if (NODE_ENV === 'production') {
       console.log('  - Time:', new Date().toISOString());
     }
     
-    // Log cuando se guarda una sesión en login
+    // Log cuando se guarda una sesión en login (cookie-session guarda automáticamente)
     if (req.path.includes('/auth/login') && req.session && !req.session._saveLogged) {
-      const originalSave = req.session.save.bind(req.session);
-      req.session.save = function(callback) {
-        console.log('💾 Guardando sesión:', {
-          sessionID: req.sessionID,
-          userId: req.session.userId
-        });
-        return originalSave(callback);
-      };
+      console.log('💾 Cookie-session activa (sesión se guarda automáticamente en la cookie)');
       req.session._saveLogged = true;
     }
     
