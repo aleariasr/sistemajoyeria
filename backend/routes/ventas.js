@@ -393,4 +393,89 @@ router.get('/resumen/periodo', requireAuth, async (req, res) => {
   }
 });
 
+// Enviar comprobante de venta por email
+router.post('/:id/enviar-email', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    const esVentaDiaParam = req.query.es_venta_dia === 'true';
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ success: false, error: 'Email inválido' });
+    }
+
+    console.log(`[VENTAS] Enviando email para venta ID: ${id}, es_venta_dia: ${esVentaDiaParam}`);
+
+    let venta = null;
+    let items = null;
+
+    // Get sale data based on es_venta_dia parameter
+    if (esVentaDiaParam) {
+      venta = await VentaDia.obtenerPorId(id);
+      if (venta) {
+        items = await ItemVentaDia.obtenerPorVenta(id);
+      }
+    } else {
+      venta = await Venta.obtenerPorId(id);
+      if (venta) {
+        items = await ItemVenta.obtenerPorVenta(id);
+      }
+    }
+
+    // Fallback: If not found with parameter, try inverse search
+    if (!venta) {
+      console.log(`[VENTAS] No encontrada con parámetro, intentando búsqueda inversa...`);
+      
+      venta = await VentaDia.obtenerPorId(id);
+      if (venta) {
+        items = await ItemVentaDia.obtenerPorVenta(id);
+      } else {
+        venta = await Venta.obtenerPorId(id);
+        if (venta) {
+          items = await ItemVenta.obtenerPorVenta(id);
+        }
+      }
+    }
+
+    if (!venta) {
+      return res.status(404).json({ success: false, error: 'Venta no encontrada' });
+    }
+
+    // Ensure items is always an array
+    if (!items || !Array.isArray(items)) {
+      items = [];
+    }
+
+    // Import emailService
+    const { enviarTicketVentaPOS } = require('../services/emailService');
+
+    // Send email
+    const resultado = await enviarTicketVentaPOS(venta, items, email);
+
+    if (resultado.sent) {
+      console.log(`✅ Email enviado exitosamente para venta #${id} a ${email}`);
+      return res.json({ 
+        success: true, 
+        message: 'Comprobante enviado exitosamente' 
+      });
+    } else if (resultado.reason === 'not_configured') {
+      return res.status(503).json({ 
+        success: false, 
+        error: 'Servicio de email no configurado' 
+      });
+    } else {
+      console.error(`❌ Error al enviar email para venta #${id}:`, resultado.error);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Error al enviar el comprobante' 
+      });
+    }
+  } catch (error) {
+    console.error('Error al enviar email de venta:', error);
+    res.status(500).json({ success: false, error: 'Error al enviar email' });
+  }
+});
+
 module.exports = router;
