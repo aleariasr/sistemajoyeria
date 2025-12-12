@@ -17,6 +17,18 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Railway usa 0.0.0.0 por defecto, que está bien
 const HOST = process.env.HOST || '0.0.0.0';
 
+// ============================================================
+// PROXY TRUST - Critical for Railway edge proxy
+// ============================================================
+// Railway uses an edge proxy (railway-edge) in front of the app.
+// Express needs to trust this proxy to correctly handle cookies,
+// secure connections, and client IPs in production.
+if (NODE_ENV === 'production') {
+  // Trust first proxy (Railway edge)
+  app.set('trust proxy', 1);
+  console.log('🔒 Proxy trust enabled for Railway edge');
+}
+
 // Validar variables de entorno críticas en producción
 if (NODE_ENV === 'production') {
   const requiredVars = ['SESSION_SECRET', 'FRONTEND_URL', 'SUPABASE_URL', 'SUPABASE_KEY'];
@@ -77,8 +89,14 @@ app.use(cookieSession({
   httpOnly: true, // Not accessible from JavaScript
   sameSite: isProduction ? 'none' : 'lax', // Allow cross-origin in production
   
+  // Domain configuration - don't set domain to allow cookies across Railway proxy
+  // domain: undefined, // Let the browser determine the domain
+  
   // Path
   path: '/',
+  
+  // Signed cookies (already enabled via keys, but explicit is better)
+  signed: true,
 }));
 
 console.log("✅ Cookie-session configured for cross-origin");
@@ -100,6 +118,18 @@ if (NODE_ENV === 'production') {
     if (req.path.includes('/auth/login') && req.session && !req.session._saveLogged) {
       console.log('💾 Cookie-session activa (sesión se guarda automáticamente en la cookie)');
       req.session._saveLogged = true;
+    }
+    
+    // Hook into response to log Set-Cookie header
+    if (req.path.includes('/auth/login') && req.method === 'POST') {
+      const oldWriteHead = res.writeHead;
+      res.writeHead = function(...args) {
+        console.log('📤 Response headers para login:');
+        console.log('  - Set-Cookie:', res.getHeader('set-cookie') || 'NO SET');
+        console.log('  - Secure context:', req.secure);
+        console.log('  - Protocol:', req.protocol);
+        oldWriteHead.apply(res, args);
+      };
     }
     
     next();
