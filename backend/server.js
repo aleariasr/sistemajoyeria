@@ -29,7 +29,7 @@ if (NODE_ENV === 'production') {
   }
   
   console.log('✅ Variables de entorno validadas correctamente');
-  console.log('🔐 SESSION_SECRET configurado:', process.env.SESSION_SECRET.substring(0, 10) + '...');
+  console.log('🔐 SESSION_SECRET: Configurado');
   console.log('🌐 FRONTEND_URL configurado:', process.env.FRONTEND_URL);
 }
 
@@ -122,16 +122,17 @@ if (NODE_ENV === 'production') {
       console.log('  - Time:', new Date().toISOString());
     }
     
-    // Log cuando se crea una sesión
-    if (req.path.includes('/auth/login') && req.session) {
-      const oldSave = req.session.save;
+    // Log cuando se guarda una sesión en login
+    if (req.path.includes('/auth/login') && req.session && !req.session._saveLogged) {
+      const originalSave = req.session.save.bind(req.session);
       req.session.save = function(callback) {
         console.log('💾 Guardando sesión:', {
           sessionID: req.sessionID,
           userId: req.session.userId
         });
-        oldSave.call(this, callback);
+        return originalSave(callback);
       };
+      req.session._saveLogged = true;
     }
     
     next();

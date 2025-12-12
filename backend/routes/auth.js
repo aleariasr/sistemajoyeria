@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
     // Guardar explícitamente antes de responder (Fix para Railway proxy)
     req.session.save((err) => {
       if (err) {
-        console.error('❌ Error al guardar sesión:', err);
+        console.error('❌ Error al guardar sesión:', err.message);
         return res.status(500).json({ error: 'Error al guardar sesión' });
       }
       
