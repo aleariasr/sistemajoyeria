@@ -31,28 +31,21 @@ router.post('/login', async (req, res) => {
     req.session.role = usuario.role;
     req.session.fullName = usuario.full_name;
 
-    // Guardar explícitamente antes de responder (Fix para Railway proxy)
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Error al guardar sesión:', err.message);
-        return res.status(500).json({ error: 'Error al guardar sesión' });
+    // cookie-session guarda automáticamente al finalizar la petición
+    // No necesita llamar explícitamente a session.save()
+    console.log('✅ Sesión configurada correctamente:', {
+      userId: req.session.userId,
+      username: req.session.username
+    });
+    
+    res.json({
+      mensaje: 'Login exitoso',
+      usuario: {
+        id: usuario.id,
+        username: usuario.username,
+        role: usuario.role,
+        full_name: usuario.full_name
       }
-      
-      console.log('✅ Sesión guardada correctamente:', {
-        sessionID: req.sessionID,
-        userId: req.session.userId,
-        username: req.session.username
-      });
-      
-      res.json({
-        mensaje: 'Login exitoso',
-        usuario: {
-          id: usuario.id,
-          username: usuario.username,
-          role: usuario.role,
-          full_name: usuario.full_name
-        }
-      });
     });
   } catch (error) {
     console.error('Error en login:', error);
@@ -62,12 +55,9 @@ router.post('/login', async (req, res) => {
 
 // Logout
 router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error al cerrar sesión' });
-    }
-    res.json({ mensaje: 'Sesión cerrada exitosamente' });
-  });
+  // cookie-session usa req.session = null para limpiar la sesión
+  req.session = null;
+  res.json({ mensaje: 'Sesión cerrada exitosamente' });
 });
 
 // Verificar sesión
