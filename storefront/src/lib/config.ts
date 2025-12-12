@@ -26,7 +26,7 @@ export const STORE_CONFIG = {
   },
   social: {
     facebook: 'https://facebook.com/cueroyperla',
-    instagram: 'https://instagram.com/cueroyperla',
+    instagram: 'https://instagram.com/cuero_y_perla',
   },
 } as const;
 
