@@ -144,3 +144,10 @@ export const crearDevolucion = (data) => api.post('/devoluciones', data);
 export const procesarDevolucion = (id, data) => api.post(`/devoluciones/${id}/procesar`, data);
 export const obtenerDevolucionesPorVenta = (idVenta) => api.get(`/devoluciones/venta/${idVenta}`);
 export const obtenerResumenDevoluciones = (filtros = {}) => api.get('/devoluciones/resumen', { params: filtros });
+
+// ------- PEDIDOS ONLINE -------
+export const obtenerPedidosOnline = (filtros = {}) => api.get('/pedidos-online', { params: filtros });
+export const obtenerPedidoOnline = (id) => api.get(`/pedidos-online/${id}`);
+export const actualizarEstadoPedido = (id, data) => api.patch(`/pedidos-online/${id}/estado`, data);
+export const actualizarNotasPedido = (id, data) => api.patch(`/pedidos-online/${id}`, data);
+export const obtenerResumenPedidos = () => api.get('/pedidos-online/resumen/stats');

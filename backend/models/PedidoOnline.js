@@ -244,6 +244,82 @@ class PedidoOnline {
 
     return resumen;
   }
+
+  /**
+   * Update internal notes
+   * @param {number} id - Order ID
+   * @param {string} notas - Internal notes from admin
+   */
+  static async actualizarNotasInternas(id, notasInternas) {
+    const { data, error } = await supabase
+      .from('pedidos_online')
+      .update({ notas_internas: notasInternas })
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    return { changes: data.length };
+  }
+
+  /**
+   * Get orders with search filter (by name, email, phone)
+   * @param {string} busqueda - Search term
+   * @param {object} filtros - Additional filters
+   */
+  static async listar(filtros = {}) {
+    const {
+      estado, estado_pago, fecha_desde, fecha_hasta, busqueda,
+      pagina = 1, por_pagina = 20
+    } = filtros;
+
+    let query = supabase
+      .from('pedidos_online')
+      .select('*', { count: 'exact' });
+
+    if (estado) {
+      query = query.eq('estado', estado);
+    }
+
+    if (estado_pago) {
+      query = query.eq('estado_pago', estado_pago);
+    }
+
+    if (fecha_desde) {
+      query = query.gte('fecha_creacion', fecha_desde);
+    }
+
+    if (fecha_hasta) {
+      query = query.lte('fecha_creacion', fecha_hasta);
+    }
+
+    // Search by customer name, email, or phone
+    if (busqueda) {
+      // Use OR filters with ilike for case-insensitive search
+      query = query.or(`nombre_cliente.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`);
+    }
+
+    const offset = (pagina - 1) * por_pagina;
+    query = query
+      .order('fecha_creacion', { ascending: false })
+      .range(offset, offset + por_pagina - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      pedidos: data || [],
+      total: count || 0,
+      pagina: parseInt(pagina),
+      por_pagina: parseInt(por_pagina),
+      total_paginas: Math.ceil((count || 0) / por_pagina)
+    };
+  }
 }
 
 module.exports = PedidoOnline;

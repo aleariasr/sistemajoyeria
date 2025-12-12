@@ -26,6 +26,7 @@ import CuentasPorCobrar from './components/CuentasPorCobrar';
 import DetalleCuentaPorCobrar from './components/DetalleCuentaPorCobrar';
 import IngresosExtras from './components/IngresosExtras';
 import Devoluciones from './components/Devoluciones';
+import PedidosOnline from './components/PedidosOnline';
 
 function Sidebar() {
   const location = useLocation();
@@ -106,6 +107,19 @@ function Sidebar() {
             <span>Histórico de Cierres</span>
           </Link>
         </li>
+
+        {/* Separador */}
+        {isAdmin() && <li className="separator"></li>}
+
+        {/* Pedidos Online - Solo administradores */}
+        {isAdmin() && (
+          <li>
+            <Link to="/pedidos-online" className={isActive('/pedidos-online')}>
+              <span className="icon">📦</span>
+              <span>Pedidos Online</span>
+            </Link>
+          </li>
+        )}
 
         {/* Separador */}
         {isAdmin() && <li className="separator"></li>}
@@ -212,6 +226,7 @@ function AppContent() {
           <Route path="/devoluciones" element={<ProtectedRoute><Devoluciones /></ProtectedRoute>} />
 
           {/* Rutas administrativas - Solo administradores */}
+          <Route path="/pedidos-online" element={<ProtectedRoute adminOnly={true}><PedidosOnline /></ProtectedRoute>} />
           <Route path="/" element={<ProtectedRoute adminOnly={true}><ListadoJoyas /></ProtectedRoute>} />
           <Route path="/nueva-joya" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />
           <Route path="/editar-joya/:id" element={<ProtectedRoute adminOnly={true}><FormularioJoya /></ProtectedRoute>} />

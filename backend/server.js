@@ -256,6 +256,8 @@ const ingresosExtrasRoutes = require('./routes/ingresos-extras');
 const devolucionesRoutes = require('./routes/devoluciones');
 // Public routes for storefront (no authentication required)
 const publicRoutes = require('./routes/public');
+// Online orders management (includes public and admin routes)
+const pedidosOnlineRoutes = require('./routes/pedidos-online');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -269,6 +271,8 @@ app.use('/api/ingresos-extras', ingresosExtrasRoutes);
 app.use('/api/devoluciones', devolucionesRoutes);
 // Public API for storefront - accessible without authentication
 app.use('/api/public', publicRoutes);
+// Online orders API - includes both public and admin routes
+app.use('/api', pedidosOnlineRoutes);
 
 
 /* ============================================================

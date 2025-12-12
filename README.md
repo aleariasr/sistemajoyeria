@@ -13,6 +13,8 @@ Sistema completo de gestión para joyerías con:
 - 💳 Ventas a crédito con cuentas por cobrar
 - 📊 Cierre de caja y reportes
 - 🛒 Tienda online con carrito de compras
+- 📦 **Sistema de pedidos online con notificaciones por email**
+- 📧 **Emails automáticos para confirmación y seguimiento de pedidos**
 - 📱 **Multi-dispositivo**: Acceso desde celulares/tablets en red local
 - 🌐 **Híbrido**: Funciona local o en la nube (Railway + Vercel)
 
@@ -165,6 +167,13 @@ sistemajoyeria/
 PostgreSQL en Supabase. Ejecutar migraciones en orden:
 1. `backend/supabase-migration.sql`
 2. `backend/migrations/create-pedidos-online.sql`
+3. `backend/migrations/complete-pedidos-online.sql` (para sistema de pedidos)
+
+## 📚 Documentación
+
+- 📦 **[Sistema de Pedidos Online](PEDIDOS_ONLINE.md)** - Guía completa del sistema de gestión de pedidos
+- 🚀 **[Guía de Despliegue](DEPLOY.md)** - Instrucciones para producción
+- 🔧 **[Desarrollo](DEVELOPMENT.md)** - Guía para desarrolladores
 
 ## 🔒 Seguridad
 
