@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -21,15 +21,15 @@ interface ProductCardProps {
   index?: number;
 }
 
-// Detect if device supports touch
-const isTouchDevice = () => {
-  if (typeof window === 'undefined') return false;
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-};
+// Detect if device supports touch (executed once per module load)
+const IS_TOUCH_DEVICE = typeof window !== 'undefined' && 
+  ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+// Blur placeholder for images (base64 SVG)
+const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==";
 
 function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
-  const [isTouch] = useState(isTouchDevice);
 
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     // Prevent event from bubbling up to the Link
@@ -81,11 +81,11 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
             placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg=="
+            blurDataURL={BLUR_DATA_URL}
           />
           
           {/* Quick Add Button - Shows on hover (desktop only) */}
-          {!isTouch && (
+          {!IS_TOUCH_DEVICE && (
             <button
               onClick={handleAddToCart}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 
@@ -128,7 +128,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
       </Link>
 
       {/* Add to Cart Button for Touch Devices - Outside the Link */}
-      {isTouch && (
+      {IS_TOUCH_DEVICE && (
         <button
           onClick={handleAddToCart}
           className="mt-3 w-full px-4 py-2.5 bg-primary-900 text-white text-sm font-medium 

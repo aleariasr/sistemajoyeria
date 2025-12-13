@@ -66,7 +66,7 @@ function FormularioJoya() {
         stock_minimo: joya.stock_minimo || '5',
         ubicacion: joya.ubicacion || '',
         estado: joya.estado || 'Activo',
-        mostrar_en_storefront: joya.mostrar_en_storefront !== undefined ? joya.mostrar_en_storefront : true
+        mostrar_en_storefront: joya.mostrar_en_storefront ?? true
       });
       // Cargar imagen actual si existe
       if (joya.imagen_url) {
