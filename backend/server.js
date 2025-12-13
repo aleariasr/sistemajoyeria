@@ -111,7 +111,7 @@ if (NODE_ENV === 'production') {
     if (req.path.includes('/auth/login') && req.method === 'POST') {
       console.log('🔐 Login request recibido:');
       console.log('  - Origin:', req.headers.origin);
-      console.log('  - User-Agent:', req.headers['user-agent']?.substring(0, 50) + '...');
+      console.log('  - User-Agent:', (req.headers['user-agent']?.substring(0, 50) || 'unknown') + '...');
       console.log('  - Time:', new Date().toISOString());
     }
     
@@ -313,7 +313,7 @@ if (NODE_ENV === 'production') {
     if (!isPublicRoute && !req.headers.cookie) {
       console.log(`⚠️  No cookie header for ${req.method} ${req.path}`);
       console.log(`   Origin: ${req.headers.origin || 'none'}`);
-      console.log(`   User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'unknown'}...`);
+      console.log(`   User-Agent: ${(req.headers['user-agent']?.substring(0, 50) || 'unknown')}...`);
     }
     
     next();
