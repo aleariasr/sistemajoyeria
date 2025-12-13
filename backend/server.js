@@ -111,6 +111,7 @@ if (NODE_ENV === 'production') {
     if (req.path.includes('/auth/login') && req.method === 'POST') {
       console.log('🔐 Login request recibido:');
       console.log('  - Origin:', req.headers.origin);
+      console.log('  - User-Agent:', req.headers['user-agent']?.substring(0, 50) + '...');
       console.log('  - Time:', new Date().toISOString());
     }
     
@@ -124,10 +125,20 @@ if (NODE_ENV === 'production') {
     if (req.path.includes('/auth/login') && req.method === 'POST') {
       const oldWriteHead = res.writeHead;
       res.writeHead = function(...args) {
+        const setCookieHeader = res.getHeader('set-cookie');
         console.log('📤 Response headers para login:');
-        console.log('  - Set-Cookie:', res.getHeader('set-cookie') || 'NO SET');
+        console.log('  - Set-Cookie:', setCookieHeader || 'NO SET');
+        if (setCookieHeader) {
+          // Log cookie attributes for Safari debugging
+          const cookieStr = Array.isArray(setCookieHeader) ? setCookieHeader[0] : setCookieHeader;
+          console.log('  - Cookie includes SameSite:', cookieStr.includes('SameSite'));
+          console.log('  - Cookie includes Secure:', cookieStr.includes('Secure'));
+          console.log('  - Cookie includes HttpOnly:', cookieStr.includes('HttpOnly'));
+        }
         console.log('  - Secure context:', req.secure);
         console.log('  - Protocol:', req.protocol);
+        console.log('  - CORS Access-Control-Allow-Credentials:', res.getHeader('access-control-allow-credentials'));
+        console.log('  - CORS Access-Control-Allow-Origin:', res.getHeader('access-control-allow-origin'));
         return oldWriteHead.apply(res, args);
       };
     }
@@ -246,7 +257,11 @@ const corsOptions = {
     }
   },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  // Explicit headers for Safari cookie compatibility
+  exposedHeaders: ['Set-Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 };
 
 app.use(cors(corsOptions));
@@ -279,6 +294,33 @@ if (NODE_ENV === 'development') {
     next();
   });
 }
+
+/* ============================================================
+   COOKIE DEBUGGING MIDDLEWARE (All Environments)
+   ============================================================ */
+// Log cookie presence for debugging Safari issues
+app.use((req, res, next) => {
+  // Only log for authenticated routes (not public endpoints)
+  const isPublicRoute = req.path.startsWith('/api/public') || 
+                        req.path === '/health' || 
+                        req.path === '/' ||
+                        req.path.startsWith('/api/auth/login') ||
+                        req.path.startsWith('/api/auth/session');
+  
+  if (!isPublicRoute && !req.session?.userId) {
+    // Log missing session for debugging
+    const cookieHeader = req.headers.cookie;
+    if (!cookieHeader) {
+      console.log(`⚠️  No cookie header for ${req.method} ${req.path}`);
+      console.log(`   Origin: ${req.headers.origin || 'none'}`);
+      console.log(`   User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'unknown'}...`);
+    } else if (!req.session?.userId) {
+      console.log(`⚠️  Cookie present but no session for ${req.method} ${req.path}`);
+    }
+  }
+  
+  next();
+});
 
 
 /* ============================================================
