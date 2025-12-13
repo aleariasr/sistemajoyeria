@@ -42,24 +42,34 @@ function Reportes() {
     }).format(valor);
   };
 
+  const escaparCSV = (valor) => {
+    if (valor === null || valor === undefined) return '';
+    const str = String(valor);
+    if (str.includes('"') || str.includes(';') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return `"${str}"`;
+  };
+
   const exportarCSV = () => {
     if (datos.length === 0) return;
 
     let csv = '';
     
     if (reporteActivo === 'inventario') {
-      csv = 'Código,Nombre,Categoría,Stock,Costo,Precio Venta,Moneda,Valor Total Costo,Valor Total Venta,Estado\n';
+      csv = 'Código;Nombre;Categoría;Stock;Costo;Precio Venta;Moneda;Valor Total Costo;Valor Total Venta;Estado\n';
       datos.forEach((item) => {
-        csv += `${item.codigo},"${item.nombre}","${item.categoria}",${item.stock_actual},${item.costo},${item.precio_venta},${item.moneda},${item.valor_total_costo},${item.valor_total_venta},${item.estado}\n`;
+        csv += `${escaparCSV(item.codigo)};${escaparCSV(item.nombre)};${escaparCSV(item.categoria)};${item.stock_actual};${item.costo};${item.precio_venta};${escaparCSV(item.moneda)};${item.valor_total_costo};${item.valor_total_venta};${escaparCSV(item.estado)}\n`;
       });
     } else {
-      csv = 'Código,Nombre,Categoría,Stock Actual,Stock Mínimo,Diferencia,Precio Venta,Moneda\n';
+      csv = 'Código;Nombre;Categoría;Stock Actual;Stock Mínimo;Diferencia;Precio Venta;Moneda\n';
       datos.forEach((item) => {
-        csv += `${item.codigo},"${item.nombre}","${item.categoria}",${item.stock_actual},${item.stock_minimo},${item.diferencia},${item.precio_venta},${item.moneda}\n`;
+        csv += `${escaparCSV(item.codigo)};${escaparCSV(item.nombre)};${escaparCSV(item.categoria)};${item.stock_actual};${item.stock_minimo};${item.diferencia};${item.precio_venta};${escaparCSV(item.moneda)}\n`;
       });
     }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const csvConBOM = '\uFEFF' + csv;
+    const blob = new Blob([csvConBOM], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
