@@ -126,6 +126,7 @@ Agregar al archivo `backend/.env`:
 RESEND_API_KEY=re_123456789
 EMAIL_FROM=ventas@cueroyperla.com
 EMAIL_FROM_NAME=Cuero&Perla
+EMAIL_REPLY_TO=contacto@cueroyperla.com
 ADMIN_EMAIL=admin@tudominio.com
 
 # Configuración de Tienda (para emails)
@@ -133,6 +134,17 @@ STORE_NAME=Cuero&Perla
 STORE_URL=https://tudominio.com
 STORE_PHONE=+506-1234-5678
 ```
+
+### Email Reply-To
+
+Para que los clientes respondan a un email diferente al de envío, puedes configurar la variable `EMAIL_REPLY_TO`:
+
+```env
+EMAIL_FROM=ventas@cueroyperla.com          # Email desde donde se envían
+EMAIL_REPLY_TO=contacto@cueroyperla.com    # Email donde llegan las respuestas
+```
+
+Cuando un cliente hace click en "Responder", su cliente de email usará `contacto@cueroyperla.com` automáticamente. El footer de los emails muestra claramente esta dirección para consultas.
 
 ### Configurar Resend (Servicio de Emails)
 
