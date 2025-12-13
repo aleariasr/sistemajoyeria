@@ -250,7 +250,7 @@ function generateOrderItemsHTML(items) {
   return items.map(item => `
     <div class="order-item">
       <div>
-        <div class="order-item-name">${item.nombre_producto || item.product_name || 'Producto'}</div>
+        <div class="order-item-name">${item.nombre || item.nombre_producto || item.product_name || 'Producto'}</div>
         <div class="order-item-details">Cantidad: ${item.cantidad || item.quantity} × ${formatCurrency(item.precio_unitario || item.unit_price)}</div>
       </div>
       <div class="order-item-price">${formatCurrency(item.subtotal)}</div>
