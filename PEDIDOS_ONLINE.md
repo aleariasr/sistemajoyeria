@@ -122,9 +122,9 @@ Sistema completo de gestión de pedidos recibidos desde la tienda web (storefron
 Agregar al archivo `backend/.env`:
 
 ```env
-# Configuración de Email (Gmail SMTP)
-EMAIL_USER=tu-email@gmail.com
-EMAIL_APP_PASSWORD=contraseña-de-aplicación-gmail
+# Configuración de Email (Resend API)
+RESEND_API_KEY=re_123456789
+EMAIL_FROM=ventas@cueroyperla.com
 EMAIL_FROM_NAME=Cuero&Perla
 ADMIN_EMAIL=admin@tudominio.com
 
@@ -134,14 +134,31 @@ STORE_URL=https://tudominio.com
 STORE_PHONE=+506-1234-5678
 ```
 
-### Generar Contraseña de Aplicación de Gmail
+### Configurar Resend (Servicio de Emails)
 
-1. Ve a tu cuenta de Google: https://myaccount.google.com/
-2. Ve a "Seguridad"
-3. Habilita "Verificación en 2 pasos" si no está habilitada
-4. Busca "Contraseñas de aplicaciones"
-5. Genera una nueva contraseña para "Correo"
-6. Copia la contraseña generada a `EMAIL_APP_PASSWORD`
+1. Crear cuenta en Resend: https://resend.com
+2. Verificar tu dominio en el dashboard:
+   - Ve a "Domains" en el panel de Resend
+   - Agrega tu dominio (ej: cueroyperla.com)
+   - Configura los registros DNS requeridos (MX, TXT, DKIM)
+   - Espera la verificación (puede tomar minutos u horas)
+3. Obtener API Key:
+   - Ve a "API Keys" en el panel de Resend
+   - Crea una nueva API key
+   - Copia la clave generada
+4. Configurar variables de entorno:
+   - `RESEND_API_KEY`: La API key obtenida
+   - `EMAIL_FROM`: Email con tu dominio verificado (ej: ventas@tudominio.com)
+   - `EMAIL_FROM_NAME`: Nombre de la tienda
+   - `ADMIN_EMAIL`: Email para recibir notificaciones de nuevos pedidos
+
+**Ventajas de Resend sobre SMTP:**
+- ✅ No requiere puertos SMTP (funciona vía REST API)
+- ✅ Compatible con Railway y otros servicios cloud
+- ✅ Sin problemas de timeouts o conexiones bloqueadas
+- ✅ Mejor deliverability (entrega de emails)
+- ✅ Analytics incluido
+- ✅ Configuración más simple
 
 ### Migración de Base de Datos
 
@@ -394,7 +411,7 @@ Auditoría automática:
 4. **Emails**
    - ✅ Envío correcto de confirmación
    - ✅ Envío correcto de notificación admin
-   - ✅ Manejo de errores de SMTP
+   - ✅ Manejo de errores de API de Resend
 
 ### Ejecutar Tests
 
