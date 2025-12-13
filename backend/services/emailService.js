@@ -25,6 +25,7 @@ const EMAIL_CONFIG = {
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.EMAIL_FROM || 'ventas@cueroyperla.com',
   fromName: process.env.EMAIL_FROM_NAME || 'Cuero&Perla',
+  replyTo: process.env.EMAIL_REPLY_TO || 'contacto@cueroyperla.com',
   adminEmail: process.env.ADMIN_EMAIL,
   storeName: process.env.STORE_NAME || 'Cuero&Perla',
   storeUrl: process.env.STORE_URL || 'https://cueroyperla.com',
@@ -221,8 +222,13 @@ function getBaseTemplate(content) {
       <p><strong>${EMAIL_CONFIG.storeName}</strong></p>
       <p>${EMAIL_CONFIG.storePhone}</p>
       <p><a href="${EMAIL_CONFIG.storeUrl}">${EMAIL_CONFIG.storeUrl}</a></p>
-      <p style="margin-top: 15px; font-size: 12px; color: #9ca3af;">
-        Este es un correo automático, por favor no responder directamente.
+      <p style="margin-top: 15px;">
+        <strong>📧 Para consultas, responde a:</strong> 
+        <a href="mailto:${EMAIL_CONFIG.replyTo}" style="color: #6366f1; text-decoration: none;">${EMAIL_CONFIG.replyTo}</a>
+      </p>
+      <p style="margin-top: 10px; font-size: 12px; color: #9ca3af;">
+        Este email fue enviado desde ${EMAIL_CONFIG.from}.<br>
+        Por favor responde a ${EMAIL_CONFIG.replyTo} para contactarnos.
       </p>
     </div>
   </div>
@@ -309,6 +315,7 @@ async function enviarConfirmacionPedido(pedido, items) {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `Confirmación de Pedido #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
@@ -377,6 +384,7 @@ async function notificarNuevoPedido(pedido, items) {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: EMAIL_CONFIG.adminEmail,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `🔔 Nuevo Pedido #${pedido.id} - ${pedido.nombre_cliente}`,
       html: getBaseTemplate(content)
     });
@@ -436,6 +444,7 @@ async function enviarConfirmacionPago(pedido, items) {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `✅ Pedido Confirmado #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
@@ -496,6 +505,7 @@ async function enviarNotificacionEnvio(pedido, items) {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `🚚 Tu Pedido #${pedido.id} está en Camino - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
@@ -550,6 +560,7 @@ async function enviarCancelacionPedido(pedido, motivo = '') {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `Pedido Cancelado #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
@@ -646,6 +657,7 @@ async function enviarTicketVentaPOS(venta, items, emailDestino) {
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: emailDestino,
+      reply_to: EMAIL_CONFIG.replyTo,
       subject: `Comprobante de Venta #${venta.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
