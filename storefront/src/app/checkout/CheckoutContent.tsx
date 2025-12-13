@@ -251,8 +251,9 @@ export default function CheckoutContent() {
                   <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-white flex-shrink-0">
                     <Image
                       src={optimizeCloudinaryImage(item.product.imagen_url, {
-                        width: 112,
-                        height: 112,
+                        width: 200,
+                        height: 200,
+                        quality: 'auto:best',
                       })}
                       alt={item.product.nombre}
                       fill

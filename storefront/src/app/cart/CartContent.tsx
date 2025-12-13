@@ -81,8 +81,9 @@ export default function CartContent() {
                   >
                     <Image
                       src={optimizeCloudinaryImage(item.product.imagen_url, {
-                        width: 256,
-                        height: 256,
+                        width: 400,
+                        height: 400,
+                        quality: 'auto:best',
                       })}
                       alt={item.product.nombre}
                       fill

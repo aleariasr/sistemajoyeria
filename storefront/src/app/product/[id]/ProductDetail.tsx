@@ -8,13 +8,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useProduct } from '@/hooks/useApi';
 import { useCartStore } from '@/hooks/useCart';
 import { Button } from '@/components/ui/Button';
 import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
+import { ImageZoom } from '@/components/ui/ImageZoom';
 import { formatPrice, optimizeCloudinaryImage } from '@/lib/utils';
 
 interface ProductDetailProps {
@@ -83,6 +83,13 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     crop: 'fill',
   });
 
+  const highResImageUrl = optimizeCloudinaryImage(product.imagen_url, {
+    width: 2400,
+    height: 2400,
+    quality: 'auto:best',
+    crop: 'fill',
+  });
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -111,26 +118,27 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Image */}
+        {/* Product Image with Zoom */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative aspect-square rounded-3xl overflow-hidden bg-primary-50"
+          className="relative"
         >
-          <Image
-            src={imageUrl}
-            alt={product.nombre}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
-            priority
-          />
-          {product.categoria && (
-            <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm">
-              {product.categoria}
-            </span>
-          )}
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-primary-50">
+            <ImageZoom
+              src={imageUrl}
+              alt={product.nombre}
+              highResSrc={highResImageUrl}
+              className="aspect-square rounded-3xl overflow-hidden"
+              priority
+            />
+            {product.categoria && (
+              <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm pointer-events-none z-10">
+                {product.categoria}
+              </span>
+            )}
+          </div>
         </motion.div>
 
         {/* Product Info */}
