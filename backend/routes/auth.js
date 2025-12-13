@@ -26,10 +26,25 @@ router.post('/login', async (req, res) => {
     }
 
     // Guardar sesión
-    req.session.userId = usuario.id;
-    req.session.username = usuario.username;
-    req.session.role = usuario.role;
-    req.session.fullName = usuario.full_name;
+    // IMPORTANTE: Reasignar completamente req.session en lugar de solo modificar propiedades
+    // Esto garantiza que cookie-session detecte el cambio y envíe Set-Cookie header
+    // (Necesario para Safari y Railway proxy)
+    
+    // Primero leer la sesión para activarla
+    const sessionId = req.session.id || Date.now().toString();
+    
+    // Luego asignar TODOS los valores incluyendo una marca temporal
+    req.session = {
+      userId: usuario.id,
+      username: usuario.username,
+      role: usuario.role,
+      fullName: usuario.full_name,
+      id: sessionId,
+      lastActivity: Date.now()  // Forzar cambio detectable
+    };
+    
+    // Marcar explícitamente como modificada (para cookie-session)
+    req.session.isNew = true;
 
     // cookie-session guarda automáticamente al finalizar la petición
     // No necesita llamar explícitamente a session.save()
