@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const Usuario = require('../models/Usuario');
 
 // Login
@@ -30,8 +31,8 @@ router.post('/login', async (req, res) => {
     // Esto garantiza que cookie-session detecte el cambio y envíe Set-Cookie header
     // (Necesario para Safari y Railway proxy)
     
-    // Primero leer la sesión para activarla
-    const sessionId = req.session.id || Date.now().toString();
+    // Primero leer la sesión para activarla, o crear un ID único
+    const sessionId = req.session.id || crypto.randomUUID();
     
     // Luego asignar TODOS los valores incluyendo una marca temporal
     req.session = {
@@ -43,7 +44,8 @@ router.post('/login', async (req, res) => {
       lastActivity: Date.now()  // Forzar cambio detectable
     };
     
-    // Marcar explícitamente como modificada (para cookie-session)
+    // Marcar explícitamente como modificada para forzar Set-Cookie header
+    // Nota: cookie-session usa esta propiedad para detectar cambios que requieren enviar la cookie
     req.session.isNew = true;
 
     // cookie-session guarda automáticamente al finalizar la petición

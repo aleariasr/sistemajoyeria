@@ -45,8 +45,11 @@ if (authContent.includes('req.session.isNew = true')) {
 }
 
 // Test 4: Verify session ID is preserved or created
-const hasSessionId = /sessionId\s*=\s*req\.session\.id\s*\|\|\s*Date\.now\(\)\.toString\(\)/m.test(authContent);
-if (hasSessionId) {
+const hasSessionId = /sessionId\s*=\s*req\.session\.id\s*\|\|/m.test(authContent);
+const usesRandomUUID = authContent.includes('crypto.randomUUID()');
+const usesTimestamp = authContent.includes('Date.now().toString()');
+
+if (hasSessionId && (usesRandomUUID || usesTimestamp)) {
   console.log('✅ PASS: Login preserves or creates session ID');
 } else {
   console.log('❌ FAIL: Login does NOT handle session ID properly');
