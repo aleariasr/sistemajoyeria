@@ -2,10 +2,12 @@
  * Product Grid Component
  * 
  * Responsive grid layout for displaying products with loading and empty states.
+ * Optimized with React.memo to prevent unnecessary re-renders.
  */
 
 'use client';
 
+import React from 'react';
 import { ProductCard } from './ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +20,7 @@ interface ProductGridProps {
   onRetry?: () => void;
 }
 
-export function ProductGrid({
+function ProductGridComponent({
   products,
   isLoading = false,
   error = null,
@@ -101,5 +103,8 @@ export function ProductGrid({
     </div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent re-renders
+export const ProductGrid = React.memo(ProductGridComponent);
 
 export default ProductGrid;
