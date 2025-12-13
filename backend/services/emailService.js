@@ -50,6 +50,12 @@ function createTransporter() {
     return null;
   }
 
+  // Validate required SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) {
+    console.warn('⚠️ SMTP configuration incomplete (SMTP_HOST and SMTP_PORT required). Emails will not be sent.');
+    return null;
+  }
+
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,

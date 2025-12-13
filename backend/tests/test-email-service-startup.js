@@ -10,12 +10,26 @@ console.log('📝 Test 1: No email credentials configured');
 process.env.NODE_ENV = 'test';
 delete process.env.EMAIL_USER;
 delete process.env.EMAIL_APP_PASSWORD;
+delete process.env.SMTP_HOST;
+delete process.env.SMTP_PORT;
 
 // Clear require cache to force reload
 delete require.cache[require.resolve('../services/emailService')];
 const emailServiceUnconfigured = require('../services/emailService');
 
 console.log('  ✓ Service loaded without crashing\n');
+
+// Test 1a: With credentials but no SMTP configuration
+console.log('📝 Test 1a: Credentials but missing SMTP configuration');
+process.env.EMAIL_USER = 'test@example.com';
+process.env.EMAIL_APP_PASSWORD = 'testpassword';
+delete process.env.SMTP_HOST;
+delete process.env.SMTP_PORT;
+
+delete require.cache[require.resolve('../services/emailService')];
+const emailServiceNoSMTP = require('../services/emailService');
+
+console.log('  ✓ Service handles missing SMTP config gracefully\n');
 
 // Test 2: With credentials but no SMTP settings
 console.log('📝 Test 2: With credentials but default SMTP settings');
