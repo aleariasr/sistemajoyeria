@@ -8,6 +8,10 @@ console.log('🧪 Testing Safari Cookie Compatibility...\n');
 const fs = require('fs');
 const path = require('path');
 
+// Define project root for more robust path resolution
+const PROJECT_ROOT = path.join(__dirname, '..', '..');
+const BACKEND_ROOT = path.join(__dirname, '..');
+
 let allPassed = true;
 let testCount = 0;
 let passCount = 0;
@@ -28,7 +32,7 @@ function test(name, condition) {
 // ============================================================
 console.log('📋 Testing Backend Configuration...\n');
 
-const serverFilePath = path.join(__dirname, '..', 'server.js');
+const serverFilePath = path.join(BACKEND_ROOT, 'server.js');
 const serverContent = fs.readFileSync(serverFilePath, 'utf8');
 
 test(
@@ -94,7 +98,7 @@ test(
 // ============================================================
 console.log('\n📋 Testing Frontend Configuration...\n');
 
-const frontendApiPath = path.join(__dirname, '..', '..', 'frontend', 'src', 'services', 'api.js');
+const frontendApiPath = path.join(PROJECT_ROOT, 'frontend', 'src', 'services', 'api.js');
 if (fs.existsSync(frontendApiPath)) {
   const frontendApiContent = fs.readFileSync(frontendApiPath, 'utf8');
   
@@ -111,7 +115,7 @@ if (fs.existsSync(frontendApiPath)) {
 // ============================================================
 console.log('\n📋 Testing Storefront Configuration...\n');
 
-const storefrontApiPath = path.join(__dirname, '..', '..', 'storefront', 'src', 'lib', 'api', 'client.ts');
+const storefrontApiPath = path.join(PROJECT_ROOT, 'storefront', 'src', 'lib', 'api', 'client.ts');
 if (fs.existsSync(storefrontApiPath)) {
   const storefrontApiContent = fs.readFileSync(storefrontApiPath, 'utf8');
   
@@ -128,7 +132,7 @@ if (fs.existsSync(storefrontApiPath)) {
 // ============================================================
 console.log('\n📋 Testing Documentation...\n');
 
-const safariDocPath = path.join(__dirname, '..', '..', 'SAFARI_COOKIE_COMPATIBILITY.md');
+const safariDocPath = path.join(PROJECT_ROOT, 'SAFARI_COOKIE_COMPATIBILITY.md');
 test(
   'Safari compatibility documentation exists',
   fs.existsSync(safariDocPath)

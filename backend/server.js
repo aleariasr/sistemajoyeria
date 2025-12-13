@@ -296,31 +296,29 @@ if (NODE_ENV === 'development') {
 }
 
 /* ============================================================
-   COOKIE DEBUGGING MIDDLEWARE (All Environments)
+   COOKIE DEBUGGING MIDDLEWARE (Production Only)
    ============================================================ */
-// Log cookie presence for debugging Safari issues
-app.use((req, res, next) => {
-  // Only log for authenticated routes (not public endpoints)
-  const isPublicRoute = req.path.startsWith('/api/public') || 
-                        req.path === '/health' || 
-                        req.path === '/' ||
-                        req.path.startsWith('/api/auth/login') ||
-                        req.path.startsWith('/api/auth/session');
-  
-  if (!isPublicRoute && !req.session?.userId) {
-    // Log missing session for debugging
-    const cookieHeader = req.headers.cookie;
-    if (!cookieHeader) {
+// Log cookie presence for debugging Safari issues in production
+// Only logs when there are actual issues (missing cookies)
+if (NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    // Only log for authenticated routes (not public endpoints)
+    const isPublicRoute = req.path.startsWith('/api/public') || 
+                          req.path === '/health' || 
+                          req.path === '/' ||
+                          req.path.startsWith('/api/auth/login') ||
+                          req.path.startsWith('/api/auth/session');
+    
+    // Only log when there's an issue: missing cookie on protected route
+    if (!isPublicRoute && !req.headers.cookie) {
       console.log(`⚠️  No cookie header for ${req.method} ${req.path}`);
       console.log(`   Origin: ${req.headers.origin || 'none'}`);
       console.log(`   User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'unknown'}...`);
-    } else if (!req.session?.userId) {
-      console.log(`⚠️  Cookie present but no session for ${req.method} ${req.path}`);
     }
-  }
-  
-  next();
-});
+    
+    next();
+  });
+}
 
 
 /* ============================================================
