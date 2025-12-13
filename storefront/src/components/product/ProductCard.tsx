@@ -52,9 +52,9 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   // Memoize URLs to prevent recalculation on every render
   const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
   const imageUrl = useMemo(() => optimizeCloudinaryImage(product.imagen_url, {
-    width: 600,
-    height: 600,
-    quality: 'auto',
+    width: 800,
+    height: 800,
+    quality: 'auto:best',
     crop: 'fill',
   }), [product.imagen_url]);
 

@@ -134,8 +134,9 @@ export function CartDrawer() {
                       <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-primary-50 flex-shrink-0">
                         <Image
                           src={optimizeCloudinaryImage(item.product.imagen_url, {
-                            width: 160,
-                            height: 160,
+                            width: 200,
+                            height: 200,
+                            quality: 'auto:best',
                           })}
                           alt={item.product.nombre}
                           fill

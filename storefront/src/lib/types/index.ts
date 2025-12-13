@@ -128,3 +128,14 @@ export interface CreateOrderResponse {
 export interface ApiError {
   error: string;
 }
+
+/**
+ * Image zoom component props
+ */
+export interface ImageZoomProps {
+  src: string;
+  alt: string;
+  highResSrc?: string;
+  className?: string;
+  priority?: boolean;
+}

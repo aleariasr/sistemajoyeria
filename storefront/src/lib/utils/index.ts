@@ -47,6 +47,7 @@ export function optimizeCloudinaryImage(
     format?: 'auto' | 'webp' | 'avif' | 'jpg' | 'png';
     crop?: 'fill' | 'fit' | 'scale' | 'pad' | 'thumb';
     gravity?: 'auto' | 'face' | 'center';
+    dpr?: 'auto' | '1.0' | '2.0' | '3.0';
   } = {}
 ): string {
   // Return placeholder if no URL
@@ -68,10 +69,11 @@ export function optimizeCloudinaryImage(
   const {
     width,
     height,
-    quality = 'auto',
+    quality = 'auto:best',
     format = 'auto',
     crop = 'fill',
     gravity = 'auto',
+    dpr = 'auto',
   } = options;
 
   // Build transformation string
@@ -81,6 +83,7 @@ export function optimizeCloudinaryImage(
   if (height) transforms.push(`h_${height}`);
   if (crop) transforms.push(`c_${crop}`);
   if (gravity) transforms.push(`g_${gravity}`);
+  if (dpr) transforms.push(`dpr_${dpr}`);
   transforms.push(`q_${quality}`);
   transforms.push(`f_${format}`);
 
