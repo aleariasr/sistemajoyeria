@@ -1,106 +1,60 @@
 /**
  * Email Service for Online Orders
  * 
- * Handles sending transactional emails using SMTP and Nodemailer
+ * Handles sending transactional emails using Resend API
  * Includes professional HTML templates for all order-related notifications
  * 
- * SMTP Configuration Examples:
+ * Resend Configuration:
+ * - Sign up at https://resend.com
+ * - Verify your domain
+ * - Get your API key from the dashboard
+ * - Add RESEND_API_KEY to your environment variables
  * 
- * iCloud Mail:
- *   SMTP_HOST=smtp.mail.me.com
- *   SMTP_PORT=587
- *   SMTP_SECURE=false
- *   EMAIL_USER=your-email@icloud.com
- *   EMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx (app-specific password from appleid.apple.com)
- * 
- * Gmail:
- *   SMTP_HOST=smtp.gmail.com
- *   SMTP_PORT=587
- *   SMTP_SECURE=false
- *   EMAIL_USER=your-email@gmail.com
- *   EMAIL_APP_PASSWORD=app-specific-password (from myaccount.google.com/apppasswords)
- * 
- * Gmail with SSL:
- *   SMTP_HOST=smtp.gmail.com
- *   SMTP_PORT=465
- *   SMTP_SECURE=true
+ * Benefits over SMTP:
+ * - No blocked ports (uses REST API)
+ * - Better deliverability
+ * - Built-in analytics
+ * - No connection timeouts
+ * - Works seamlessly on Railway and other platforms
  */
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 // Email configuration from environment variables
 const EMAIL_CONFIG = {
-  user: process.env.EMAIL_USER,
-  password: process.env.EMAIL_APP_PASSWORD,
+  apiKey: process.env.RESEND_API_KEY,
+  from: process.env.EMAIL_FROM || 'ventas@cueroyperla.com',
   fromName: process.env.EMAIL_FROM_NAME || 'Cuero&Perla',
-  adminEmail: process.env.ADMIN_EMAIL,
+  adminEmail: process.env.ADMIN_EMAIL || 'cueroyperla@icloud.com',
   storeName: process.env.STORE_NAME || 'Cuero&Perla',
-  storeUrl: process.env.STORE_URL || 'https://cueroyperla.com',
-  storePhone: process.env.STORE_PHONE || '+506 7269-7050'
+  storeUrl: process.env.STORE_URL || 'https://sistemainterno.cueroyperla.com',
+  storePhone: process.env.STORE_PHONE || '+506-7269-7050'
 };
 
+// Initialize Resend client
+let resendClient = null;
+
 /**
- * Create nodemailer transporter with SMTP configuration
- * Only creates if email credentials are configured
- * Supports connection pooling and configurable timeouts for reliability
+ * Get or create Resend client instance
+ * Only creates if API key is configured
  */
-function createTransporter() {
-  if (!EMAIL_CONFIG.user || !EMAIL_CONFIG.password) {
-    console.warn('⚠️ Email credentials not configured. Emails will not be sent.');
+function getResendClient() {
+  if (!EMAIL_CONFIG.apiKey) {
+    console.warn('⚠️ Resend API key not configured. Emails will not be sent.');
     return null;
   }
 
-  // Validate required SMTP configuration
-  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) {
-    console.warn('⚠️ SMTP configuration incomplete (SMTP_HOST and SMTP_PORT required). Emails will not be sent.');
-    return null;
+  if (!resendClient) {
+    try {
+      resendClient = new Resend(EMAIL_CONFIG.apiKey);
+      console.log('✅ Resend Email Service initialized');
+    } catch (error) {
+      console.error('❌ Error initializing Resend client:', error);
+      return null;
+    }
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: EMAIL_CONFIG.user,
-        pass: EMAIL_CONFIG.password
-      },
-      // Connection pooling for better performance
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-      // Timeout settings to prevent hanging connections
-      connectionTimeout: 60000, // 60 seconds
-      greetingTimeout: 30000,   // 30 seconds
-      socketTimeout: 60000,     // 60 seconds
-      // TLS configuration - allows environment override for compatibility
-      tls: {
-        rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false',
-        minVersion: 'TLSv1.2'
-      },
-      // Debug logging in development
-      debug: process.env.NODE_ENV === 'development',
-      logger: process.env.NODE_ENV === 'development'
-    });
-
-    // Verify SMTP connection on startup
-    transporter.verify(function(error, success) {
-      if (error) {
-        console.error('❌ SMTP Connection verification failed:', error);
-      } else {
-        console.log('✅ SMTP Server is ready to send emails');
-      }
-    });
-
-    return transporter;
-  } catch (error) {
-    console.error('❌ Error creating email transporter:', error);
-    return null;
-  }
-}
-
-function getTransporter() {
-  return createTransporter();
+  return resendClient;
 }
 
 /**
@@ -309,8 +263,8 @@ function generateOrderItemsHTML(items) {
  * Sent immediately when order is created
  */
 async function enviarConfirmacionPedido(pedido, items) {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResendClient();
+  if (!resend) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -352,24 +306,23 @@ async function enviarConfirmacionPedido(pedido, items) {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
       subject: `Confirmación de Pedido #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ Confirmation email sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending confirmation email:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ Confirmation email sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending confirmation email:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending confirmation email:', error);
+    return { sent: false, error: error.message };
   }
 }
 
@@ -378,8 +331,8 @@ async function enviarConfirmacionPedido(pedido, items) {
  * Alerts admin team of new orders requiring attention
  */
 async function notificarNuevoPedido(pedido, items) {
-  const transporter = getTransporter();
-  if (!transporter || !EMAIL_CONFIG.adminEmail) {
+  const resend = getResendClient();
+  if (!resend || !EMAIL_CONFIG.adminEmail) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -421,24 +374,23 @@ async function notificarNuevoPedido(pedido, items) {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: EMAIL_CONFIG.adminEmail,
       subject: `🔔 Nuevo Pedido #${pedido.id} - ${pedido.nombre_cliente}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ Admin notification sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending admin notification:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ Admin notification sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending admin notification:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending admin notification:', error);
+    return { sent: false, error: error.message };
   }
 }
 
@@ -447,8 +399,8 @@ async function notificarNuevoPedido(pedido, items) {
  * Sent when admin approves the order
  */
 async function enviarConfirmacionPago(pedido, items) {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResendClient();
+  if (!resend) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -481,24 +433,23 @@ async function enviarConfirmacionPago(pedido, items) {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
       subject: `✅ Pedido Confirmado #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ Payment confirmation sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending payment confirmation:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ Payment confirmation sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending payment confirmation:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending payment confirmation:', error);
+    return { sent: false, error: error.message };
   }
 }
 
@@ -507,8 +458,8 @@ async function enviarConfirmacionPago(pedido, items) {
  * Sent when order is marked as shipped
  */
 async function enviarNotificacionEnvio(pedido, items) {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResendClient();
+  if (!resend) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -542,24 +493,23 @@ async function enviarNotificacionEnvio(pedido, items) {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
       subject: `🚚 Tu Pedido #${pedido.id} está en Camino - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ Shipping notification sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending shipping notification:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ Shipping notification sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending shipping notification:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending shipping notification:', error);
+    return { sent: false, error: error.message };
   }
 }
 
@@ -568,8 +518,8 @@ async function enviarNotificacionEnvio(pedido, items) {
  * Sent when order is cancelled
  */
 async function enviarCancelacionPedido(pedido, motivo = '') {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResendClient();
+  if (!resend) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -597,24 +547,23 @@ async function enviarCancelacionPedido(pedido, motivo = '') {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: pedido.email,
       subject: `Pedido Cancelado #${pedido.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ Cancellation email sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending cancellation email:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ Cancellation email sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending cancellation email:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending cancellation email:', error);
+    return { sent: false, error: error.message };
   }
 }
 
@@ -623,8 +572,8 @@ async function enviarCancelacionPedido(pedido, motivo = '') {
  * Sent when user clicks "Send Email" from sale detail in POS
  */
 async function enviarTicketVentaPOS(venta, items, emailDestino) {
-  const transporter = getTransporter();
-  if (!transporter) {
+  const resend = getResendClient();
+  if (!resend) {
     console.log('📧 Email service not configured');
     return { sent: false, reason: 'not_configured' };
   }
@@ -694,24 +643,23 @@ async function enviarTicketVentaPOS(venta, items, emailDestino) {
   `;
 
   try {
-    const info = await transporter.sendMail({
-      from: `"${EMAIL_CONFIG.fromName}" <${EMAIL_CONFIG.user}>`,
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.from}>`,
       to: emailDestino,
       subject: `Comprobante de Venta #${venta.id} - ${EMAIL_CONFIG.storeName}`,
       html: getBaseTemplate(content)
     });
 
-    console.log('✅ POS receipt email sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Error sending POS receipt email:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('✅ POS receipt email sent:', data.id);
+    return { sent: true, messageId: data.id };
   } catch (error) {
-    console.error('❌ Error sending POS receipt email:', {
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode,
-      message: error.message
-    });
-    return { sent: false, error: error.message, code: error.code };
+    console.error('❌ Error sending POS receipt email:', error);
+    return { sent: false, error: error.message };
   }
 }
 
