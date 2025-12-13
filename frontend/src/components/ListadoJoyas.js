@@ -316,6 +316,7 @@ function ListadoJoyas() {
                     <th>Stock</th>
                     <th>Ubicación</th>
                     <th>Estado</th>
+                    <th>Tienda Online</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -391,6 +392,31 @@ function ListadoJoyas() {
                       </td>
                       <td>{joya.ubicacion}</td>
                       <td>{getEstadoBadge(joya)}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {joya.mostrar_en_storefront !== false ? (
+                          <span 
+                            style={{ 
+                              fontSize: '20px',
+                              filter: 'grayscale(0)',
+                              display: 'inline-block'
+                            }}
+                            title="Visible en tienda online"
+                          >
+                            🌐
+                          </span>
+                        ) : (
+                          <span 
+                            style={{ 
+                              fontSize: '18px',
+                              opacity: 0.3,
+                              display: 'inline-block'
+                            }}
+                            title="Oculto en tienda online"
+                          >
+                            🚫
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <div className="table-actions">
                           <button
