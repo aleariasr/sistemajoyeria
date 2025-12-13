@@ -36,13 +36,13 @@ const ventaMixtoMock = {
 
 const itemsMock = [
   {
-    nombre_producto: 'Collar de Plata',
+    nombre: 'Collar de Plata',
     cantidad: 1,
     precio_unitario: 30000,
     subtotal: 30000
   },
   {
-    nombre_producto: 'Anillo de Oro',
+    nombre: 'Anillo de Oro',
     cantidad: 1,
     precio_unitario: 20000,
     subtotal: 20000
