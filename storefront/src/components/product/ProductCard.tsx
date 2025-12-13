@@ -21,7 +21,7 @@ interface ProductCardProps {
   index?: number;
 }
 
-// Blur placeholder for images (base64 SVG)
+// Blur placeholder for images (base64 SVG - 600x600 gray rectangle)
 const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==";
 
 function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
