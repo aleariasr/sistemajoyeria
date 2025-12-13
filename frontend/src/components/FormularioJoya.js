@@ -389,7 +389,6 @@ function FormularioJoya() {
               Si está activado, este producto aparecerá en la tienda online pública (storefront)
             </small>
           </div>
-          </div>
 
           <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Información Comercial</h3>
 
