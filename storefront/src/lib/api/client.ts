@@ -92,6 +92,9 @@ const createApiClient = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
+    // Enable credentials (cookies) for cross-origin requests
+    // Required for Safari compatibility with session cookies
+    withCredentials: true,
   });
 
   // Request interceptor for logging in development
