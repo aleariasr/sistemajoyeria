@@ -1,8 +1,29 @@
 /**
  * Email Service for Online Orders
  * 
- * Handles sending transactional emails using Gmail SMTP and Nodemailer
+ * Handles sending transactional emails using SMTP and Nodemailer
  * Includes professional HTML templates for all order-related notifications
+ * 
+ * SMTP Configuration Examples:
+ * 
+ * iCloud Mail:
+ *   SMTP_HOST=smtp.mail.me.com
+ *   SMTP_PORT=587
+ *   SMTP_SECURE=false
+ *   EMAIL_USER=your-email@icloud.com
+ *   EMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx (app-specific password from appleid.apple.com)
+ * 
+ * Gmail:
+ *   SMTP_HOST=smtp.gmail.com
+ *   SMTP_PORT=587
+ *   SMTP_SECURE=false
+ *   EMAIL_USER=your-email@gmail.com
+ *   EMAIL_APP_PASSWORD=app-specific-password (from myaccount.google.com/apppasswords)
+ * 
+ * Gmail with SSL:
+ *   SMTP_HOST=smtp.gmail.com
+ *   SMTP_PORT=465
+ *   SMTP_SECURE=true
  */
 
 const nodemailer = require('nodemailer');
@@ -19,12 +40,19 @@ const EMAIL_CONFIG = {
 };
 
 /**
- * Create nodemailer transporter with Gmail SMTP
+ * Create nodemailer transporter with SMTP configuration
  * Only creates if email credentials are configured
+ * Supports connection pooling and configurable timeouts for reliability
  */
 function createTransporter() {
   if (!EMAIL_CONFIG.user || !EMAIL_CONFIG.password) {
     console.warn('⚠️ Email credentials not configured. Emails will not be sent.');
+    return null;
+  }
+
+  // Validate required SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT) {
+    console.warn('⚠️ SMTP configuration incomplete (SMTP_HOST and SMTP_PORT required). Emails will not be sent.');
     return null;
   }
 
@@ -37,8 +65,30 @@ function createTransporter() {
         user: EMAIL_CONFIG.user,
         pass: EMAIL_CONFIG.password
       },
+      // Connection pooling for better performance
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      // Timeout settings to prevent hanging connections
+      connectionTimeout: 60000, // 60 seconds
+      greetingTimeout: 30000,   // 30 seconds
+      socketTimeout: 60000,     // 60 seconds
+      // TLS configuration - allows environment override for compatibility
       tls: {
-        rejectUnauthorized: true
+        rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false',
+        minVersion: 'TLSv1.2'
+      },
+      // Debug logging in development
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development'
+    });
+
+    // Verify SMTP connection on startup
+    transporter.verify(function(error, success) {
+      if (error) {
+        console.error('❌ SMTP Connection verification failed:', error);
+      } else {
+        console.log('✅ SMTP Server is ready to send emails');
       }
     });
 
@@ -312,8 +362,14 @@ async function enviarConfirmacionPedido(pedido, items) {
     console.log('✅ Confirmation email sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending confirmation email:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending confirmation email:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
@@ -375,8 +431,14 @@ async function notificarNuevoPedido(pedido, items) {
     console.log('✅ Admin notification sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending admin notification:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending admin notification:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
@@ -429,8 +491,14 @@ async function enviarConfirmacionPago(pedido, items) {
     console.log('✅ Payment confirmation sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending payment confirmation:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending payment confirmation:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
@@ -484,8 +552,14 @@ async function enviarNotificacionEnvio(pedido, items) {
     console.log('✅ Shipping notification sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending shipping notification:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending shipping notification:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
@@ -533,8 +607,14 @@ async function enviarCancelacionPedido(pedido, motivo = '') {
     console.log('✅ Cancellation email sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending cancellation email:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending cancellation email:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
@@ -624,8 +704,14 @@ async function enviarTicketVentaPOS(venta, items, emailDestino) {
     console.log('✅ POS receipt email sent:', info.messageId);
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending POS receipt email:', error);
-    return { sent: false, error: error.message };
+    console.error('❌ Error sending POS receipt email:', {
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      message: error.message
+    });
+    return { sent: false, error: error.message, code: error.code };
   }
 }
 
