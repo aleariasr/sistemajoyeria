@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const Usuario = require('../models/Usuario');
 
 // Login
@@ -26,10 +27,26 @@ router.post('/login', async (req, res) => {
     }
 
     // Guardar sesión
-    req.session.userId = usuario.id;
-    req.session.username = usuario.username;
-    req.session.role = usuario.role;
-    req.session.fullName = usuario.full_name;
+    // IMPORTANTE: Reasignar completamente req.session en lugar de solo modificar propiedades
+    // Esto garantiza que cookie-session detecte el cambio y envíe Set-Cookie header
+    // (Necesario para Safari y Railway proxy)
+    
+    // Primero leer la sesión para activarla, o crear un ID único
+    const sessionId = req.session.id || crypto.randomUUID();
+    
+    // Luego asignar TODOS los valores incluyendo una marca temporal
+    req.session = {
+      userId: usuario.id,
+      username: usuario.username,
+      role: usuario.role,
+      fullName: usuario.full_name,
+      id: sessionId,
+      lastActivity: Date.now()  // Forzar cambio detectable
+    };
+    
+    // Marcar explícitamente como modificada para forzar Set-Cookie header
+    // Nota: cookie-session usa esta propiedad para detectar cambios que requieren enviar la cookie
+    req.session.isNew = true;
 
     // cookie-session guarda automáticamente al finalizar la petición
     // No necesita llamar explícitamente a session.save()
