@@ -91,6 +91,7 @@ class Joya {
     }
 
     // Filtro por visibilidad en storefront
+    // Accepts both boolean and string for compatibility with query params
     if (mostrar_en_storefront === true || mostrar_en_storefront === 'true') {
       query = query.eq('mostrar_en_storefront', true);
     }

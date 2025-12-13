@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -21,15 +21,19 @@ interface ProductCardProps {
   index?: number;
 }
 
-// Detect if device supports touch (executed once per module load)
-const IS_TOUCH_DEVICE = typeof window !== 'undefined' && 
-  ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-
 // Blur placeholder for images (base64 SVG)
 const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==";
 
 function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
+  
+  // Detect touch device safely on client side only
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  
+  useEffect(() => {
+    // Only run on client side
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     // Prevent event from bubbling up to the Link
@@ -55,6 +59,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   }), [product.imagen_url]);
 
   // Simplified animation config for better performance
+  // Cap delay at 0.3s to avoid long waits for items further down the list
   const cardAnimation = useMemo(() => ({
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -85,7 +90,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
           />
           
           {/* Quick Add Button - Shows on hover (desktop only) */}
-          {!IS_TOUCH_DEVICE && (
+          {!isTouchDevice && (
             <button
               onClick={handleAddToCart}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 
@@ -128,7 +133,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
       </Link>
 
       {/* Add to Cart Button for Touch Devices - Outside the Link */}
-      {IS_TOUCH_DEVICE && (
+      {isTouchDevice && (
         <button
           onClick={handleAddToCart}
           className="mt-3 w-full px-4 py-2.5 bg-primary-900 text-white text-sm font-medium 

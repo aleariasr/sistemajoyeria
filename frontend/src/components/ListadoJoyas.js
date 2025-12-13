@@ -393,7 +393,7 @@ function ListadoJoyas() {
                       <td>{joya.ubicacion}</td>
                       <td>{getEstadoBadge(joya)}</td>
                       <td style={{ textAlign: 'center' }}>
-                        {joya.mostrar_en_storefront !== false ? (
+                        {joya.mostrar_en_storefront === true ? (
                           <span 
                             style={{ 
                               fontSize: '20px',
