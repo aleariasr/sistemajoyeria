@@ -25,10 +25,10 @@ const EMAIL_CONFIG = {
   apiKey: process.env.RESEND_API_KEY,
   from: process.env.EMAIL_FROM || 'ventas@cueroyperla.com',
   fromName: process.env.EMAIL_FROM_NAME || 'Cuero&Perla',
-  adminEmail: process.env.ADMIN_EMAIL || 'cueroyperla@icloud.com',
+  adminEmail: process.env.ADMIN_EMAIL,
   storeName: process.env.STORE_NAME || 'Cuero&Perla',
-  storeUrl: process.env.STORE_URL || 'https://sistemainterno.cueroyperla.com',
-  storePhone: process.env.STORE_PHONE || '+506-7269-7050'
+  storeUrl: process.env.STORE_URL || 'https://cueroyperla.com',
+  storePhone: process.env.STORE_PHONE || '+506-1234-5678'
 };
 
 // Initialize Resend client
