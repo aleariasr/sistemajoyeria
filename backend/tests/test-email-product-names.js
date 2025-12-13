@@ -122,8 +122,8 @@ async function testProductNames() {
   const itemsConProductName = [
     {
       product_name: 'Aretes de Perla',
-      quantity: 1,
-      unit_price: 25000,
+      cantidad: 1,
+      precio_unitario: 25000,
       subtotal: 25000
     }
   ];
