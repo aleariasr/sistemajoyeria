@@ -2,10 +2,12 @@
  * Product Card Component
  * 
  * Elegant product display card with hover effects and add-to-cart.
+ * Optimized for performance and touch devices.
  */
 
 'use client';
 
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -19,10 +21,22 @@ interface ProductCardProps {
   index?: number;
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { addItem, openCart } = useCartStore();
+// Blur placeholder for images (base64 SVG - 600x600 gray rectangle)
+const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==";
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
+  const { addItem, openCart } = useCartStore();
+  
+  // Detect touch device safely on client side only
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  
+  useEffect(() => {
+    // Only run on client side
+    setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    // Prevent event from bubbling up to the Link
     e.preventDefault();
     e.stopPropagation();
     
@@ -33,21 +47,28 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         onClick: openCart,
       },
     });
-  };
+  }, [product, addItem, openCart]);
 
-  const productUrl = `/product/${product.id}`;
-  const imageUrl = optimizeCloudinaryImage(product.imagen_url, {
+  // Memoize URLs to prevent recalculation on every render
+  const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
+  const imageUrl = useMemo(() => optimizeCloudinaryImage(product.imagen_url, {
     width: 600,
     height: 600,
     quality: 'auto',
     crop: 'fill',
-  });
+  }), [product.imagen_url]);
+
+  // Simplified animation config for better performance
+  // Cap delay at 0.3s to avoid long waits for items further down the list
+  const cardAnimation = useMemo(() => ({
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3, delay: Math.min(index * 0.05, 0.3) }
+  }), [index]);
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      {...cardAnimation}
       className="group"
     >
       <Link
@@ -64,23 +85,26 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
           />
           
-          {/* Quick Add Button - Shows on hover */}
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAddToCart}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 
-                       px-6 py-2.5 bg-primary-900 text-white text-sm font-medium 
-                       rounded-full shadow-premium opacity-0 group-hover:opacity-100 
-                       transition-all duration-300 transform translate-y-2 group-hover:translate-y-0
-                       hover:bg-primary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"
-            aria-label={`Agregar ${product.nombre} al carrito`}
-          >
-            Agregar al carrito
-          </motion.button>
+          {/* Quick Add Button - Shows on hover (desktop only) */}
+          {!isTouchDevice && (
+            <button
+              onClick={handleAddToCart}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 
+                         px-6 py-2.5 bg-primary-900 text-white text-sm font-medium 
+                         rounded-full shadow-premium opacity-0 group-hover:opacity-100 
+                         transition-all duration-300 transform translate-y-2 group-hover:translate-y-0
+                         hover:bg-primary-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500
+                         z-10"
+              aria-label={`Agregar ${product.nombre} al carrito`}
+              type="button"
+            >
+              Agregar al carrito
+            </button>
+          )}
 
           {/* Category Badge */}
           {product.categoria && (
@@ -107,8 +131,26 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           </p>
         </div>
       </Link>
+
+      {/* Add to Cart Button for Touch Devices - Outside the Link */}
+      {isTouchDevice && (
+        <button
+          onClick={handleAddToCart}
+          className="mt-3 w-full px-4 py-2.5 bg-primary-900 text-white text-sm font-medium 
+                     rounded-lg shadow-md hover:bg-primary-800 active:bg-primary-950
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500
+                     transition-colors duration-200"
+          aria-label={`Agregar ${product.nombre} al carrito`}
+          type="button"
+        >
+          Agregar al carrito
+        </button>
+      )}
     </motion.article>
   );
 }
+
+// Use React.memo to prevent unnecessary re-renders
+export const ProductCard = React.memo(ProductCardComponent);
 
 export default ProductCard;

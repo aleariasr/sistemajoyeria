@@ -31,7 +31,8 @@ function FormularioJoya() {
     stock_actual: '',
     stock_minimo: '5',
     ubicacion: '',
-    estado: 'Activo'
+    estado: 'Activo',
+    mostrar_en_storefront: true
   });
   
   const [imagen, setImagen] = useState(null);
@@ -64,7 +65,8 @@ function FormularioJoya() {
         stock_actual: joya.stock_actual || '',
         stock_minimo: joya.stock_minimo || '5',
         ubicacion: joya.ubicacion || '',
-        estado: joya.estado || 'Activo'
+        estado: joya.estado || 'Activo',
+        mostrar_en_storefront: joya.mostrar_en_storefront ?? true
       });
       // Cargar imagen actual si existe
       if (joya.imagen_url) {
@@ -85,10 +87,10 @@ function FormularioJoya() {
   }, [esEdicion, cargarJoya]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     });
 
     // Si es el campo código, validar en tiempo real
@@ -367,6 +369,25 @@ function FormularioJoya() {
               placeholder="Descripción detallada de la joya..."
               rows="3"
             />
+          </div>
+
+          {/* Visibilidad en Tienda Online */}
+          <div className="form-group" style={{ marginTop: '20px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                name="mostrar_en_storefront"
+                checked={formData.mostrar_en_storefront}
+                onChange={handleChange}
+                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: '15px', fontWeight: '500' }}>
+                🌐 Mostrar en tienda online
+              </span>
+            </label>
+            <small style={{ color: '#666', display: 'block', marginTop: '5px', marginLeft: '30px' }}>
+              Si está activado, este producto aparecerá en la tienda online pública (storefront)
+            </small>
           </div>
 
           <h3 style={{ marginTop: '30px', marginBottom: '20px', color: '#1a237e' }}>Información Comercial</h3>

@@ -6,7 +6,7 @@ class Joya {
     const {
       codigo, nombre, descripcion, categoria, proveedor, costo,
       precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado,
-      imagen_url, imagen_public_id
+      imagen_url, imagen_public_id, mostrar_en_storefront
     } = joyaData;
 
     const { data, error } = await supabase
@@ -25,7 +25,8 @@ class Joya {
         ubicacion,
         estado: estado || 'Activo',
         imagen_url: imagen_url || null,
-        imagen_public_id: imagen_public_id || null
+        imagen_public_id: imagen_public_id || null,
+        mostrar_en_storefront: mostrar_en_storefront !== undefined ? mostrar_en_storefront : true
       }])
       .select()
       .single();
@@ -41,7 +42,7 @@ class Joya {
   static async obtenerTodas(filtros = {}) {
     const {
       busqueda, categoria, precio_min, precio_max,
-      stock_bajo, sin_stock, estado, con_stock,
+      stock_bajo, sin_stock, estado, con_stock, mostrar_en_storefront,
       pagina = 1,
       por_pagina = 20
     } = filtros;
@@ -87,6 +88,12 @@ class Joya {
     // Filtro por productos con stock disponible (para storefront)
     if (con_stock === true || con_stock === 'true') {
       query = query.gt('stock_actual', 0);
+    }
+
+    // Filtro por visibilidad en storefront
+    // Accepts both boolean and string for compatibility with query params
+    if (mostrar_en_storefront === true || mostrar_en_storefront === 'true') {
+      query = query.eq('mostrar_en_storefront', true);
     }
 
     // Filtro por estado
@@ -167,7 +174,7 @@ class Joya {
     const {
       codigo, nombre, descripcion, categoria, proveedor, costo,
       precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado,
-      imagen_url, imagen_public_id
+      imagen_url, imagen_public_id, mostrar_en_storefront
     } = joyaData;
 
     const updateData = {
@@ -180,6 +187,9 @@ class Joya {
     }
     if (imagen_public_id !== undefined) {
       updateData.imagen_public_id = imagen_public_id;
+    }
+    if (mostrar_en_storefront !== undefined) {
+      updateData.mostrar_en_storefront = mostrar_en_storefront;
     }
 
     const { data, error } = await supabase
@@ -264,6 +274,7 @@ class Joya {
       .select('categoria')
       .eq('estado', 'Activo')
       .gt('stock_actual', 0)
+      .eq('mostrar_en_storefront', true)
       .not('categoria', 'is', null)
       .order('categoria');
 

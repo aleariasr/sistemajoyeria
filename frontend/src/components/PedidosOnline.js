@@ -11,7 +11,7 @@ import { formatearFechaCorta } from '../utils/dateFormatter';
 import './PedidosOnline.css';
 
 function PedidosOnline() {
-  const { isAdmin } = useAuth();
+  const { isAdmin: _isAdmin } = useAuth(); // eslint-disable-line no-unused-vars
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resumen, setResumen] = useState(null);

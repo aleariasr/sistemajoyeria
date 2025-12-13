@@ -57,7 +57,7 @@ function transformToPublicProduct(joya, includeStock = false) {
 /**
  * GET /api/public/products
  * Get all active products with optional filtering for storefront display
- * Only returns products with estado='Activo' and stock > 0
+ * Only returns products with estado='Activo', stock > 0, and mostrar_en_storefront=true
  */
 router.get('/products', async (req, res) => {
   try {
@@ -72,6 +72,7 @@ router.get('/products', async (req, res) => {
       // Only show active products with stock for public storefront
       estado: 'Activo',
       con_stock: true, // Filter by stock > 0 in database query
+      mostrar_en_storefront: true, // Only show products marked as visible in storefront
       pagina: pagina,
       por_pagina: porPagina
     };
@@ -97,13 +98,14 @@ router.get('/products', async (req, res) => {
 /**
  * GET /api/public/products/featured
  * Get featured/highlighted products for homepage
- * Returns the 8 most recent active products with stock
+ * Returns the 8 most recent active products with stock and visible in storefront
  */
 router.get('/products/featured', async (req, res) => {
   try {
     const filtros = {
       estado: 'Activo',
       con_stock: true, // Filter by stock > 0 in database query
+      mostrar_en_storefront: true, // Only show products marked as visible in storefront
       pagina: 1,
       por_pagina: 8 // Get exactly 8 products
     };
@@ -123,6 +125,7 @@ router.get('/products/featured', async (req, res) => {
 /**
  * GET /api/public/products/:id
  * Get a single product by ID for product detail page
+ * Only returns if product is active, has stock, and is visible in storefront
  */
 router.get('/products/:id', async (req, res) => {
   try {
@@ -134,6 +137,11 @@ router.get('/products/:id', async (req, res) => {
 
     // Only show active products with stock
     if (joya.estado !== 'Activo') {
+      return res.status(404).json({ error: 'Product not available' });
+    }
+
+    // Check if product is visible in storefront
+    if (!joya.mostrar_en_storefront) {
       return res.status(404).json({ error: 'Product not available' });
     }
 
