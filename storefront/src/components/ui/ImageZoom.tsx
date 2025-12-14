@@ -116,6 +116,7 @@ export function ImageZoom({
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover"
           priority={priority}
+          unoptimized
         />
 
         {/* Zoom Indicator - Desktop Only */}
@@ -146,7 +147,7 @@ export function ImageZoom({
             style={{
               backgroundImage: `url(${modalSrc})`,
               backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-              backgroundSize: '200%',
+              backgroundSize: '300%',
               backgroundRepeat: 'no-repeat',
             }}
           />
@@ -210,7 +211,7 @@ export function ImageZoom({
                     sizes="100vw"
                     className="object-contain"
                     priority
-                    quality={100}
+                    unoptimized
                   />
                 </div>
               </div>

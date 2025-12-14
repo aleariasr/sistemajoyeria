@@ -56,6 +56,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
     height: 800,
     quality: 'auto:best',
     crop: 'fill',
+    gravity: 'south',
   }), [product.imagen_url]);
 
   // Simplified animation config for better performance

@@ -22,12 +22,10 @@ cloudinary.config({
 const uploadImage = async (filePath, folder = 'joyas') => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: folder,
+      folder,
       resource_type: 'image',
-      transformation: [
-        { width: 800, height: 800, crop: 'limit' },
-        { quality: 'auto', fetch_format: 'auto' }
-      ]
+      use_filename: true,
+      overwrite: false
     });
     
     return {
@@ -64,7 +62,7 @@ const deleteImage = async (publicId) => {
 const getOptimizedUrl = (publicId, options = {}) => {
   return cloudinary.url(publicId, {
     fetch_format: 'auto',
-    quality: 'auto',
+    quality: 'auto:best',
     ...options
   });
 };

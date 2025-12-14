@@ -7,7 +7,7 @@ const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
 const MONEDAS = ['CRC', 'USD'];
 
 // Constantes para validación y tamaño de imagen
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en bytes
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB en bytes
 const IMAGE_PREVIEW_MAX_SIZE = '300px';
 
 function FormularioJoya() {
@@ -496,7 +496,7 @@ function FormularioJoya() {
           <label>Imagen de la Joya</label>
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleImagenChange}
             ref={fileInputRef}
             style={{ marginBottom: '10px' }}

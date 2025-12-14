@@ -46,7 +46,7 @@ export function optimizeCloudinaryImage(
     quality?: 'auto' | 'auto:low' | 'auto:eco' | 'auto:good' | 'auto:best';
     format?: 'auto' | 'webp' | 'avif' | 'jpg' | 'png';
     crop?: 'fill' | 'fit' | 'scale' | 'pad' | 'thumb';
-    gravity?: 'auto' | 'face' | 'center';
+    gravity?: string;
     dpr?: 'auto' | '1.0' | '2.0' | '3.0';
   } = {}
 ): string {

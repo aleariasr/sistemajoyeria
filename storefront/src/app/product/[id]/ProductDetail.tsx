@@ -77,17 +77,19 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   };
 
   const imageUrl = optimizeCloudinaryImage(product.imagen_url, {
-    width: 1200,
-    height: 1200,
-    quality: 'auto:best',
-    crop: 'fill',
-  });
+  width: 1200,
+  height: 1200,
+  quality: 'auto:best',
+  crop: 'fill',
+  gravity: 'south',
+});
 
   const highResImageUrl = optimizeCloudinaryImage(product.imagen_url, {
     width: 2400,
     height: 2400,
     quality: 'auto:best',
     crop: 'fill',
+    gravity: 'south',
   });
 
   return (
