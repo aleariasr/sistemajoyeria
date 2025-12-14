@@ -496,7 +496,7 @@ function FormularioJoya() {
           <label>Imagen de la Joya</label>
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
             onChange={handleImagenChange}
             ref={fileInputRef}
             style={{ marginBottom: '10px' }}
