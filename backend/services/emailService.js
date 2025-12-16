@@ -67,180 +67,182 @@ function getBaseTemplate(content) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${EMAIL_CONFIG.storeName}</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background-color: #f5f5f5;
-      line-height: 1.6;
-    }
-    .email-container {
-      max-width: 600px;
-      margin: 20px auto;
-      background-color: #ffffff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .header {
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: #ffffff;
-      padding: 30px 20px;
-      text-align: center;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 600;
-    }
-    .header .logo {
-      font-size: 36px;
-      margin-bottom: 10px;
-    }
-    .content {
-      padding: 30px 20px;
-    }
-    .content h2 {
-      color: #1f2937;
-      font-size: 22px;
-      margin-top: 0;
-      margin-bottom: 20px;
-    }
-    .content p {
-      color: #4b5563;
-      font-size: 16px;
-      margin: 10px 0;
-    }
-    .order-summary {
-      background-color: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .order-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .order-item:last-child {
-      border-bottom: none;
-    }
-    .order-item-name {
-      font-weight: 500;
-      color: #1f2937;
-    }
-    .order-item-details {
-      color: #6b7280;
-      font-size: 14px;
-    }
-    .order-item-price {
-      font-weight: 600;
-      color: #1f2937;
-    }
-    .order-total {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 2px solid #6366f1;
-      display: flex;
-      justify-content: space-between;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1f2937;
-    }
-    .info-box {
-      background-color: #eff6ff;
-      border-left: 4px solid #3b82f6;
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 4px;
-    }
-    .info-box.success {
-      background-color: #f0fdf4;
-      border-left-color: #10b981;
-    }
-    .info-box.warning {
-      background-color: #fffbeb;
-      border-left-color: #f59e0b;
-    }
-    .info-box p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    .button {
-      display: inline-block;
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-      color: #ffffff !important;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
-      margin: 20px 0;
-      text-align: center;
-    }
-    .footer {
-      background-color: #f9fafb;
-      padding: 20px;
-      text-align: center;
-      color: #6b7280;
-      font-size: 14px;
-      border-top: 1px solid #e5e7eb;
-    }
-    .footer p {
-      margin: 5px 0;
-    }
-    .footer a {
-      color: #6366f1;
-      text-decoration: none;
-    }
-    @media only screen and (max-width: 600px) {
-      .email-container {
-        margin: 0;
-        border-radius: 0;
-      }
-      .content {
-        padding: 20px 15px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${EMAIL_CONFIG.storeName}</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f7;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+
+  .email-container {
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  /* HEADER */
+  .header {
+    background-color: #eef0ff;
+    padding: 10px 16px;
+    text-align: center;
+    border-bottom: 1px solid #e1e4ff;
+  }
+
+  .header img {
+    width: 110px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 26px 22px;
+  }
+
+  .content h2 {
+    font-size: 22px;
+    margin: 0 0 14px;
+    color: #1f2937;
+  }
+
+  .content p {
+    font-size: 15px;
+    color: #4b5563;
+    margin: 8px 0;
+  }
+
+  /* INFO BOX */
+  .info-box {
+    background-color: #f7f7ff;
+    border: 1px solid #e4e6ff;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 18px 0;
+  }
+
+  .info-box.success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  .info-box.warning {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background-color: #f7f7ff;
+    border: 1px solid #e4e6ff;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 20px 0;
+  }
+
+  .order-item {
+    display: table;
+    width: 100%;
+    padding: 10px 0;
+    border-bottom: 1px solid #e4e6ff;
+  }
+
+  .order-item:last-child {
+    border-bottom: none;
+  }
+
+  .order-item-left {
+    display: table-cell;
+    vertical-align: top;
+  }
+
+  .order-item-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+  }
+
+  .order-item-details {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+
+  .order-item-price {
+    display: table-cell;
+    text-align: right;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .order-total {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 2px solid #8b8df6;
+    display: table;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .order-total span:last-child {
+    text-align: right;
+    display: table-cell;
+  }
+
+  /* FOOTER */
+  .footer {
+    background-color: #fafafa;
+    padding: 18px;
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .footer a {
+    color: #8b8df6;
+    text-decoration: none;
+  }
+</style>
 </head>
+
 <body>
   <div class="email-container">
+
     <div class="header">
-      <div class="logo" style="text-align:center; margin-bottom:16px;">
-        <img
-          src="https://res.cloudinary.com/dekqptpft/image/upload/v1765846278/CYP_FB-1-removebg-preview_bxblwq.png"
-          alt="Cuero & Perla"
-          width="140"
-          style="display:block; margin:0 auto; border:0; outline:none;"
-        />
-      </div>
+      <img
+        src="https://res.cloudinary.com/dekqptpft/image/upload/v1765846278/CYP_FB-1-removebg-preview_bxblwq.png"
+        alt="${EMAIL_CONFIG.storeName}"
+      />
     </div>
+
     <div class="content">
       ${content}
     </div>
+
     <div class="footer">
       <p><strong>${EMAIL_CONFIG.storeName}</strong></p>
       <p>${EMAIL_CONFIG.storePhone}</p>
       <p><a href="${EMAIL_CONFIG.storeUrl}">${EMAIL_CONFIG.storeUrl}</a></p>
-      <p style="margin-top: 15px;">
-        <strong>📧 Para consultas, responde a:</strong> 
-        <a href="mailto:${EMAIL_CONFIG.replyTo}" style="color: #6366f1; text-decoration: none;">${EMAIL_CONFIG.replyTo}</a>
-      </p>
-      <p style="margin-top: 10px; font-size: 12px; color: #9ca3af;">
-        Este email fue enviado desde ${EMAIL_CONFIG.from}.<br>
-        Por favor responde a ${EMAIL_CONFIG.replyTo} para contactarnos.
+      <p style="margin-top:8px;">
+        Consultas: <a href="mailto:${EMAIL_CONFIG.replyTo}">${EMAIL_CONFIG.replyTo}</a>
       </p>
     </div>
+
   </div>
 </body>
 </html>
-  `;
+`;
 }
 
 /**
@@ -261,11 +263,18 @@ function formatCurrency(amount) {
 function generateOrderItemsHTML(items) {
   return items.map(item => `
     <div class="order-item">
-      <div>
-        <div class="order-item-name">${item.nombre || item.nombre_producto || item.product_name || 'Producto'}</div>
-        <div class="order-item-details">Cantidad: ${item.cantidad || item.quantity} × ${formatCurrency(item.precio_unitario || item.unit_price)}</div>
+      <div class="order-item-left">
+        <div class="order-item-name">
+          ${item.nombre || item.nombre_producto || item.product_name || 'Producto'}
+        </div>
+        <div class="order-item-details">
+          Cantidad: ${item.cantidad || item.quantity} × 
+          ${formatCurrency(item.precio_unitario || item.unit_price)}
+        </div>
       </div>
-      <div class="order-item-price">${formatCurrency(item.subtotal)}</div>
+      <div class="order-item-price">
+        ${formatCurrency(item.subtotal)}
+      </div>
     </div>
   `).join('');
 }
