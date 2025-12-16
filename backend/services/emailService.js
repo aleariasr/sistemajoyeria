@@ -212,7 +212,7 @@ function getBaseTemplate(content) {
 <body>
   <div class="email-container">
     <div class="header">
-      <div class="logo">💎</div>
+      <div class="logo">https://res.cloudinary.com/dekqptpft/image/upload/v1765846278/CYP_FB-1-removebg-preview_bxblwq.png</div>
       <h1>${EMAIL_CONFIG.storeName}</h1>
     </div>
     <div class="content">
