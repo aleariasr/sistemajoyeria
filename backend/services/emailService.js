@@ -28,7 +28,7 @@ const EMAIL_CONFIG = {
   replyTo: process.env.EMAIL_REPLY_TO || 'contacto@cueroyperla.com',
   adminEmail: process.env.ADMIN_EMAIL,
   storeName: process.env.STORE_NAME || 'Cuero&Perla',
-  storeUrl: process.env.STORE_URL || 'https://cueroyperla.com',
+  storeUrl: process.env.STORE_URL || 'https://www.cueroyperla.com',
   storePhone: process.env.STORE_PHONE || '+506-1234-5678'
 };
 
