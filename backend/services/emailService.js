@@ -220,7 +220,6 @@ function getBaseTemplate(content) {
           style="display:block; margin:0 auto; border:0; outline:none;"
         />
       </div>
-      <h1>${EMAIL_CONFIG.storeName}</h1>
     </div>
     <div class="content">
       ${content}
