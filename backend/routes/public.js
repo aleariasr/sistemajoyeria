@@ -14,6 +14,8 @@
 const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
+const VarianteProducto = require('../models/VarianteProducto');
+const ProductoCompuesto = require('../models/ProductoCompuesto');
 
 /**
  * Generate a URL-friendly slug from product code and name
@@ -30,9 +32,10 @@ function generateProductSlug(codigo, nombre) {
  * Hides sensitive fields like cost and exact stock numbers
  * @param {Object} joya - Raw joya object from database
  * @param {boolean} includeStock - Whether to include exact stock count
+ * @param {Object} varianteInfo - Optional variant information
  * @returns {Object} Public product object
  */
-function transformToPublicProduct(joya, includeStock = false) {
+function transformToPublicProduct(joya, includeStock = false, varianteInfo = null) {
   const product = {
     id: joya.id,
     codigo: joya.codigo,
@@ -43,8 +46,20 @@ function transformToPublicProduct(joya, includeStock = false) {
     moneda: joya.moneda,
     stock_disponible: joya.stock_actual > 0,
     imagen_url: joya.imagen_url,
-    slug: generateProductSlug(joya.codigo, joya.nombre)
+    slug: generateProductSlug(joya.codigo, joya.nombre),
+    es_producto_variante: joya.es_producto_variante || false,
+    es_producto_compuesto: joya.es_producto_compuesto || false
   };
+  
+  // If this is a variant product, add variant information
+  if (varianteInfo) {
+    product.es_variante = true;
+    product.variante_id = varianteInfo.id;
+    product.variante_nombre = varianteInfo.nombre_variante;
+    product.nombre = `${joya.nombre} - ${varianteInfo.nombre_variante}`;
+    product.imagen_url = varianteInfo.imagen_url;
+    product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
+  }
   
   // Include exact stock count only for product detail view
   if (includeStock) {
@@ -58,6 +73,7 @@ function transformToPublicProduct(joya, includeStock = false) {
  * GET /api/public/products
  * Get all active products with optional filtering for storefront display
  * Only returns products with estado='Activo', stock > 0, and mostrar_en_storefront=true
+ * Expands products with variants into individual "virtual products"
  */
 router.get('/products', async (req, res) => {
   try {
@@ -79,15 +95,30 @@ router.get('/products', async (req, res) => {
 
     const resultado = await Joya.obtenerTodas(filtros);
 
-    // Transform data for public consumption (hide sensitive fields)
-    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
+    // Expand products with variants
+    const productosExpandidos = [];
+    
+    for (const joya of resultado.joyas) {
+      // If product has variants, expand each variant as a separate product
+      if (joya.es_producto_variante) {
+        const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
+        
+        for (const variante of variantes) {
+          const productoVariante = transformToPublicProduct(joya, false, variante);
+          productosExpandidos.push(productoVariante);
+        }
+      } else {
+        // Regular product without variants
+        productosExpandidos.push(transformToPublicProduct(joya));
+      }
+    }
 
     res.json({
-      products: productos,
-      total: resultado.total,
+      products: productosExpandidos,
+      total: productosExpandidos.length,
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: resultado.total_paginas
+      total_pages: Math.ceil(productosExpandidos.length / resultado.por_pagina)
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
@@ -126,6 +157,7 @@ router.get('/products/featured', async (req, res) => {
  * GET /api/public/products/:id
  * Get a single product by ID for product detail page
  * Only returns if product is active, has stock, and is visible in storefront
+ * Includes variant information if available
  */
 router.get('/products/:id', async (req, res) => {
   try {
@@ -148,6 +180,25 @@ router.get('/products/:id', async (req, res) => {
     // Include stock for cart validation
     const producto = transformToPublicProduct(joya, true);
 
+    // If product has variants, include them
+    if (joya.es_producto_variante) {
+      const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
+      producto.variantes = variantes.map(v => ({
+        id: v.id,
+        nombre: v.nombre_variante,
+        descripcion: v.descripcion_variante,
+        imagen_url: v.imagen_url
+      }));
+    }
+
+    // If product is a set, include component info
+    if (joya.es_producto_compuesto) {
+      const stockDisponible = await ProductoCompuesto.calcularStockDisponible(joya.id);
+      producto.stock_set = stockDisponible;
+      producto.stock = stockDisponible; // Override with calculated set stock
+      producto.stock_disponible = stockDisponible > 0;
+    }
+
     res.json(producto);
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -168,6 +219,49 @@ router.get('/categories', async (req, res) => {
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Error fetching categories' });
+  }
+});
+
+/**
+ * GET /api/public/products/:id/componentes
+ * Get components for a composite product (set)
+ * Returns component details for displaying in product detail page
+ */
+router.get('/products/:id/componentes', async (req, res) => {
+  try {
+    const joya = await Joya.obtenerPorId(req.params.id);
+
+    if (!joya || !joya.es_producto_compuesto) {
+      return res.status(404).json({ error: 'Composite product not found' });
+    }
+
+    // Get components with details
+    const componentes = await ProductoCompuesto.obtenerComponentesConDetalles(req.params.id);
+
+    // Calculate set stock
+    const stockDisponible = await ProductoCompuesto.calcularStockDisponible(req.params.id);
+
+    // Transform components for public consumption
+    const componentesPublicos = componentes.map(comp => ({
+      id: comp.producto.id,
+      codigo: comp.producto.codigo,
+      nombre: comp.producto.nombre,
+      precio: comp.producto.precio_venta,
+      moneda: comp.producto.moneda,
+      stock_disponible: comp.producto.stock_actual > 0,
+      stock: comp.producto.stock_actual,
+      imagen_url: comp.producto.imagen_url,
+      cantidad_requerida: comp.cantidad_requerida
+    }));
+
+    res.json({
+      componentes: componentesPublicos,
+      stock_set: stockDisponible,
+      completo: stockDisponible > 0
+    });
+  } catch (error) {
+    console.error('Error fetching product components:', error);
+    res.status(500).json({ error: 'Error fetching components' });
   }
 });
 
