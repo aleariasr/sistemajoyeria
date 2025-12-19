@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crearJoya, actualizarJoya, obtenerJoya, verificarCodigoJoya } from '../services/api';
+import GaleriaImagenesJoya from './GaleriaImagenesJoya';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
@@ -561,6 +562,16 @@ function FormularioJoya() {
           )}
         </div>
       </div>
+
+      {/* Galería de múltiples imágenes - Solo mostrar en modo edición */}
+      {esEdicion && id && (
+        <div className="card" style={{ marginTop: '20px' }}>
+          <GaleriaImagenesJoya 
+            idJoya={id}
+            onCambio={cargarJoya}
+          />
+        </div>
+      )}
 
       {/* Botones de acción */}
       <div className="modal-footer" style={{ marginTop: '20px' }}>
