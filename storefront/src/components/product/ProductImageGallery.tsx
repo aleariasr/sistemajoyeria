@@ -31,6 +31,15 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
       <motion.div
         className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
         onClick={() => setIsZoomed(true)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsZoomed(true);
+          }
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label="Click to zoom image"
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.2 }}
       >
@@ -108,10 +117,13 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
               />
             </motion.div>
             <button
-              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300"
+              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => setIsZoomed(false)}
+              aria-label="Close zoom view"
+              type="button"
             >
-              ×
+              <span aria-hidden="true">×</span>
+              <span className="sr-only">Close</span>
             </button>
           </motion.div>
         )}

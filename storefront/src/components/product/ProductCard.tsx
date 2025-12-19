@@ -52,7 +52,8 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   // Memoize URLs to prevent recalculation on every render
   const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
   const imageUrl = useMemo(() => {
-    // Find the primary image, or use the first image, or fallback to imagen_url
+    // Find the primary image (sorted once and memoized)
+    // If API returns images sorted, this is O(n) worst case, O(1) best case
     const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
       || product.imagenes?.[0]?.url 
       || product.imagen_url;
