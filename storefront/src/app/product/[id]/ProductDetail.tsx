@@ -14,8 +14,8 @@ import { useCartStore } from '@/hooks/useCart';
 import { Button } from '@/components/ui/Button';
 import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
-import { ImageZoom } from '@/components/ui/ImageZoom';
-import { formatPrice, optimizeCloudinaryImage } from '@/lib/utils';
+import { ProductImageGallery } from '@/components/product/ProductImageGallery';
+import { formatPrice } from '@/lib/utils';
 
 interface ProductDetailProps {
   productId: number;
@@ -76,22 +76,6 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     }
   };
 
-  const imageUrl = optimizeCloudinaryImage(product.imagen_url, {
-  width: 1200,
-  height: 1200,
-  quality: 'auto:best',
-  crop: 'fill',
-  gravity: 'south',
-});
-
-  const highResImageUrl = optimizeCloudinaryImage(product.imagen_url, {
-    width: 2400,
-    height: 2400,
-    quality: 'auto:best',
-    crop: 'fill',
-    gravity: 'south',
-  });
-
   return (
     <div>
       {/* Breadcrumb */}
@@ -120,27 +104,22 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Image with Zoom */}
+        {/* Product Image Gallery with Zoom */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-primary-50">
-            <ImageZoom
-              src={imageUrl}
-              alt={product.nombre}
-              highResSrc={highResImageUrl}
-              className="aspect-square rounded-3xl overflow-hidden"
-              priority
-            />
-            {product.categoria && (
-              <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm pointer-events-none z-10">
-                {product.categoria}
-              </span>
-            )}
-          </div>
+          <ProductImageGallery 
+            imagenes={product.imagenes || []}
+            productName={product.nombre}
+          />
+          {product.categoria && (
+            <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm pointer-events-none z-10">
+              {product.categoria}
+            </span>
+          )}
         </motion.div>
 
         {/* Product Info */}
