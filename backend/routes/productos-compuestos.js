@@ -166,24 +166,22 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get component data before deleting
-    const { data: componentData } = await require('../supabase-db').supabase
-      .from('productos_compuestos')
-      .select('id_producto_set')
-      .eq('id', id)
-      .single();
-
+    // Get component data using model method
+    const componentData = await ProductoCompuesto.obtenerPorId(id);
+    
     if (!componentData) {
       return res.status(404).json({ error: 'Component not found' });
     }
+
+    const idProductoSet = componentData.id_producto_set;
 
     // Delete component
     await ProductoCompuesto.eliminarComponente(id);
 
     // Check if this was the last component - if so, unmark set
-    const componentesRestantes = await ProductoCompuesto.contarComponentes(componentData.id_producto_set);
+    const componentesRestantes = await ProductoCompuesto.contarComponentes(idProductoSet);
     if (componentesRestantes === 0) {
-      await Joya.actualizar(componentData.id_producto_set, { es_producto_compuesto: false });
+      await Joya.actualizar(idProductoSet, { es_producto_compuesto: false });
     }
 
     res.json({

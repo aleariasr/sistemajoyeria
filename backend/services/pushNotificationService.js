@@ -27,6 +27,12 @@ if (vapidPublicKey && vapidPrivateKey) {
 
 /**
  * Rate limiting for push notifications
+ * 
+ * NOTE: This is an in-memory implementation suitable for single-instance deployments.
+ * For production multi-instance deployments, consider using:
+ * - Redis for distributed rate limiting
+ * - Database-backed rate limiting
+ * - Dedicated rate limiting service (e.g., rate-limiter-flexible)
  */
 const notificationCounts = new Map();
 const MAX_NOTIFICATIONS_PER_HOUR = 100;

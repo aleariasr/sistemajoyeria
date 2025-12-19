@@ -30,6 +30,7 @@ const {
   actualizarStockVenta,
   validarStockPedidoOnline
 } = require('../services/productService');
+const { formatPrice } = require('../utils/formatters');
 
 // ============================================
 // HELPER FUNCTIONS
@@ -260,14 +261,6 @@ router.post('/public/orders', async (req, res) => {
     // ====== SEND PUSH NOTIFICATIONS ======
     
     // Send push notification to all authenticated POS users
-    const formatPrice = (price) => {
-      return new Intl.NumberFormat('es-CR', {
-        style: 'currency',
-        currency: 'CRC',
-        minimumFractionDigits: 0
-      }).format(price);
-    };
-
     const pushPayload = crearPayload({
       title: '🛍️ Nuevo Pedido Online',
       body: `${sanitizedCustomer.nombre} - Total: ${formatPrice(subtotal)}`,

@@ -86,6 +86,25 @@ class ProductoCompuesto {
   }
 
   /**
+   * Get component relationship by ID
+   * @param {number} id - Component relationship ID
+   * @returns {Promise<Object|null>} Component relationship
+   */
+  static async obtenerPorId(id) {
+    const { data, error } = await supabase
+      .from('productos_compuestos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
    * Get all components for a set with full product details
    * @param {number} idProductoSet - Set product ID
    * @returns {Promise<Array>} List of components with product details

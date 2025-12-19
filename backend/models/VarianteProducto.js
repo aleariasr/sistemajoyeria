@@ -31,8 +31,13 @@ class VarianteProducto {
     }
 
     // Validate imagen_url is from Cloudinary (security)
-    if (!imagen_url.includes('cloudinary.com')) {
-      throw new Error('Image URL must be from Cloudinary');
+    try {
+      const url = new URL(imagen_url);
+      if (!url.hostname.endsWith('cloudinary.com') && !url.hostname.endsWith('res.cloudinary.com')) {
+        throw new Error('Image URL must be from Cloudinary');
+      }
+    } catch (error) {
+      throw new Error('Invalid image URL or must be from Cloudinary');
     }
 
     const { data, error } = await supabase
@@ -126,10 +131,15 @@ class VarianteProducto {
     }
     if (imagen_url !== undefined) {
       // Validate imagen_url is from Cloudinary
-      if (!imagen_url.includes('cloudinary.com')) {
-        throw new Error('Image URL must be from Cloudinary');
+      try {
+        const url = new URL(imagen_url);
+        if (!url.hostname.endsWith('cloudinary.com') && !url.hostname.endsWith('res.cloudinary.com')) {
+          throw new Error('Image URL must be from Cloudinary');
+        }
+        updateData.imagen_url = imagen_url;
+      } catch (error) {
+        throw new Error('Invalid image URL or must be from Cloudinary');
       }
-      updateData.imagen_url = imagen_url;
     }
     if (orden_display !== undefined) {
       updateData.orden_display = orden_display;
