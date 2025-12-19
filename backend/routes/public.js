@@ -14,6 +14,7 @@
 const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
+const ImagenJoya = require('../models/ImagenJoya');
 
 /**
  * Generate a URL-friendly slug from product code and name
@@ -43,6 +44,7 @@ function transformToPublicProduct(joya, includeStock = false) {
     moneda: joya.moneda,
     stock_disponible: joya.stock_actual > 0,
     imagen_url: joya.imagen_url,
+    imagenes: joya.imagenes || [], // NUEVO: Todas las imágenes
     slug: generateProductSlug(joya.codigo, joya.nombre)
   };
   
@@ -80,7 +82,17 @@ router.get('/products', async (req, res) => {
     const resultado = await Joya.obtenerTodas(filtros);
 
     // Transform data for public consumption (hide sensitive fields)
-    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
+    // Get images for each product
+    const productos = await Promise.all(resultado.joyas.map(async (joya) => {
+      const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+      joya.imagenes = imagenes.map(img => ({
+        id: img.id,
+        url: img.imagen_url,
+        orden: img.orden_display,
+        es_principal: img.es_principal
+      }));
+      return transformToPublicProduct(joya);
+    }));
 
     res.json({
       products: productos,
@@ -113,7 +125,17 @@ router.get('/products/featured', async (req, res) => {
     const resultado = await Joya.obtenerTodas(filtros);
 
     // Transform data for public consumption
-    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
+    // Get images for each product
+    const productos = await Promise.all(resultado.joyas.map(async (joya) => {
+      const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+      joya.imagenes = imagenes.map(img => ({
+        id: img.id,
+        url: img.imagen_url,
+        orden: img.orden_display,
+        es_principal: img.es_principal
+      }));
+      return transformToPublicProduct(joya);
+    }));
 
     res.json({ products: productos });
   } catch (error) {
@@ -144,6 +166,15 @@ router.get('/products/:id', async (req, res) => {
     if (!joya.mostrar_en_storefront) {
       return res.status(404).json({ error: 'Product not available' });
     }
+
+    // Get all images for this product
+    const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+    joya.imagenes = imagenes.map(img => ({
+      id: img.id,
+      url: img.imagen_url,
+      orden: img.orden_display,
+      es_principal: img.es_principal
+    }));
 
     // Include stock for cart validation
     const producto = transformToPublicProduct(joya, true);

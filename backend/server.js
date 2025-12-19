@@ -334,6 +334,7 @@ const clientesRoutes = require('./routes/clientes');
 const cuentasPorCobrarRoutes = require('./routes/cuentas-por-cobrar');
 const ingresosExtrasRoutes = require('./routes/ingresos-extras');
 const devolucionesRoutes = require('./routes/devoluciones');
+const imagenesJoyaRoutes = require('./routes/imagenes-joya');
 // Public routes for storefront (no authentication required)
 const publicRoutes = require('./routes/public');
 // Online orders management (includes public and admin routes)
@@ -349,6 +350,7 @@ app.use('/api/clientes', clientesRoutes);
 app.use('/api/cuentas-por-cobrar', cuentasPorCobrarRoutes);
 app.use('/api/ingresos-extras', ingresosExtrasRoutes);
 app.use('/api/devoluciones', devolucionesRoutes);
+app.use('/api', imagenesJoyaRoutes);
 // Public API for storefront - accessible without authentication
 app.use('/api/public', publicRoutes);
 // Online orders API - includes both public and admin routes
