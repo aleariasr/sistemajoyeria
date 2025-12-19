@@ -21,6 +21,15 @@ const {
   enviarNotificacionEnvio,
   enviarCancelacionPedido
 } = require('../services/emailService');
+const {
+  enviarATodos,
+  crearPayload
+} = require('../services/pushNotificationService');
+const {
+  validarYPrepararItem,
+  actualizarStockVenta,
+  validarStockPedidoOnline
+} = require('../services/productService');
 
 // ============================================
 // HELPER FUNCTIONS
@@ -186,42 +195,29 @@ router.post('/public/orders', async (req, res) => {
         });
       }
 
-      // Get product details
-      const joya = await Joya.obtenerPorId(item.product_id);
+      // Validate product and stock (handles both regular and composite products)
+      try {
+        const joya = await validarStockPedidoOnline(item);
 
-      if (!joya) {
-        return res.status(404).json({
-          error: `Producto con ID ${item.product_id} no encontrado`,
-          field: 'product_id'
+        const itemSubtotal = joya.precio_venta * item.quantity;
+        subtotal += itemSubtotal;
+
+        itemsValidados.push({
+          id_joya: joya.id,
+          nombre_producto: joya.nombre,
+          precio_unitario: joya.precio_venta,
+          cantidad: item.quantity,
+          subtotal: itemSubtotal,
+          imagen_url: joya.imagen_url,
+          stock_actual: joya.stock_actual,
+          es_producto_compuesto: joya.es_producto_compuesto
         });
-      }
-
-      if (joya.estado !== 'Activo') {
+      } catch (error) {
         return res.status(400).json({
-          error: `El producto "${joya.nombre}" no está disponible`,
-          field: 'product_id'
+          error: error.message,
+          field: 'product_validation'
         });
       }
-
-      if (joya.stock_actual < item.quantity) {
-        return res.status(400).json({
-          error: `Stock insuficiente para "${joya.nombre}". Disponible: ${joya.stock_actual}`,
-          field: 'stock'
-        });
-      }
-
-      const itemSubtotal = joya.precio_venta * item.quantity;
-      subtotal += itemSubtotal;
-
-      itemsValidados.push({
-        id_joya: joya.id,
-        nombre_producto: joya.nombre,
-        precio_unitario: joya.precio_venta,
-        cantidad: item.quantity,
-        subtotal: itemSubtotal,
-        imagen_url: joya.imagen_url,
-        stock_actual: joya.stock_actual // Keep for later stock update
-      });
     }
 
     // ====== CREATE ORDER ======
@@ -259,6 +255,37 @@ router.post('/public/orders', async (req, res) => {
     // Send notification to admin (async, don't wait)
     notificarNuevoPedido(pedidoCompleto, itemsCompletos).catch(err => {
       console.error('Error sending admin notification:', err);
+    });
+
+    // ====== SEND PUSH NOTIFICATIONS ======
+    
+    // Send push notification to all authenticated POS users
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat('es-CR', {
+        style: 'currency',
+        currency: 'CRC',
+        minimumFractionDigits: 0
+      }).format(price);
+    };
+
+    const pushPayload = crearPayload({
+      title: '🛍️ Nuevo Pedido Online',
+      body: `${sanitizedCustomer.nombre} - Total: ${formatPrice(subtotal)}`,
+      icon: '/icon-192x192.png',
+      badge: '/badge-72x72.png',
+      data: {
+        url: '/pedidos-online',
+        pedidoId: idPedido,
+        tipo: 'nuevo_pedido'
+      },
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      tag: 'pedido-online'
+    });
+
+    enviarATodos(pushPayload).catch(err => {
+      console.error('Error sending push notification:', err);
+      // Don't fail the order creation if notification fails
     });
 
     // ====== RESPONSE ======
@@ -424,12 +451,33 @@ router.patch('/pedidos-online/:id/estado', requireAuth, async (req, res) => {
     if (estado === 'Confirmado' && estadoActual === 'pendiente') {
       // CONFIRMING ORDER: Verify stock, create sale, update inventory
       
-      // 1. Verify stock availability
+      // 1. Prepare items and verify stock availability (handles sets)
+      const itemsPreparados = [];
       for (const item of items) {
-        const joya = await Joya.obtenerPorId(item.id_joya);
-        if (joya.stock_actual < item.cantidad) {
+        try {
+          const joya = await Joya.obtenerPorId(item.id_joya);
+          if (!joya) {
+            return res.status(404).json({
+              error: `Producto con ID ${item.id_joya} no encontrado`,
+              field: 'product_id'
+            });
+          }
+          
+          const itemPreparado = await validarYPrepararItem(
+            {
+              id_joya: item.id_joya,
+              cantidad: item.cantidad,
+              precio_unitario: item.precio_unitario
+            },
+            req.session.username || 'Admin'
+          );
+          itemsPreparados.push({
+            ...item,
+            ...itemPreparado
+          });
+        } catch (error) {
           return res.status(400).json({
-            error: `Stock insuficiente para "${item.nombre_producto}". Disponible: ${joya.stock_actual}`,
+            error: error.message,
             field: 'stock'
           });
         }
@@ -450,8 +498,8 @@ router.patch('/pedidos-online/:id/estado', requireAuth, async (req, res) => {
       const resultadoVenta = await Venta.crear(ventaData);
       const idVenta = resultadoVenta.id;
 
-      // 3. Create sale items and update stock
-      for (const item of items) {
+      // 3. Create sale items and update stock (handles sets)
+      for (const item of itemsPreparados) {
         // Create sale item
         await ItemVenta.crear({
           id_venta: idVenta,
@@ -461,21 +509,8 @@ router.patch('/pedidos-online/:id/estado', requireAuth, async (req, res) => {
           subtotal: item.subtotal
         });
 
-        // Update stock
-        const joya = await Joya.obtenerPorId(item.id_joya);
-        const nuevoStock = joya.stock_actual - item.cantidad;
-        await Joya.actualizarStock(item.id_joya, nuevoStock);
-
-        // Record inventory movement
-        await MovimientoInventario.crear({
-          id_joya: item.id_joya,
-          tipo_movimiento: 'Salida',
-          cantidad: item.cantidad,
-          motivo: `Pedido online #${id} confirmado`,
-          usuario: req.session.username || 'Admin',
-          stock_antes: joya.stock_actual,
-          stock_despues: nuevoStock
-        });
+        // Update stock (handles both regular and composite products)
+        await actualizarStockVenta(item, `Pedido online #${id} confirmado`, req.session.username || 'Admin');
       }
 
       // 4. Link order to sale
