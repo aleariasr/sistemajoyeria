@@ -80,7 +80,9 @@ function PedidosOnline() {
       setMostrarModal(true);
     } catch (error) {
       console.error('Error al cargar detalle:', error);
-      alert('Error al cargar detalles del pedido');
+      console.log('DETALLE BACKEND:', error.response?.data);
+      console.log('STATUS:', error.response?.status);
+    alert('Error al cargar detalles del pedido');
     }
   };
 
@@ -110,7 +112,7 @@ function PedidosOnline() {
     setProcesando(true);
     try {
       await actualizarEstadoPedido(pedidoSeleccionado.id, { 
-        estado: nuevoEstado, 
+        estado: mapEstado[nuevoEstado], 
         motivo 
       });
       
@@ -148,6 +150,13 @@ function PedidosOnline() {
     setPaginacion({ ...paginacion, pagina: 1 });
     cargarPedidos();
   };
+
+  const mapEstado = {
+  Confirmado: 'pago_verificado',
+  Enviado: 'enviado',
+  Entregado: 'entregado',
+  Cancelado: 'cancelado'
+};
 
   const limpiarFiltros = () => {
     setFiltros({
@@ -397,33 +406,32 @@ function PedidosOnline() {
               {/* Productos */}
               <div className="seccion">
                 <h3>📦 Productos</h3>
-                <div className="items-lista">
-                  {pedidoSeleccionado.items_pedido_online?.map((item) => (
-                    <div key={item.id} className="item-card">
-                      {item.imagen_url && (
-                        <img src={item.imagen_url} alt={item.nombre_producto} />
-                      )}
-                      <div className="item-info">
-                        <div className="item-nombre">{item.nombre_producto || 'Producto'}</div>
-                        <div className="item-detalle">
-                          Cantidad: {item.cantidad} × {formatearMoneda(item.precio_unitario)}
-                        </div>
-                      </div>
-                      <div className="item-precio">
-                        {formatearMoneda(item.subtotal)}
+                {pedidoSeleccionado.items?.map((item) => (
+                  <div key={item.id} className="item-card">
+                    {item.imagen_url && (
+                      <img src={item.imagen_url} alt={item.nombre_producto} />
+                    )}
+                    <div className="item-info">
+                      <div className="item-nombre">{item.nombre_producto || 'Producto'}</div>
+                      <div className="item-detalle">
+                        Cantidad: {item.cantidad} × {formatearMoneda(item.precio_unitario)}
                       </div>
                     </div>
-                  ))}
+                    <div className="item-precio">
+                      {formatearMoneda(item.subtotal)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="total-section">
+                <div className="total-row">
+                  <span>Subtotal:</span>
+                  <span>{formatearMoneda(pedidoSeleccionado.subtotal)}</span>
                 </div>
-                <div className="total-section">
-                  <div className="total-row">
-                    <span>Subtotal:</span>
-                    <span>{formatearMoneda(pedidoSeleccionado.subtotal)}</span>
-                  </div>
-                  <div className="total-row total-final">
-                    <span>Total:</span>
-                    <span>{formatearMoneda(pedidoSeleccionado.total)}</span>
-                  </div>
+                <div className="total-row total-final">
+                  <span>Total:</span>
+                  <span>{formatearMoneda(pedidoSeleccionado.total)}</span>
                 </div>
               </div>
 

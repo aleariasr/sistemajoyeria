@@ -392,7 +392,7 @@ router.patch('/pedidos-online/:id/estado', requireAuth, async (req, res) => {
     const { estado, motivo } = req.body;
 
     // Validate new status
-    const estadosValidos = ['Pendiente', 'Confirmado', 'Enviado', 'Entregado', 'Cancelado'];
+    const estadosValidos = ['pendiente', 'pago_verificado', 'en_proceso', 'enviado', 'entregado', 'cancelado'];
     if (!estadosValidos.includes(estado)) {
       return res.status(400).json({
         error: 'Estado inválido',
