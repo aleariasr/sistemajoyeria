@@ -4,38 +4,11 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductImage } from '@/lib/types';
+import { optimizeCloudinaryImage } from '@/lib/utils';
 
 interface ProductImageGalleryProps {
   imagenes: ProductImage[];
   productName: string;
-}
-
-/**
- * Optimize Cloudinary image URL
- */
-function optimizeCloudinaryImage(
-  url: string | null, 
-  options: { width?: number; height?: number; quality?: string; crop?: string; gravity?: string } = {}
-): string {
-  if (!url) return '/placeholder-product.jpg';
-  
-  // Only optimize Cloudinary URLs
-  if (!url.includes('cloudinary.com')) return url;
-  
-  const { width = 800, height = 800, quality = 'auto:best', crop, gravity } = options;
-  
-  try {
-    const urlParts = url.split('/upload/');
-    if (urlParts.length !== 2) return url;
-    
-    let transforms = [`w_${width}`, `h_${height}`, `q_${quality}`, 'f_auto'];
-    if (crop) transforms.push(`c_${crop}`);
-    if (gravity) transforms.push(`g_${gravity}`);
-    
-    return `${urlParts[0]}/upload/${transforms.join(',')}/${urlParts[1]}`;
-  } catch {
-    return url;
-  }
 }
 
 export function ProductImageGallery({ imagenes, productName }: ProductImageGalleryProps) {

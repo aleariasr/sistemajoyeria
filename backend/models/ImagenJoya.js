@@ -74,23 +74,25 @@ class ImagenJoya {
    * Actualizar orden de múltiples imágenes
    */
   static async actualizarOrden(actualizaciones) {
-    // actualizaciones = [{ id: 1, orden_display: 0, es_principal: true }, ...]
+    // actualizaciones = [{ id: 1, orden_display: 0, es_principal: true, imagen_url: ... }, ...]
     
     for (const img of actualizaciones) {
+      const updateData = {
+        orden_display: img.orden_display,
+        es_principal: img.es_principal || false
+      };
+      
       const { error } = await supabase
         .from('imagenes_joya')
-        .update({
-          orden_display: img.orden_display,
-          es_principal: img.es_principal || false
-        })
+        .update(updateData)
         .eq('id', img.id);
       
       if (error) throw error;
       
-      // Si es la nueva principal, actualizar joyas.imagen_url
-      if (img.es_principal && img.imagen_url) {
+      // Si es la nueva principal, obtener la imagen y actualizar joyas.imagen_url
+      if (img.es_principal) {
         const imagenActual = await this.obtenerPorId(img.id);
-        await this.actualizarImagenPrincipal(imagenActual.id_joya, img.imagen_url);
+        await this.actualizarImagenPrincipal(imagenActual.id_joya, imagenActual.imagen_url);
       }
     }
     

@@ -208,8 +208,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
         const actualizaciones = nuevasImagenes.map((img, index) => ({
           id: img.id,
           orden_display: index,
-          es_principal: index === 0, // Primera imagen siempre es principal
-          imagen_url: img.imagen_url,
+          es_principal: img.es_principal, // Preserve existing primary flag
         }));
 
         await axios.put('/api/imagenes-joya/reordenar', { imagenes: actualizaciones });
@@ -403,7 +402,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       ) : (
         <>
           <p className="galeria-hint">
-            💡 Arrastra las imágenes para reordenar. La primera imagen es la principal.
+            💡 Arrastra las imágenes para reordenar. Usa el botón ⭐ para cambiar la imagen principal.
           </p>
           
           <DndContext
