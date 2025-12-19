@@ -52,8 +52,10 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   // Memoize URLs to prevent recalculation on every render
   const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
   const imageUrl = useMemo(() => {
-    // Use first image from gallery if available, otherwise fallback to imagen_url
-    const imagenPrincipal = product.imagenes?.[0]?.url || product.imagen_url;
+    // Find the primary image, or use the first image, or fallback to imagen_url
+    const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
+      || product.imagenes?.[0]?.url 
+      || product.imagen_url;
     return optimizeCloudinaryImage(imagenPrincipal, {
       width: 800,
       height: 800,

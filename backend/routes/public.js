@@ -81,10 +81,13 @@ router.get('/products', async (req, res) => {
 
     const resultado = await Joya.obtenerTodas(filtros);
 
+    // Bulk fetch images for all products to avoid N+1 queries
+    const joyaIds = resultado.joyas.map(j => j.id);
+    const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
+
     // Transform data for public consumption (hide sensitive fields)
-    // Get images for each product
-    const productos = await Promise.all(resultado.joyas.map(async (joya) => {
-      const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+    const productos = resultado.joyas.map((joya) => {
+      const imagenes = imagesByJoya[joya.id] || [];
       joya.imagenes = imagenes.map(img => ({
         id: img.id,
         url: img.imagen_url,
@@ -92,7 +95,7 @@ router.get('/products', async (req, res) => {
         es_principal: img.es_principal
       }));
       return transformToPublicProduct(joya);
-    }));
+    });
 
     res.json({
       products: productos,
@@ -124,10 +127,13 @@ router.get('/products/featured', async (req, res) => {
 
     const resultado = await Joya.obtenerTodas(filtros);
 
+    // Bulk fetch images for all products to avoid N+1 queries
+    const joyaIds = resultado.joyas.map(j => j.id);
+    const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
+
     // Transform data for public consumption
-    // Get images for each product
-    const productos = await Promise.all(resultado.joyas.map(async (joya) => {
-      const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+    const productos = resultado.joyas.map((joya) => {
+      const imagenes = imagesByJoya[joya.id] || [];
       joya.imagenes = imagenes.map(img => ({
         id: img.id,
         url: img.imagen_url,
@@ -135,7 +141,7 @@ router.get('/products/featured', async (req, res) => {
         es_principal: img.es_principal
       }));
       return transformToPublicProduct(joya);
-    }));
+    });
 
     res.json({ products: productos });
   } catch (error) {

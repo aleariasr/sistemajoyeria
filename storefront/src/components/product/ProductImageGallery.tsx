@@ -3,13 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface ProductImage {
-  id: number;
-  url: string;
-  orden: number;
-  es_principal: boolean;
-}
+import type { ProductImage } from '@/lib/types';
 
 interface ProductImageGalleryProps {
   imagenes: ProductImage[];

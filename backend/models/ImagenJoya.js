@@ -43,6 +43,34 @@ class ImagenJoya {
   }
 
   /**
+   * Obtener imágenes para múltiples joyas (optimizado para evitar N+1)
+   */
+  static async obtenerPorJoyas(ids_joyas) {
+    if (!ids_joyas || ids_joyas.length === 0) {
+      return {};
+    }
+
+    const { data, error } = await supabase
+      .from('imagenes_joya')
+      .select('*')
+      .in('id_joya', ids_joyas)
+      .order('orden_display', { ascending: true });
+
+    if (error) throw error;
+
+    // Group images by joya id
+    const imagesByJoya = {};
+    (data || []).forEach(img => {
+      if (!imagesByJoya[img.id_joya]) {
+        imagesByJoya[img.id_joya] = [];
+      }
+      imagesByJoya[img.id_joya].push(img);
+    });
+
+    return imagesByJoya;
+  }
+
+  /**
    * Actualizar orden de múltiples imágenes
    */
   static async actualizarOrden(actualizaciones) {
