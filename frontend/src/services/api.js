@@ -151,3 +151,27 @@ export const obtenerPedidoOnline = (id) => api.get(`/pedidos-online/${id}`);
 export const actualizarEstadoPedido = (id, data) => api.patch(`/pedidos-online/${id}/estado`, data);
 export const actualizarNotasPedido = (id, data) => api.patch(`/pedidos-online/${id}`, data);
 export const obtenerResumenPedidos = () => api.get('/pedidos-online/resumen/stats');
+
+// ------- VARIANTES DE PRODUCTO -------
+export const crearVariante = (data) => api.post('/variantes', data);
+export const obtenerVariante = (id) => api.get(`/variantes/${id}`);
+export const actualizarVariante = (id, data) => api.put(`/variantes/${id}`, data);
+export const eliminarVariante = (id) => api.delete(`/variantes/${id}`);
+export const obtenerVariantesPorProducto = (idProducto, soloActivas = false) => 
+  api.get(`/variantes/producto/${idProducto}`, { params: { activas: soloActivas } });
+export const reordenarVariantes = (ordenes) => api.post('/variantes/reordenar', { ordenes });
+
+// ------- PRODUCTOS COMPUESTOS (SETS) -------
+export const agregarComponente = (data) => api.post('/productos-compuestos', data);
+export const obtenerComponentesSet = (idSet) => api.get(`/productos-compuestos/set/${idSet}`);
+export const eliminarComponente = (id) => api.delete(`/productos-compuestos/${id}`);
+export const actualizarCantidadComponente = (id, cantidad) => 
+  api.put(`/productos-compuestos/${id}/cantidad`, { cantidad });
+export const validarStockSet = (idSet, cantidad = 1) => 
+  api.get(`/productos-compuestos/validar-stock/${idSet}`, { params: { cantidad } });
+
+// ------- NOTIFICACIONES PUSH -------
+export const obtenerVapidPublicKey = () => api.get('/notifications/vapid-public');
+export const suscribirseNotificaciones = (subscription) => api.post('/notifications/subscribe', subscription);
+export const desuscribirseNotificaciones = (endpoint) => api.delete('/notifications/unsubscribe', { data: { endpoint } });
+export const enviarNotificacionPrueba = (data = {}) => api.post('/notifications/test', data);

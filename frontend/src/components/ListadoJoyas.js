@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 import BarcodeModal from './BarcodeModal';
+import NotificacionesPush from './NotificacionesPush';
 
 // Constantes para thumbnail de imagen
 const THUMBNAIL_SIZE = '50px';
@@ -183,6 +184,9 @@ function ListadoJoyas() {
         <h2>Inventario de Joyas</h2>
         <p>Gestiona el inventario completo de tu joyería</p>
       </div>
+
+      {/* Push Notifications Banner */}
+      <NotificacionesPush />
 
       {mensaje && <div className="alert alert-success">{mensaje}</div>}
       {error && <div className="alert alert-error">{error}</div>}
