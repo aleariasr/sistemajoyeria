@@ -4,6 +4,16 @@
  */
 
 /**
+ * Product image in gallery
+ */
+export interface ProductImage {
+  id: number;
+  url: string;
+  orden: number;
+  es_principal: boolean;
+}
+
+/**
  * Product type as returned by the public API
  */
 export interface Product {
@@ -16,7 +26,8 @@ export interface Product {
   moneda: 'CRC' | 'USD' | 'EUR';
   stock_disponible: boolean;
   stock?: number; // Only available in product detail
-  imagen_url: string | null;
+  imagen_url: string | null; // Imagen principal
+  imagenes: ProductImage[]; // NUEVO: Galería completa
   slug: string;
 }
 

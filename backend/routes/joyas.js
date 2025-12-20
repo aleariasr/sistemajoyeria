@@ -333,4 +333,31 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// POST /api/joyas/upload-image - Subir imagen independiente
+router.post('/upload-image', uploadMiddleware, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+    }
+
+    // Subir imagen a Cloudinary
+    const resultadoImagen = await uploadImage(req.file.path, 'joyas');
+    
+    // Limpiar archivo temporal
+    cleanupTempFile(req.file.path);
+    
+    res.json({
+      url: resultadoImagen.url,
+      publicId: resultadoImagen.publicId
+    });
+  } catch (error) {
+    console.error('Error al subir imagen:', error);
+    // Limpiar archivo temporal si existe
+    if (req.file) {
+      cleanupTempFile(req.file.path);
+    }
+    res.status(500).json({ error: 'Error al subir imagen' });
+  }
+});
+
 module.exports = router;

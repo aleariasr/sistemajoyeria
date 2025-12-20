@@ -51,13 +51,20 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
 
   // Memoize URLs to prevent recalculation on every render
   const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
-  const imageUrl = useMemo(() => optimizeCloudinaryImage(product.imagen_url, {
-    width: 800,
-    height: 800,
-    quality: 'auto:best',
-    crop: 'fill',
-    gravity: 'south',
-  }), [product.imagen_url]);
+  const imageUrl = useMemo(() => {
+    // Find the primary image (sorted once and memoized)
+    // If API returns images sorted, this is O(n) worst case, O(1) best case
+    const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
+      || product.imagenes?.[0]?.url 
+      || product.imagen_url;
+    return optimizeCloudinaryImage(imagenPrincipal, {
+      width: 800,
+      height: 800,
+      quality: 'auto:best',
+      crop: 'fill',
+      gravity: 'south',
+    });
+  }, [product.imagenes, product.imagen_url]);
 
   // Simplified animation config for better performance
   // Cap delay at 0.3s to avoid long waits for items further down the list

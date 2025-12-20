@@ -14,6 +14,7 @@
 const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
+const ImagenJoya = require('../models/ImagenJoya');
 const VarianteProducto = require('../models/VarianteProducto');
 const ProductoCompuesto = require('../models/ProductoCompuesto');
 
@@ -46,12 +47,12 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     moneda: joya.moneda,
     stock_disponible: joya.stock_actual > 0,
     imagen_url: joya.imagen_url,
+    imagenes: joya.imagenes || [],
     slug: generateProductSlug(joya.codigo, joya.nombre),
     es_producto_variante: joya.es_producto_variante || false,
     es_producto_compuesto: joya.es_producto_compuesto || false
   };
-  
-  // If this is a variant product, add variant information
+
   if (varianteInfo) {
     product.es_variante = true;
     product.variante_id = varianteInfo.id;
@@ -60,12 +61,11 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     product.imagen_url = varianteInfo.imagen_url;
     product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
   }
-  
-  // Include exact stock count only for product detail view
+
   if (includeStock) {
     product.stock = joya.stock_actual;
   }
-  
+
   return product;
 }
 
@@ -94,25 +94,30 @@ router.get('/products', async (req, res) => {
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
+    // Bulk fetch images for all products to avoid N+1 queries
+const joyaIds = resultado.joyas.map(j => j.id);
+const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
 
-    // Expand products with variants
-    const productosExpandidos = [];
-    
-    for (const joya of resultado.joyas) {
-      // If product has variants, expand each variant as a separate product
-      if (joya.es_producto_variante) {
-        const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
-        
-        for (const variante of variantes) {
-          const productoVariante = transformToPublicProduct(joya, false, variante);
-          productosExpandidos.push(productoVariante);
-        }
-      } else {
-        // Regular product without variants
-        productosExpandidos.push(transformToPublicProduct(joya));
-      }
+const productosExpandidos = [];
+
+for (const joya of resultado.joyas) {
+  const imagenes = imagesByJoya[joya.id] || [];
+  joya.imagenes = imagenes.map(img => ({
+    id: img.id,
+    url: img.imagen_url,
+    orden: img.orden_display,
+    es_principal: img.es_principal
+  }));
+
+  if (joya.es_producto_variante) {
+    const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
+    for (const variante of variantes) {
+      productosExpandidos.push(transformToPublicProduct(joya, false, variante));
     }
-
+  } else {
+    productosExpandidos.push(transformToPublicProduct(joya));
+  }
+}
     res.json({
       products: productosExpandidos,
       total: productosExpandidos.length,
@@ -143,8 +148,21 @@ router.get('/products/featured', async (req, res) => {
 
     const resultado = await Joya.obtenerTodas(filtros);
 
+    // Bulk fetch images for all products to avoid N+1 queries
+    const joyaIds = resultado.joyas.map(j => j.id);
+    const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
+
     // Transform data for public consumption
-    const productos = resultado.joyas.map(joya => transformToPublicProduct(joya));
+    const productos = resultado.joyas.map((joya) => {
+      const imagenes = imagesByJoya[joya.id] || [];
+      joya.imagenes = imagenes.map(img => ({
+        id: img.id,
+        url: img.imagen_url,
+        orden: img.orden_display,
+        es_principal: img.es_principal
+      }));
+      return transformToPublicProduct(joya);
+    });
 
     res.json({ products: productos });
   } catch (error) {
@@ -176,6 +194,15 @@ router.get('/products/:id', async (req, res) => {
     if (!joya.mostrar_en_storefront) {
       return res.status(404).json({ error: 'Product not available' });
     }
+
+    // Get all images for this product
+    const imagenes = await ImagenJoya.obtenerPorJoya(joya.id);
+    joya.imagenes = imagenes.map(img => ({
+      id: img.id,
+      url: img.imagen_url,
+      orden: img.orden_display,
+      es_principal: img.es_principal
+    }));
 
     // Include stock for cart validation
     const producto = transformToPublicProduct(joya, true);
