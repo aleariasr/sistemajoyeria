@@ -338,6 +338,10 @@ const devolucionesRoutes = require('./routes/devoluciones');
 const publicRoutes = require('./routes/public');
 // Online orders management (includes public and admin routes)
 const pedidosOnlineRoutes = require('./routes/pedidos-online');
+// New features routes
+const variantesRoutes = require('./routes/variantes');
+const productosCompuestosRoutes = require('./routes/productos-compuestos');
+const notificationsRoutes = require('./routes/notifications');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -353,6 +357,10 @@ app.use('/api/devoluciones', devolucionesRoutes);
 app.use('/api/public', publicRoutes);
 // Online orders API - includes both public and admin routes
 app.use('/api', pedidosOnlineRoutes);
+// New features APIs
+app.use('/api/variantes', variantesRoutes);
+app.use('/api/productos-compuestos', productosCompuestosRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 
 /* ============================================================
