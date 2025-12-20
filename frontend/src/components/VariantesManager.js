@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   obtenerVariantesPorProducto,
   crearVariante,
@@ -24,13 +24,7 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
   const [imagenPreview, setImagenPreview] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (productoId) {
-      cargarVariantes();
-    }
-  }, [productoId]);
-
-  const cargarVariantes = async () => {
+  const cargarVariantes = useCallback(async () => {
     try {
       setLoading(true);
       const response = await obtenerVariantesPorProducto(productoId);
@@ -44,7 +38,13 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productoId, onVariantesChange]);
+
+  useEffect(() => {
+    if (productoId) {
+      cargarVariantes();
+    }
+  }, [productoId, cargarVariantes]);
 
   const abrirModal = (variante = null) => {
     if (variante) {

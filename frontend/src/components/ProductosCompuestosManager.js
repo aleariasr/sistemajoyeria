@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   obtenerComponentesSet,
   agregarComponente,
   eliminarComponente,
-  actualizarCantidadComponente,
-  validarStockSet,
   obtenerJoyas
 } from '../services/api';
 import './ProductosCompuestosManager.css';
@@ -20,13 +18,7 @@ function ProductosCompuestosManager({ setId, nombreSet, onComponentesChange }) {
   const [cantidad, setCantidad] = useState(1);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (setId) {
-      cargarComponentes();
-    }
-  }, [setId]);
-
-  const cargarComponentes = async () => {
+  const cargarComponentes = useCallback(async () => {
     try {
       setLoading(true);
       const response = await obtenerComponentesSet(setId);
@@ -49,7 +41,13 @@ function ProductosCompuestosManager({ setId, nombreSet, onComponentesChange }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setId, onComponentesChange]);
+
+  useEffect(() => {
+    if (setId) {
+      cargarComponentes();
+    }
+  }, [setId, cargarComponentes]);
 
   const calcularStockSet = (comps) => {
     if (comps.length === 0) {
