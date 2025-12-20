@@ -51,7 +51,12 @@ class CierreCaja {
     }
 
     if (usuario) {
-      query = query.ilike('usuario', `%${usuario}%`);
+      // Sanitize input to prevent SQL injection
+      const sanitizedUsuario = usuario
+        .replace(/\\/g, '\\\\')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_');
+      query = query.ilike('usuario', `%${sanitizedUsuario}%`);
     }
 
     const offset = (pagina - 1) * por_pagina;
