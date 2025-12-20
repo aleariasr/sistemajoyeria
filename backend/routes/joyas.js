@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const { requireAuth } = require('../middleware/auth');
 const { uploadMiddleware, cleanupTempFile } = require('../middleware/upload');
 const { uploadImage, deleteImage } = require('../cloudinary-config');
 const {
@@ -13,6 +14,9 @@ const {
   validarEstado,
   convertirCamposNumericos
 } = require('../utils/validaciones');
+
+// All routes require authentication
+router.use(requireAuth);
 
 // Validación de datos de joya
 const validarJoya = (data) => {
