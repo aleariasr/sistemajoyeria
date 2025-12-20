@@ -79,6 +79,20 @@ const limitarLongitud = (str, maxLength) => {
 };
 
 /**
+ * Sanitize input for ILIKE queries to prevent SQL injection
+ * Escapes special characters used in PostgreSQL pattern matching
+ * @param {string} input - Raw user input
+ * @returns {string} Sanitized input safe for ILIKE queries
+ */
+const sanitizarParaBusqueda = (input) => {
+  if (!input || typeof input !== 'string') return '';
+  return input
+    .replace(/\\/g, '\\\\')  // Escape backslash
+    .replace(/%/g, '\\%')     // Escape percent (wildcard)
+    .replace(/_/g, '\\_');    // Escape underscore (single char wildcard)
+};
+
+/**
  * Helper function to convert numeric fields from strings to numbers
  * and boolean fields from strings to booleans
  * Handles empty strings and invalid values by returning undefined
@@ -99,10 +113,13 @@ const convertirCamposNumericos = (data) => {
   const convertirBooleano = (valor) => {
     if (valor === undefined || valor === null || valor === '') return undefined;
     if (typeof valor === 'boolean') return valor;
+    // Handle numeric values (0 = false, 1 = true, any other number = truthy)
+    if (typeof valor === 'number') return valor !== 0;
+    // Handle string values
     if (typeof valor === 'string') {
       const lowerValue = valor.toLowerCase().trim();
-      if (lowerValue === 'true') return true;
-      if (lowerValue === 'false') return false;
+      if (lowerValue === 'true' || lowerValue === '1') return true;
+      if (lowerValue === 'false' || lowerValue === '0') return false;
     }
     return undefined;
   };
@@ -130,5 +147,6 @@ module.exports = {
   validarEstado,
   validarTipoMovimiento,
   limitarLongitud,
+  sanitizarParaBusqueda,
   convertirCamposNumericos
 };

@@ -1,5 +1,6 @@
 const { supabase } = require('../supabase-db');
 const { formatearFechaSQL, obtenerRangoDia } = require('../utils/timezone');
+const { sanitizarParaBusqueda } = require('../utils/validaciones');
 
 class CierreCaja {
   /**
@@ -52,10 +53,7 @@ class CierreCaja {
 
     if (usuario) {
       // Sanitize input to prevent SQL injection
-      const sanitizedUsuario = usuario
-        .replace(/\\/g, '\\\\')
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_');
+      const sanitizedUsuario = sanitizarParaBusqueda(usuario);
       query = query.ilike('usuario', `%${sanitizedUsuario}%`);
     }
 
