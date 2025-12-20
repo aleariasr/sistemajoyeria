@@ -80,6 +80,7 @@ const limitarLongitud = (str, maxLength) => {
 
 /**
  * Helper function to convert numeric fields from strings to numbers
+ * and boolean fields from strings to booleans
  * Handles empty strings and invalid values by returning undefined
  */
 const convertirCamposNumericos = (data) => {
@@ -95,12 +96,27 @@ const convertirCamposNumericos = (data) => {
     return isNaN(num) ? undefined : num;
   };
 
+  const convertirBooleano = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    if (typeof valor === 'boolean') return valor;
+    if (typeof valor === 'string') {
+      const lowerValue = valor.toLowerCase().trim();
+      if (lowerValue === 'true') return true;
+      if (lowerValue === 'false') return false;
+    }
+    return undefined;
+  };
+
   return {
     ...data,
     costo: convertirNumero(data.costo),
     precio_venta: convertirNumero(data.precio_venta),
     stock_actual: convertirEntero(data.stock_actual),
-    stock_minimo: convertirEntero(data.stock_minimo)
+    stock_minimo: convertirEntero(data.stock_minimo),
+    // Convert boolean fields from FormData strings to actual booleans
+    mostrar_en_storefront: convertirBooleano(data.mostrar_en_storefront),
+    es_producto_variante: convertirBooleano(data.es_producto_variante),
+    es_producto_compuesto: convertirBooleano(data.es_producto_compuesto)
   };
 };
 
