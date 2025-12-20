@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { crearJoya, actualizarJoya, obtenerJoya, verificarCodigoJoya } from '../services/api';
 import GaleriaImagenesJoya from './GaleriaImagenesJoya';
+import VariantesManager from './VariantesManager';
+import ProductosCompuestosManager from './ProductosCompuestosManager';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
@@ -33,7 +35,9 @@ function FormularioJoya() {
     stock_minimo: '5',
     ubicacion: '',
     estado: 'Activo',
-    mostrar_en_storefront: true
+    mostrar_en_storefront: true,
+    es_producto_variante: false,
+    es_producto_compuesto: false
   });
   
   const [imagen, setImagen] = useState(null);
@@ -67,7 +71,9 @@ function FormularioJoya() {
         stock_minimo: joya.stock_minimo || '5',
         ubicacion: joya.ubicacion || '',
         estado: joya.estado || 'Activo',
-        mostrar_en_storefront: joya.mostrar_en_storefront ?? true
+        mostrar_en_storefront: joya.mostrar_en_storefront ?? true,
+        es_producto_variante: joya.es_producto_variante || false,
+        es_producto_compuesto: joya.es_producto_compuesto || false
       });
       // Cargar imagen actual si existe
       if (joya.imagen_url) {
@@ -487,6 +493,88 @@ function FormularioJoya() {
             </div>
           </div>
         </form>
+      </div>
+
+      {/* Card para funciones especiales */}
+      <div className="card" style={{ marginTop: '20px' }}>
+        <h3 style={{ marginBottom: '20px', color: '#1a237e' }}>⚙️ Funciones Especiales</h3>
+        
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              name="es_producto_variante"
+              checked={formData.es_producto_variante}
+              onChange={handleChange}
+              style={{ marginRight: '10px' }}
+            />
+            <span>
+              <strong>🔀 Este producto tiene variantes</strong>
+              <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>
+                Múltiples diseños que comparten el mismo precio y stock (ej: aretes con diferentes estilos)
+              </small>
+            </span>
+          </label>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              name="es_producto_compuesto"
+              checked={formData.es_producto_compuesto}
+              onChange={handleChange}
+              style={{ marginRight: '10px' }}
+            />
+            <span>
+              <strong>📦 Este producto es un SET</strong>
+              <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>
+                Conjunto de varios productos (ej: trio de pulseras). El stock se calcula automáticamente.
+              </small>
+            </span>
+          </label>
+        </div>
+
+        {/* Gestión de Variantes */}
+        {esEdicion && formData.es_producto_variante && (
+          <VariantesManager 
+            productoId={id} 
+            nombreProducto={formData.nombre}
+          />
+        )}
+
+        {/* Gestión de Componentes de Sets */}
+        {esEdicion && formData.es_producto_compuesto && (
+          <ProductosCompuestosManager
+            setId={id}
+            nombreSet={formData.nombre}
+          />
+        )}
+
+        {/* Mensajes informativos para productos nuevos */}
+        {!esEdicion && formData.es_producto_variante && (
+          <div style={{ 
+            padding: '15px', 
+            background: '#fff3cd', 
+            border: '1px solid #ffc107', 
+            borderRadius: '8px',
+            marginTop: '15px'
+          }}>
+            <strong>ℹ️ Nota:</strong> Guarda el producto primero para poder agregar variantes.
+          </div>
+        )}
+
+        {!esEdicion && formData.es_producto_compuesto && (
+          <div style={{ 
+            padding: '15px', 
+            background: '#fff3cd', 
+            border: '1px solid #ffc107', 
+            borderRadius: '8px',
+            marginTop: '15px'
+          }}>
+            <strong>ℹ️ Nota:</strong> Guarda el producto primero para poder agregar componentes al set.
+          </div>
+        )}
       </div>
 
       {/* Card separada para la imagen */}

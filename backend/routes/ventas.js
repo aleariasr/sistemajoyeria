@@ -9,6 +9,7 @@ const MovimientoInventario = require('../models/MovimientoInventario');
 const CuentaPorCobrar = require('../models/CuentaPorCobrar');
 const Cliente = require('../models/Cliente');
 const { enviarTicketVentaPOS } = require('../services/emailService');
+const { validarYPrepararItem, actualizarStockVenta } = require('../services/productService');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -99,37 +100,15 @@ router.post('/', requireAuth, async (req, res) => {
     };
 
     // IMPORTANT: Validate stock BEFORE creating the sale to prevent race conditions
-    // Get all items and validate stock first
+    // Get all items and validate stock first (handles both regular and composite products)
     const itemsConJoya = [];
     for (const item of items) {
-      // Si es un item tipo "Otros" (sin id_joya), agregarlo directamente
-      if (!item.id_joya) {
-        itemsConJoya.push({
-          ...item,
-          joya: null, // No tiene joya asociada
-          // Usar nombre del item si está disponible, sino descripcion_item, sino "Otros"
-          descripcion_item: item.nombre || item.descripcion_item || 'Otros'
-        });
-        continue;
+      try {
+        const itemValidado = await validarYPrepararItem(item, req.session.username);
+        itemsConJoya.push(itemValidado);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
       }
-
-      const joya = await Joya.obtenerPorId(item.id_joya);
-      
-      if (!joya) {
-        return res.status(404).json({ error: `Joya con ID ${item.id_joya} no encontrada` });
-      }
-
-      // Verify there is enough stock
-      if (joya.stock_actual < item.cantidad) {
-        return res.status(400).json({ 
-          error: `Stock insuficiente para ${joya.nombre}. Stock disponible: ${joya.stock_actual}` 
-        });
-      }
-
-      itemsConJoya.push({
-        ...item,
-        joya
-      });
     }
 
     // Si es venta a crédito, guardar directamente en la base de datos principal
@@ -173,24 +152,9 @@ router.post('/', requireAuth, async (req, res) => {
         });
       }
 
-      // Actualizar stock y registrar movimiento solo si hay joya asociada
-      if (joya) {
-        // Actualizar stock (joya was already validated above)
-        const nuevoStock = joya.stock_actual - item.cantidad;
-        await Joya.actualizarStock(item.id_joya, nuevoStock);
-
-        // Registrar movimiento de inventario
-        const motivoVenta = esVentaCredito ? `Venta a crédito #${idVenta}` : `Venta del día #${idVenta}`;
-        await MovimientoInventario.crear({
-          id_joya: item.id_joya,
-          tipo_movimiento: 'Salida',
-          cantidad: item.cantidad,
-          motivo: motivoVenta,
-          usuario: req.session.username,
-          stock_antes: joya.stock_actual,
-          stock_despues: nuevoStock
-        });
-      }
+      // Actualizar stock y registrar movimiento (handles both regular and composite products)
+      const motivoVenta = esVentaCredito ? `Venta a crédito #${idVenta}` : `Venta del día #${idVenta}`;
+      await actualizarStockVenta(itemConJoya, motivoVenta, req.session.username);
     }
 
     // Si es venta a crédito, crear cuenta por cobrar

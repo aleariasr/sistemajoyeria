@@ -6,7 +6,8 @@ class Joya {
     const {
       codigo, nombre, descripcion, categoria, proveedor, costo,
       precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado,
-      imagen_url, imagen_public_id, mostrar_en_storefront
+      imagen_url, imagen_public_id, mostrar_en_storefront,
+      es_producto_variante, es_producto_compuesto
     } = joyaData;
 
     const { data, error } = await supabase
@@ -26,7 +27,9 @@ class Joya {
         estado: estado || 'Activo',
         imagen_url: imagen_url || null,
         imagen_public_id: imagen_public_id || null,
-        mostrar_en_storefront: mostrar_en_storefront !== undefined ? mostrar_en_storefront : true
+        mostrar_en_storefront: mostrar_en_storefront !== undefined ? mostrar_en_storefront : true,
+        es_producto_variante: es_producto_variante || false,
+        es_producto_compuesto: es_producto_compuesto || false
       }])
       .select()
       .single();
@@ -174,7 +177,8 @@ class Joya {
     const {
       codigo, nombre, descripcion, categoria, proveedor, costo,
       precio_venta, moneda, stock_actual, stock_minimo, ubicacion, estado,
-      imagen_url, imagen_public_id, mostrar_en_storefront
+      imagen_url, imagen_public_id, mostrar_en_storefront,
+      es_producto_variante, es_producto_compuesto
     } = joyaData;
 
     const updateData = {
@@ -190,6 +194,12 @@ class Joya {
     }
     if (mostrar_en_storefront !== undefined) {
       updateData.mostrar_en_storefront = mostrar_en_storefront;
+    }
+    if (es_producto_variante !== undefined) {
+      updateData.es_producto_variante = es_producto_variante;
+    }
+    if (es_producto_compuesto !== undefined) {
+      updateData.es_producto_compuesto = es_producto_compuesto;
     }
 
     const { data, error } = await supabase

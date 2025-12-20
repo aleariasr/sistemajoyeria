@@ -5,7 +5,8 @@ import {
   obtenerPedidoOnline,
   actualizarEstadoPedido,
   actualizarNotasPedido,
-  obtenerResumenPedidos
+  obtenerResumenPedidos,
+  enviarNotificacionPrueba
 } from '../services/api';
 import { formatearFechaCorta } from '../utils/dateFormatter';
 import './PedidosOnline.css';
@@ -202,8 +203,31 @@ function PedidosOnline() {
   return (
     <div className="pedidos-online-container">
       <div className="page-header">
-        <h1>📦 Pedidos Online</h1>
-        <p>Gestión de pedidos recibidos desde la tienda web</p>
+        <div>
+          <h1>📦 Pedidos Online</h1>
+          <p>Gestión de pedidos recibidos desde la tienda web</p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              await enviarNotificacionPrueba();
+              alert('✅ Notificación de prueba enviada');
+            } catch (error) {
+              alert('❌ Error al enviar notificación');
+            }
+          }}
+          style={{
+            background: '#6c757d',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          🧪 Enviar Notificación de Prueba
+        </button>
       </div>
 
       {/* Resumen de estadísticas */}
