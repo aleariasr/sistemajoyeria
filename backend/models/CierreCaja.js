@@ -1,5 +1,6 @@
 const { supabase } = require('../supabase-db');
 const { formatearFechaSQL, obtenerRangoDia } = require('../utils/timezone');
+const { sanitizarParaBusqueda } = require('../utils/validaciones');
 
 class CierreCaja {
   /**
@@ -51,7 +52,9 @@ class CierreCaja {
     }
 
     if (usuario) {
-      query = query.ilike('usuario', `%${usuario}%`);
+      // Sanitize input to prevent SQL injection
+      const sanitizedUsuario = sanitizarParaBusqueda(usuario);
+      query = query.ilike('usuario', `%${sanitizedUsuario}%`);
     }
 
     const offset = (pagina - 1) * por_pagina;

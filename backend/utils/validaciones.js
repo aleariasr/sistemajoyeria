@@ -79,7 +79,22 @@ const limitarLongitud = (str, maxLength) => {
 };
 
 /**
+ * Sanitize input for ILIKE queries to prevent SQL injection
+ * Escapes special characters used in PostgreSQL pattern matching
+ * @param {string} input - Raw user input
+ * @returns {string} Sanitized input safe for ILIKE queries
+ */
+const sanitizarParaBusqueda = (input) => {
+  if (!input || typeof input !== 'string') return '';
+  return input
+    .replace(/\\/g, '\\\\')  // Escape backslash
+    .replace(/%/g, '\\%')     // Escape percent (wildcard)
+    .replace(/_/g, '\\_');    // Escape underscore (single char wildcard)
+};
+
+/**
  * Helper function to convert numeric fields from strings to numbers
+ * and boolean fields from strings to booleans
  * Handles empty strings and invalid values by returning undefined
  */
 const convertirCamposNumericos = (data) => {
@@ -95,12 +110,30 @@ const convertirCamposNumericos = (data) => {
     return isNaN(num) ? undefined : num;
   };
 
+  const convertirBooleano = (valor) => {
+    if (valor === undefined || valor === null || valor === '') return undefined;
+    if (typeof valor === 'boolean') return valor;
+    // Handle numeric values (0 = false, 1 = true, any other number = truthy)
+    if (typeof valor === 'number') return valor !== 0;
+    // Handle string values
+    if (typeof valor === 'string') {
+      const lowerValue = valor.toLowerCase().trim();
+      if (lowerValue === 'true' || lowerValue === '1') return true;
+      if (lowerValue === 'false' || lowerValue === '0') return false;
+    }
+    return undefined;
+  };
+
   return {
     ...data,
     costo: convertirNumero(data.costo),
     precio_venta: convertirNumero(data.precio_venta),
     stock_actual: convertirEntero(data.stock_actual),
-    stock_minimo: convertirEntero(data.stock_minimo)
+    stock_minimo: convertirEntero(data.stock_minimo),
+    // Convert boolean fields from FormData strings to actual booleans
+    mostrar_en_storefront: convertirBooleano(data.mostrar_en_storefront),
+    es_producto_variante: convertirBooleano(data.es_producto_variante),
+    es_producto_compuesto: convertirBooleano(data.es_producto_compuesto)
   };
 };
 
@@ -114,5 +147,6 @@ module.exports = {
   validarEstado,
   validarTipoMovimiento,
   limitarLongitud,
+  sanitizarParaBusqueda,
   convertirCamposNumericos
 };

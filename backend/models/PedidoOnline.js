@@ -9,6 +9,7 @@
 
 const { supabase } = require('../supabase-db');
 const { formatearFechaSQL } = require('../utils/timezone');
+const { sanitizarParaBusqueda } = require('../utils/validaciones');
 
 class PedidoOnline {
   /**
@@ -296,9 +297,11 @@ class PedidoOnline {
     }
 
     // Search by customer name, email, or phone
+    // Sanitize input to prevent SQL injection
     if (busqueda) {
+      const sanitizedBusqueda = sanitizarParaBusqueda(busqueda);
       // Use OR filters with ilike for case-insensitive search
-      query = query.or(`nombre_cliente.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`);
+      query = query.or(`nombre_cliente.ilike.%${sanitizedBusqueda}%,email.ilike.%${sanitizedBusqueda}%,telefono.ilike.%${sanitizedBusqueda}%`);
     }
 
     const offset = (pagina - 1) * por_pagina;

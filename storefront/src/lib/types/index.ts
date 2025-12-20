@@ -29,6 +29,24 @@ export interface Product {
   imagen_url: string | null; // Imagen principal
   imagenes: ProductImage[]; // NUEVO: Galería completa
   slug: string;
+  es_producto_variante?: boolean; // Product has variants
+  es_producto_compuesto?: boolean; // Product is a set/composite
+  es_variante?: boolean; // This is a variant of another product
+  variante_id?: number; // Variant ID if this is a variant
+  variante_nombre?: string; // Variant name if this is a variant
+  componentes?: ProductComponent[]; // Components if this is a set
+}
+
+/**
+ * Component of a composite product (set)
+ */
+export interface ProductComponent {
+  id: number;
+  producto_id: number;
+  producto_nombre: string;
+  producto_imagen: string | null;
+  cantidad_requerida: number;
+  orden_display: number;
 }
 
 /**
