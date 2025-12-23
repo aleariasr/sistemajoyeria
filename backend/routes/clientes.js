@@ -16,14 +16,16 @@ router.post('/', requireAuth, async (req, res) => {
     const { nombre, telefono, cedula, direccion, email, notas } = req.body;
 
     // Validaciones
-    if (!nombre || !telefono || !cedula) {
-      return res.status(400).json({ error: 'Nombre, teléfono y cédula son requeridos' });
+    if (!nombre || nombre.trim() === '') {
+      return res.status(400).json({ error: 'El nombre es requerido' });
     }
 
-    // Verificar si la cédula ya existe
-    const clienteExistente = await Cliente.obtenerPorCedula(cedula);
-    if (clienteExistente) {
-      return res.status(400).json({ error: 'Ya existe un cliente con esta cédula' });
+    // Verificar si la cédula ya existe (solo si se proporciona)
+    if (cedula && cedula.trim() !== '') {
+      const clienteExistente = await Cliente.obtenerPorCedula(cedula);
+      if (clienteExistente) {
+        return res.status(400).json({ error: 'Ya existe un cliente con esta cédula' });
+      }
     }
 
     const resultado = await Cliente.crear({ nombre, telefono, cedula, direccion, email, notas });
@@ -94,8 +96,8 @@ router.put('/:id', requireAuth, async (req, res) => {
     const { nombre, telefono, cedula, direccion, email, notas } = req.body;
 
     // Validaciones
-    if (!nombre || !telefono || !cedula) {
-      return res.status(400).json({ error: 'Nombre, teléfono y cédula son requeridos' });
+    if (!nombre || nombre.trim() === '') {
+      return res.status(400).json({ error: 'El nombre es requerido' });
     }
 
     // Verificar si el cliente existe
@@ -104,8 +106,8 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
 
-    // Si se cambió la cédula, verificar que no esté en uso
-    if (cedula !== clienteExistente.cedula) {
+    // Si se cambió la cédula, verificar que no esté en uso (solo si se proporciona una cédula)
+    if (cedula && cedula.trim() !== '' && cedula !== clienteExistente.cedula) {
       const clienteConCedula = await Cliente.obtenerPorCedula(cedula);
       if (clienteConCedula) {
         return res.status(400).json({ error: 'Ya existe un cliente con esta cédula' });
