@@ -11,17 +11,20 @@ export const useSelection = () => {
 };
 
 export const SelectionProvider = ({ children }) => {
-  // Store selected IDs/codes as an object for O(1) lookup
-  const [selectedIds, setSelectedIds] = useState({});
+  // Store selected items as objects: { id: joyaObject }
+  // This allows us to access full joya data even when item is not on current page
+  const [selectedItems, setSelectedItems] = useState({});
 
-  // Toggle selection for a single item
-  const toggleSelection = useCallback((id) => {
-    setSelectedIds((prev) => {
+  // Toggle selection for a single item (now requires full joya object)
+  const toggleSelection = useCallback((id, joya = null) => {
+    setSelectedItems((prev) => {
       const newSelection = { ...prev };
       if (newSelection[id]) {
+        // Deselect
         delete newSelection[id];
-      } else {
-        newSelection[id] = true;
+      } else if (joya) {
+        // Select - store full joya object
+        newSelection[id] = joya;
       }
       return newSelection;
     });
@@ -29,32 +32,40 @@ export const SelectionProvider = ({ children }) => {
 
   // Clear all selections
   const clearSelection = useCallback(() => {
-    setSelectedIds({});
+    setSelectedItems({});
   }, []);
 
   // Check if an item is selected
   const isSelected = useCallback((id) => {
-    return !!selectedIds[id];
-  }, [selectedIds]);
+    return !!selectedItems[id];
+  }, [selectedItems]);
 
   // Get count of selected items
   const getSelectionCount = useCallback(() => {
-    return Object.keys(selectedIds).length;
-  }, [selectedIds]);
+    return Object.keys(selectedItems).length;
+  }, [selectedItems]);
 
   // Get array of selected IDs
   const getSelectedIds = useCallback(() => {
-    return Object.keys(selectedIds);
-  }, [selectedIds]);
+    return Object.keys(selectedItems);
+  }, [selectedItems]);
+
+  // Get array of selected joya objects
+  const getSelectedItems = useCallback(() => {
+    return Object.values(selectedItems);
+  }, [selectedItems]);
 
   // Toggle multiple items (e.g., all items on current page)
-  const toggleMultiple = useCallback((ids, selected) => {
-    setSelectedIds((prev) => {
+  const toggleMultiple = useCallback((items, selected) => {
+    setSelectedItems((prev) => {
       const newSelection = { ...prev };
-      ids.forEach((id) => {
+      items.forEach((item) => {
+        const id = item.id ?? item.codigo;
         if (selected) {
-          newSelection[id] = true;
+          // Select - store full joya object
+          newSelection[id] = item;
         } else {
+          // Deselect
           delete newSelection[id];
         }
       });
@@ -63,14 +74,15 @@ export const SelectionProvider = ({ children }) => {
   }, []);
 
   const value = useMemo(() => ({
-    selectedIds,
+    selectedItems,
     toggleSelection,
     clearSelection,
     isSelected,
     getSelectionCount,
     getSelectedIds,
+    getSelectedItems,
     toggleMultiple
-  }), [selectedIds, toggleSelection, clearSelection, isSelected, getSelectionCount, getSelectedIds, toggleMultiple]);
+  }), [selectedItems, toggleSelection, clearSelection, isSelected, getSelectionCount, getSelectedIds, getSelectedItems, toggleMultiple]);
 
   return (
     <SelectionContext.Provider value={value}>

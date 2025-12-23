@@ -10,7 +10,7 @@ const THUMBNAIL_SIZE = '50px';
 
 function ListadoJoyas() {
   const navigate = useNavigate();
-  const { toggleSelection, isSelected, clearSelection, toggleMultiple } = useSelection();
+  const { toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectedItems } = useSelection();
   const [joyas, setJoyas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -158,18 +158,18 @@ function ListadoJoyas() {
     setJoyaSeleccionada(null);
   };
 
+  // Get all selected joyas from context (persists across pages/filters)
   const joyasSeleccionadas = useMemo(() => {
-    return joyas.filter((j) => isSelected(j.id) || isSelected(j.codigo));
-  }, [joyas, isSelected]);
+    return getSelectedItems();
+  }, [getSelectedItems]);
 
   const toggleSeleccionItem = (j) => {
     const key = j.id ?? j.codigo;
-    toggleSelection(key);
+    toggleSelection(key, j);
   };
 
   const toggleSeleccionPagina = (checked) => {
-    const ids = joyas.map((j) => j.id ?? j.codigo);
-    toggleMultiple(ids, checked);
+    toggleMultiple(joyas, checked);
   };
 
   return (
@@ -261,7 +261,7 @@ function ListadoJoyas() {
           </div>
         </div>
 
-        <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+        <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn btn-secondary" onClick={limpiarFiltros}>
             🔄 Limpiar Filtros
           </button>
@@ -286,6 +286,97 @@ function ListadoJoyas() {
             Total: {total} joyas
           </span>
         </div>
+
+        {/* Mostrar ítems seleccionados */}
+        {joyasSeleccionadas.length > 0 && (
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '12px', 
+            background: '#e3f2fd', 
+            borderRadius: '6px',
+            border: '1px solid #90caf9'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '8px'
+            }}>
+              <strong style={{ color: '#1976d2' }}>
+                ✓ {joyasSeleccionadas.length} {joyasSeleccionadas.length === 1 ? 'ítem seleccionado' : 'ítems seleccionados'}
+              </strong>
+              <button
+                onClick={clearSelection}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#1976d2',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  textDecoration: 'underline'
+                }}
+              >
+                Limpiar todo
+              </button>
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '6px',
+              maxHeight: '120px',
+              overflowY: 'auto'
+            }}>
+              {joyasSeleccionadas.map((j) => {
+                const key = j.id ?? j.codigo;
+                // Check if this item is on the current page
+                const enPaginaActual = joyas.some(joya => (joya.id ?? joya.codigo) === key);
+                return (
+                  <div 
+                    key={key}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 8px',
+                      background: enPaginaActual ? '#ffffff' : '#fff9c4',
+                      border: enPaginaActual ? '1px solid #90caf9' : '1px solid #ffd54f',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem'
+                    }}
+                    title={enPaginaActual ? 'En página actual' : 'En otra página/filtro'}
+                  >
+                    <strong>{j.codigo}</strong>
+                    <span style={{ color: '#666' }}>-</span>
+                    <span style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {j.nombre}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSeleccionItem(j);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#d32f2f',
+                        cursor: 'pointer',
+                        padding: '0 4px',
+                        fontSize: '1rem',
+                        lineHeight: 1
+                      }}
+                      title="Remover selección"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#666' }}>
+              💡 Los ítems en amarillo no están en la página actual. Todas las selecciones se mantendrán al imprimir.
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="card">
