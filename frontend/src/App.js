@@ -4,6 +4,7 @@ import './styles/App.css';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SelectionProvider } from './context/SelectionContext';
 
 // Components
 import Login from './components/Login';
@@ -249,9 +250,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <SelectionProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </SelectionProvider>
     </AuthProvider>
   );
 }
