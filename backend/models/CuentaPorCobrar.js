@@ -1,32 +1,96 @@
 const { supabase } = require('../supabase-db');
+const MovimientoCuenta = require('./MovimientoCuenta');
 
 class CuentaPorCobrar {
-  // Crear nueva cuenta por cobrar
+  // Obtener cuenta activa (pendiente) de un cliente
+  static async obtenerActivaPorCliente(id_cliente) {
+    const { data, error } = await supabase
+      .from('cuentas_por_cobrar')
+      .select('*')
+      .eq('id_cliente', id_cliente)
+      .eq('estado', 'Pendiente')
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    return data;
+  }
+
+  // Crear nueva cuenta por cobrar o actualizar existente
   static async crear(cuentaData) {
     const { 
       id_venta, id_cliente, monto_total, monto_pagado = 0, 
       saldo_pendiente, estado = 'Pendiente', fecha_vencimiento 
     } = cuentaData;
 
-    const { data, error } = await supabase
-      .from('cuentas_por_cobrar')
-      .insert([{
-        id_venta,
-        id_cliente,
-        monto_total,
-        monto_pagado,
-        saldo_pendiente,
-        estado,
-        fecha_vencimiento: fecha_vencimiento || null
-      }])
-      .select()
-      .single();
+    // Verificar si existe una cuenta activa para este cliente
+    const cuentaExistente = await this.obtenerActivaPorCliente(id_cliente);
 
-    if (error) {
-      throw error;
+    if (cuentaExistente) {
+      // Actualizar cuenta existente sumando el nuevo monto
+      const nuevoMontoTotal = parseFloat(cuentaExistente.monto_total) + parseFloat(monto_total);
+      const nuevoSaldoPendiente = parseFloat(cuentaExistente.saldo_pendiente) + parseFloat(saldo_pendiente);
+
+      const { data, error } = await supabase
+        .from('cuentas_por_cobrar')
+        .update({
+          monto_total: nuevoMontoTotal,
+          saldo_pendiente: nuevoSaldoPendiente,
+          fecha_ultima_modificacion: new Date().toISOString()
+        })
+        .eq('id', cuentaExistente.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Registrar movimiento de nueva venta a crédito
+      await MovimientoCuenta.crear({
+        id_cuenta_por_cobrar: cuentaExistente.id,
+        id_venta: id_venta,
+        tipo: 'venta_credito',
+        monto: monto_total,
+        descripcion: `Venta a crédito #${id_venta}`,
+        usuario: 'system'
+      });
+
+      return { id: cuentaExistente.id, actualizada: true };
+    } else {
+      // Crear nueva cuenta si no existe una activa
+      const { data, error } = await supabase
+        .from('cuentas_por_cobrar')
+        .insert([{
+          id_venta,
+          id_cliente,
+          monto_total,
+          monto_pagado,
+          saldo_pendiente,
+          estado,
+          fecha_vencimiento: fecha_vencimiento || null
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Registrar movimiento inicial
+      await MovimientoCuenta.crear({
+        id_cuenta_por_cobrar: data.id,
+        id_venta: id_venta,
+        tipo: 'venta_credito',
+        monto: monto_total,
+        descripcion: `Venta a crédito inicial #${id_venta}`,
+        usuario: 'system'
+      });
+
+      return { id: data.id, actualizada: false };
     }
-
-    return { id: data.id };
   }
 
   // Obtener todas las cuentas por cobrar con filtros
@@ -162,7 +226,7 @@ class CuentaPorCobrar {
   }
 
   // Actualizar monto pagado y saldo
-  static async actualizarPago(id, monto_abono) {
+  static async actualizarPago(id, monto_abono, usuario = 'system') {
     // Primero obtener la cuenta actual
     const cuenta = await this.obtenerPorId(id);
     
@@ -187,6 +251,10 @@ class CuentaPorCobrar {
     if (error) {
       throw error;
     }
+
+    // Registrar movimiento de abono (ya se registra en Abono, pero esto es para historial completo)
+    // Solo registramos aquí el cambio en el saldo como referencia
+    // Los abonos detallados están en la tabla 'abonos'
 
     return { 
       changes: data.length,

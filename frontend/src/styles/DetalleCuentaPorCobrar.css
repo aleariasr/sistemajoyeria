@@ -336,6 +336,73 @@
   font-style: italic;
 }
 
+.historial-movimientos {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+}
+
+.historial-movimientos h3 {
+  color: #1a237e;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.historial-movimientos table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.historial-movimientos th {
+  background: #f5f5f5;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #1a237e;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.historial-movimientos td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.historial-movimientos tbody tr:hover {
+  background: #f8f8f8;
+}
+
+.historial-movimientos .monto {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #1a237e;
+}
+
+.badge-tipo {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-tipo.tipo-venta_credito {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge-tipo.tipo-abono {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-tipo.tipo-ajuste {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
 .error-message {
   background: #ffebee;
   color: #c62828;

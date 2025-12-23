@@ -3,6 +3,7 @@ const router = express.Router();
 const CuentaPorCobrar = require('../models/CuentaPorCobrar');
 const Abono = require('../models/Abono');
 const Cliente = require('../models/Cliente');
+const MovimientoCuenta = require('../models/MovimientoCuenta');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -41,7 +42,7 @@ router.get('/resumen', requireAuth, async (req, res) => {
   }
 });
 
-// Obtener una cuenta por cobrar específica con sus abonos
+// Obtener una cuenta por cobrar específica con sus abonos y movimientos
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,9 +56,13 @@ router.get('/:id', requireAuth, async (req, res) => {
     // Obtener los abonos de esta cuenta
     const abonos = await Abono.obtenerPorCuenta(id);
 
+    // Obtener los movimientos (historial de ventas a crédito)
+    const movimientos = await MovimientoCuenta.obtenerPorCuenta(id);
+
     res.json({
       ...cuenta,
-      abonos
+      abonos,
+      movimientos
     });
   } catch (error) {
     console.error('Error al obtener cuenta por cobrar:', error);
