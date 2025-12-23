@@ -289,7 +289,7 @@ describe('CuentaPorCobrar - Consolidated Accounts', () => {
 
 // Run tests
 console.log('🧪 Running Unit Tests for Consolidated Accounts\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 // Simple test runner
 async function runUnitTests() {

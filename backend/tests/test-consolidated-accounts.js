@@ -29,7 +29,7 @@ api.interceptors.request.use(config => {
 
 async function runTests() {
   console.log('🧪 Testing Consolidated Accounts Per Client\n');
-  console.log('=' . repeat(60));
+  console.log('='.repeat(60));
   
   try {
     // 1. Login
