@@ -91,6 +91,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
     if (idJoya) {
       cargarImagenes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idJoya]);
 
   const cargarImagenes = async () => {
