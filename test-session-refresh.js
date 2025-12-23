@@ -55,7 +55,7 @@ api.interceptors.request.use(
 
 async function testSessionRefresh() {
   console.log('\n🧪 Testing Session Refresh Functionality\n');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
 
   try {
     // Test 1: Login

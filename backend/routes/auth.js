@@ -110,7 +110,10 @@ router.post('/refresh-session', (req, res) => {
     // y envíe un nuevo Set-Cookie header con maxAge renovado
     req.session.lastActivity = Date.now();
     
-    // Marcar como modificada para forzar el envío del Set-Cookie header
+    // NOTA: cookie-session necesita detectar cambios en el objeto de sesión para
+    // enviar un nuevo Set-Cookie header. Modificar req.session.isNew = true
+    // es una técnica documentada para forzar este comportamiento.
+    // Ver: https://github.com/expressjs/cookie-session#extending-the-session-expiration
     req.session.isNew = true;
     
     res.json({ 

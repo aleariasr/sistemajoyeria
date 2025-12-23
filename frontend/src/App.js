@@ -193,14 +193,14 @@ function ProtectedRoute({ children, adminOnly = false }) {
   return children;
 }
 
+// Constantes de configuración fuera del componente para evitar recreación
+const ACTIVITY_DEBOUNCE = 5 * 60 * 1000; // 5 minutos entre refresh de sesión
+const SESSION_CHECK_INTERVAL = 60 * 1000; // Verificar cada 1 minuto si hay actividad
+
 function AppContent() {
   const { user, loading, refreshSession } = useAuth();
   const lastActivityRef = useRef(Date.now());
   const refreshTimerRef = useRef(null);
-
-  // Constantes de configuración
-  const ACTIVITY_DEBOUNCE = 5 * 60 * 1000; // 5 minutos entre refresh de sesión
-  const SESSION_CHECK_INTERVAL = 60 * 1000; // Verificar cada 1 minuto si hay actividad
 
   // Manejador de actividad del usuario
   const handleUserActivity = useCallback(() => {
@@ -250,7 +250,7 @@ function AppContent() {
         clearInterval(refreshTimerRef.current);
       }
     };
-  }, [user, refreshSession, ACTIVITY_DEBOUNCE, SESSION_CHECK_INTERVAL]);
+  }, [user, refreshSession]);
 
   if (loading) {
     return <div className="loading">Cargando...</div>;

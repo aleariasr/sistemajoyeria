@@ -347,7 +347,7 @@ toast.warning('Tu mensaje personalizado', {
 
 ```json
 {
-  "react-toastify": "^9.1.3"
+  "react-toastify": "^11.0.5"
 }
 ```
 
