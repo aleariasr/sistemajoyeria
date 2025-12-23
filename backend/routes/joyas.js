@@ -152,6 +152,23 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET /api/joyas/:id/dependencias - Verificar dependencias de una joya
+router.get('/:id/dependencias', async (req, res) => {
+  try {
+    const joya = await Joya.obtenerPorId(req.params.id);
+    
+    if (!joya) {
+      return res.status(404).json({ error: 'Joya no encontrada' });
+    }
+
+    const dependencias = await Joya.verificarDependencias(req.params.id);
+    res.json(dependencias);
+  } catch (error) {
+    console.error('Error al verificar dependencias:', error);
+    res.status(500).json({ error: 'Error al verificar dependencias' });
+  }
+});
+
 // POST /api/joyas - Crear nueva joya
 router.post('/', uploadMiddleware, async (req, res) => {
   try {
@@ -311,7 +328,7 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/joyas/:id - Eliminar joya (marcar como descontinuado)
+// DELETE /api/joyas/:id - Eliminar joya físicamente o marcar como descontinuado
 router.delete('/:id', async (req, res) => {
   try {
     const joya = await Joya.obtenerPorId(req.params.id);
@@ -319,18 +336,39 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
-    // Opcional: Eliminar imagen de Cloudinary si existe
-    if (joya.imagen_public_id) {
-      try {
-        await deleteImage(joya.imagen_public_id);
-      } catch (err) {
-        console.error('Error al eliminar imagen de Cloudinary:', err);
-        // Continuar con la eliminación aunque falle borrar la imagen
-      }
-    }
+    const resultado = await Joya.eliminar(req.params.id);
 
-    await Joya.eliminar(req.params.id);
-    res.json({ mensaje: 'Joya marcada como descontinuada' });
+    if (resultado.eliminado) {
+      // Eliminación física exitosa - eliminar imagen de Cloudinary
+      if (joya.imagen_public_id) {
+        try {
+          await deleteImage(joya.imagen_public_id);
+        } catch (err) {
+          console.error('Error al eliminar imagen de Cloudinary:', err);
+          // No fallar si no se puede eliminar la imagen
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        mensaje: 'Joya eliminada completamente del sistema',
+        eliminado: true
+      });
+    } else if (resultado.marcado_descontinuado) {
+      // Tiene dependencias - solo se marcó como descontinuado
+      res.status(409).json({
+        success: false,
+        error: 'No se puede eliminar la joya debido a dependencias existentes',
+        mensaje: 'La joya fue marcada como descontinuada porque tiene registros relacionados',
+        marcado_descontinuado: true,
+        dependencias: resultado.dependencias
+      });
+    } else {
+      res.status(400).json({ 
+        success: false,
+        error: 'No se pudo procesar la eliminación' 
+      });
+    }
   } catch (error) {
     console.error('Error al eliminar joya:', error);
     res.status(500).json({ error: 'Error al eliminar joya' });

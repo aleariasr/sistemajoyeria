@@ -230,11 +230,122 @@ class Joya {
     return { changes: data.length };
   }
 
-  // Eliminar (marcar como descontinuado)
+  // Verificar dependencias de una joya antes de eliminar
+  static async verificarDependencias(id) {
+    const dependencias = {
+      tiene_dependencias: false,
+      detalles: []
+    };
+
+    // Verificar ventas - obtener count directamente
+    const { count: countVentas, error: errorVentas } = await supabase
+      .from('items_venta')
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
+
+    if (errorVentas) {
+      throw errorVentas;
+    }
+
+    if (countVentas && countVentas > 0) {
+      dependencias.tiene_dependencias = true;
+      dependencias.detalles.push({
+        tipo: 'ventas',
+        cantidad: countVentas,
+        mensaje: `Esta joya está asociada a ${countVentas} venta(s) registrada(s)`
+      });
+    }
+
+    // Verificar movimientos de inventario - obtener count directamente
+    const { count: countMovimientos, error: errorMovimientos } = await supabase
+      .from('movimientos_inventario')
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
+
+    if (errorMovimientos) {
+      throw errorMovimientos;
+    }
+
+    if (countMovimientos && countMovimientos > 0) {
+      dependencias.tiene_dependencias = true;
+      dependencias.detalles.push({
+        tipo: 'movimientos',
+        cantidad: countMovimientos,
+        mensaje: `Esta joya tiene ${countMovimientos} movimiento(s) de inventario registrado(s)`
+      });
+    }
+
+    // Verificar si es componente de algún set
+    const { data: sets, error: errorSets } = await supabase
+      .from('productos_compuestos')
+      .select('id_producto_set, joyas:id_producto_set(codigo, nombre)')
+      .eq('id_producto_componente', id);
+
+    if (errorSets) {
+      throw errorSets;
+    }
+
+    if (sets && sets.length > 0) {
+      dependencias.tiene_dependencias = true;
+      const nombresSets = sets.map(s => s.joyas?.nombre || 'Desconocido').join(', ');
+      dependencias.detalles.push({
+        tipo: 'sets',
+        cantidad: sets.length,
+        mensaje: `Esta joya es componente de ${sets.length} set(s): ${nombresSets}`
+      });
+    }
+
+    // Verificar pedidos online - obtener count directamente
+    const { count: countPedidos, error: errorPedidos } = await supabase
+      .from('items_pedido_online')
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
+
+    if (errorPedidos) {
+      throw errorPedidos;
+    }
+
+    if (countPedidos && countPedidos > 0) {
+      dependencias.tiene_dependencias = true;
+      dependencias.detalles.push({
+        tipo: 'pedidos_online',
+        cantidad: countPedidos,
+        mensaje: `Esta joya está en ${countPedidos} pedido(s) online`
+      });
+    }
+
+    return dependencias;
+  }
+
+  // Eliminar físicamente (solo si no tiene dependencias)
   static async eliminar(id) {
+    // Verificar dependencias primero
+    const dependencias = await this.verificarDependencias(id);
+    
+    if (dependencias.tiene_dependencias) {
+      // Si tiene dependencias, solo marcar como descontinuado
+      const { data, error } = await supabase
+        .from('joyas')
+        .update({ estado: 'Descontinuado' })
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        changes: data.length,
+        eliminado: false,
+        marcado_descontinuado: true,
+        dependencias: dependencias.detalles
+      };
+    }
+
+    // Si no tiene dependencias, eliminar físicamente
     const { data, error } = await supabase
       .from('joyas')
-      .update({ estado: 'Descontinuado' })
+      .delete()
       .eq('id', id)
       .select();
 
@@ -242,7 +353,11 @@ class Joya {
       throw error;
     }
 
-    return { changes: data.length };
+    return {
+      changes: data.length,
+      eliminado: true,
+      marcado_descontinuado: false
+    };
   }
 
   // Obtener joyas con stock bajo
