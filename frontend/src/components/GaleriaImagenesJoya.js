@@ -110,10 +110,15 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
   }, [idJoya]);
 
   const cargarImagenes = async () => {
+    if (!idJoya) {
+      console.warn('No se puede cargar imágenes: idJoya no está definido');
+      return;
+    }
+    
     setCargando(true);
     try {
       const response = await axios.get(`/api/imagenes-joya/joya/${idJoya}`);
-      setImagenes(response.data);
+      setImagenes(response.data || []);
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
       
@@ -121,6 +126,10 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       let errorMsg = 'Error al cargar imágenes';
       if (error.response?.status === 404) {
         errorMsg = 'No se encontraron imágenes para este producto';
+        // No mostrar alerta para 404, es esperado si no hay imágenes
+        setImagenes([]);
+        setCargando(false);
+        return;
       } else if (error.response?.status === 500) {
         errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
       } else if (error.message === 'Network Error') {
@@ -136,11 +145,19 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
   const handleSubirImagen = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
+    
+    // Validar que idJoya existe
+    if (!idJoya) {
+      alert('Error: No se puede subir la imagen. El producto debe ser guardado primero.');
+      e.target.value = '';
+      return;
+    }
 
     // Validar tipo de archivo
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!tiposPermitidos.includes(archivo.type)) {
       alert('Tipo de archivo no permitido. Use JPG, PNG, GIF o WebP');
+      e.target.value = '';
       return;
     }
 
@@ -261,36 +278,79 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
   const handleDragEnd = async (event) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
-      const oldIndex = imagenes.findIndex((img) => img.id === active.id);
-      const newIndex = imagenes.findIndex((img) => img.id === over.id);
+    // Validar que over existe (puede ser null si se suelta fuera del área)
+    if (!over || active.id === over.id) {
+      return;
+    }
 
-      const nuevasImagenes = arrayMove(imagenes, oldIndex, newIndex);
+    const oldIndex = imagenes.findIndex((img) => img.id === active.id);
+    const newIndex = imagenes.findIndex((img) => img.id === over.id);
+    
+    // Validar que ambos índices son válidos
+    if (oldIndex === -1 || newIndex === -1) {
+      console.error('Error: No se encontraron los índices para el drag & drop');
+      return;
+    }
+
+    const nuevasImagenes = arrayMove(imagenes, oldIndex, newIndex);
+    
+    // Actualizar orden local inmediatamente (optimistic update)
+    setImagenes(nuevasImagenes);
+
+    // Actualizar en servidor
+    try {
+      const actualizaciones = nuevasImagenes.map((img, index) => ({
+        id: img.id,
+        orden_display: index,
+        es_principal: img.es_principal, // Preserve existing primary flag
+      }));
+
+      await axios.put('/api/imagenes-joya/reordenar', { imagenes: actualizaciones });
+
+      if (onCambio) onCambio();
+    } catch (error) {
+      console.error('Error al reordenar:', error);
       
-      // Actualizar orden local inmediatamente
-      setImagenes(nuevasImagenes);
-
-      // Actualizar en servidor
-      try {
-        const actualizaciones = nuevasImagenes.map((img, index) => ({
-          id: img.id,
-          orden_display: index,
-          es_principal: img.es_principal, // Preserve existing primary flag
-        }));
-
-        await axios.put('/api/imagenes-joya/reordenar', { imagenes: actualizaciones });
-
-        if (onCambio) onCambio();
-      } catch (error) {
-        console.error('Error al reordenar:', error);
-        alert('Error al reordenar imágenes');
-        await cargarImagenes(); // Recargar en caso de error
+      let errorMsg = 'Error al reordenar imágenes';
+      if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
       }
+      
+      alert(errorMsg);
+      // Recargar en caso de error para restaurar el orden correcto
+      await cargarImagenes();
     }
   };
 
   if (cargando) {
     return <div style={{ textAlign: 'center', padding: '20px' }}>Cargando imágenes...</div>;
+  }
+  
+  // Si no hay idJoya, mostrar mensaje
+  if (!idJoya) {
+    return (
+      <div className="galeria-imagenes">
+        <style>{`
+          .galeria-warning {
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background-color: #fff3e0;
+            color: #e65100;
+          }
+          .galeria-warning-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+          }
+        `}</style>
+        <div className="galeria-warning">
+          <div className="galeria-warning-icon">⚠️</div>
+          <p><strong>Guarda el producto primero</strong></p>
+          <p>Para poder agregar imágenes, primero debes guardar el producto.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
