@@ -235,10 +235,14 @@ function AppContent() {
 
       // Si hay actividad reciente (dentro del período de debounce), renovar sesión
       if (timeSinceLastActivity < ACTIVITY_DEBOUNCE) {
-        console.log('🔄 Usuario activo, renovando sesión...');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔄 Usuario activo, renovando sesión...');
+        }
         await refreshSession();
       } else {
-        console.log('⏸️ Usuario inactivo, no se renueva la sesión');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('⏸️ Usuario inactivo, no se renueva la sesión');
+        }
       }
     };
 

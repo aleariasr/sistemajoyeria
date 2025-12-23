@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import api, { refreshSession as refreshSessionAPI } from '../services/api';
+import api, { refreshSession as refreshSessionAPI, setSessionExpiredHandler } from '../services/api';
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
@@ -91,7 +91,9 @@ export const AuthProvider = ({ children }) => {
       const response = await refreshSessionAPI();
       if (response.data.success) {
         // Sesión renovada exitosamente
-        console.log('✅ Sesión renovada exitosamente');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Sesión renovada exitosamente');
+        }
         return true;
       }
     } catch (error) {
@@ -106,14 +108,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, [logout]);
 
-  // Configurar handler global para el interceptor de axios
+  // Configurar handler para el interceptor de axios
+  // Usando función setter en lugar de window global para evitar conflictos
   useEffect(() => {
-    window.onSessionExpired = async () => {
+    setSessionExpiredHandler(async () => {
       await logout(true);
-    };
+    });
     
     return () => {
-      window.onSessionExpired = null;
+      setSessionExpiredHandler(null);
     };
   }, [logout]);
 

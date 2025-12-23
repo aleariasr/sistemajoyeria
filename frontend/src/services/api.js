@@ -73,6 +73,14 @@ const api = axios.create({
 // Variable para evitar múltiples llamadas de logout simultáneas
 let isLoggingOut = false;
 
+// Handler para sesión expirada - será configurado por AuthContext
+// Usando una función en lugar de window.onSessionExpired para evitar conflictos globales
+let sessionExpiredHandler = null;
+
+export const setSessionExpiredHandler = (handler) => {
+  sessionExpiredHandler = handler;
+};
+
 // Manejo global de errores con detección de 401 (sesión expirada)
 api.interceptors.response.use(
   (res) => res,
@@ -87,10 +95,10 @@ api.interceptors.response.use(
         // Evitar loops de logout
         isLoggingOut = true;
         
-        // Llamar al handler de sesión expirada que será configurado por AuthContext
-        if (window.onSessionExpired && typeof window.onSessionExpired === 'function') {
+        // Llamar al handler de sesión expirada si está configurado
+        if (sessionExpiredHandler && typeof sessionExpiredHandler === 'function') {
           try {
-            await window.onSessionExpired();
+            await sessionExpiredHandler();
           } catch (logoutError) {
             console.error("Error al cerrar sesión automáticamente:", logoutError);
           }
