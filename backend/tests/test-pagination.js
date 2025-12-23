@@ -61,8 +61,8 @@ async function testPagination() {
     }
 
     // Test 4: Test with filters
-    console.log('Test 4: With search filter');
-    const response4 = await axios.get(`${API_URL}/public/products?search=anillo&per_page=5`);
+    console.log('Test 4: With search filter (generic)');
+    const response4 = await axios.get(`${API_URL}/public/products?search=&per_page=5`);
     console.log('✅ Response structure:', {
       products_count: response4.data.products.length,
       total: response4.data.total,

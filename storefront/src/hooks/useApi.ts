@@ -55,7 +55,7 @@ export function useInfiniteProducts(params?: {
   per_page?: number;
 }) {
   return useInfiniteQuery({
-    queryKey: ['products', 'infinite', params],
+    queryKey: ['products', 'infinite', params], // Separate key for infinite queries
     queryFn: ({ pageParam = 1 }) => 
       api.getProducts({ ...params, page: pageParam }),
     initialPageParam: 1,

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useInfiniteProducts, useCategories } from '@/hooks/useApi';
 import { ProductGrid } from '@/components/product';
 import { debounce } from '@/lib/utils';
@@ -37,6 +37,7 @@ export default function CatalogContent() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useInfiniteProducts({
     search: debouncedSearch || undefined,
     category: selectedCategory || undefined,
@@ -54,6 +55,13 @@ export default function CatalogContent() {
   // Total count from first page
   const totalCount = data?.pages[0]?.total || 0;
 
+  // Memoize fetchNextPage to prevent unnecessary useEffect re-runs
+  const handleFetchNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   // Setup Intersection Observer for infinite scroll
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
@@ -61,7 +69,7 @@ export default function CatalogContent() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          fetchNextPage();
+          handleFetchNextPage();
         }
       },
       {
@@ -72,7 +80,7 @@ export default function CatalogContent() {
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, handleFetchNextPage]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -217,7 +225,7 @@ export default function CatalogContent() {
         products={products}
         isLoading={isLoading}
         error={error as Error | null}
-        onRetry={() => window.location.reload()}
+        onRetry={refetch}
       />
 
       {/* Infinite Scroll Trigger & Load More Button */}
