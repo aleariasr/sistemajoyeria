@@ -189,3 +189,191 @@
   font-size: 1.2rem;
   color: #666;
 }
+
+/* Responsive Design for Clientes */
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .clientes-container {
+    padding: 1rem;
+  }
+
+  .clientes-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .title-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .title-section p {
+    font-size: 0.9rem;
+  }
+
+  .btn-nuevo {
+    width: 100%;
+    text-align: center;
+  }
+
+  .search-bar {
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .clientes-table {
+    overflow-x: auto;
+    border-left: 3px solid #1a237e;
+  }
+
+  .clientes-table table {
+    min-width: 600px;
+  }
+
+  .clientes-table th,
+  .clientes-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .btn-icon {
+    font-size: 1rem;
+    padding: 0.25rem 0.4rem;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .pagination button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .pagination span {
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .clientes-container {
+    padding: 0.75rem;
+  }
+
+  .clientes-header {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .title-section h2 {
+    font-size: 1.35rem;
+  }
+
+  .title-section p {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  .btn-nuevo {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .search-bar input {
+    padding: 0.65rem;
+    font-size: 0.9rem;
+  }
+
+  .clientes-table {
+    border-left: 4px solid #1a237e;
+    position: relative;
+  }
+
+  /* Scroll indicator using data attribute for i18n support */
+  .clientes-table::after {
+    content: attr(data-scroll-hint);
+    position: sticky;
+    right: 10px;
+    top: 10px;
+    background: #1a237e;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    opacity: 0.8;
+    pointer-events: none;
+    float: right;
+    margin: -8px -8px 0 0;
+  }
+
+  /* Fallback if data attribute not set */
+  .clientes-table:not([data-scroll-hint])::after {
+    content: '← Deslice →';
+  }
+
+  .clientes-table table {
+    min-width: 500px;
+  }
+
+  .clientes-table th,
+  .clientes-table td {
+    padding: 0.65rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .btn-icon {
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-primary {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pagination button {
+    width: 100%;
+    padding: 0.65rem 1rem;
+  }
+
+  .error-message,
+  .loading {
+    padding: 1rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+

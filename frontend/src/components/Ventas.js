@@ -411,7 +411,7 @@ function Ventas() {
         <div className={`mensaje ${mensaje.tipo}`}>
           {mensaje.texto}
           {mensaje.tipo === 'success' && ultimaVenta && (
-            <div style={{ display: 'inline-flex', gap: '10px', marginLeft: '15px' }}>
+            <div className="btn-group">
               <button 
                 onClick={imprimirTicket}
                 className="btn-imprimir-ticket"
@@ -423,8 +423,7 @@ function Ventas() {
               {thermalPrint.isSupported && (
                 <button 
                   onClick={handlePrint}
-                  className="btn-imprimir-ticket"
-                  style={{ backgroundColor: '#6c757d' }}
+                  className="btn-imprimir-ticket btn-imprimir-ticket-secondary"
                   title="Usar diálogo de impresión del navegador"
                 >
                   📄 Navegador
