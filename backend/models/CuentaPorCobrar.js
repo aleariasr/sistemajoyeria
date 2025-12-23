@@ -108,6 +108,9 @@ class CuentaPorCobrar {
     // Filtro por estado
     if (estado) {
       query = query.eq('estado', estado);
+    } else {
+      // Por defecto, excluir cuentas consolidadas
+      query = query.neq('estado', 'Consolidada');
     }
 
     // Filtro por cliente
@@ -268,7 +271,8 @@ class CuentaPorCobrar {
   static async obtenerResumen() {
     const { data, error } = await supabase
       .from('cuentas_por_cobrar')
-      .select('*');
+      .select('*')
+      .neq('estado', 'Consolidada'); // Excluir cuentas consolidadas del resumen
 
     if (error) {
       throw error;
