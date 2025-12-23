@@ -215,11 +215,11 @@ async function testActualizarClienteEliminarDatos() {
 }
 
 /**
- * Test 6: Verificar que cedulas duplicadas aún funcionan (sin UNIQUE)
+ * Test 6: Verificar que backend previene cedulas duplicadas
  */
 async function testCedulasDuplicadas() {
   try {
-    console.log('7️⃣  Test: Crear dos clientes con la misma cédula (debe fallar)...');
+    console.log('7️⃣  Test: Verificar que backend previene cédulas duplicadas...');
     
     const cedulaDuplicada = '111222333';
     
@@ -239,7 +239,7 @@ async function testCedulasDuplicadas() {
       }
     );
 
-    // Intentar crear segundo cliente con misma cédula
+    // Intentar crear segundo cliente con misma cédula (debe fallar)
     await axios.post(
       `${BASE_URL}/clientes`,
       {
@@ -255,9 +255,8 @@ async function testCedulasDuplicadas() {
       }
     );
 
-    console.error('❌ Se permitió crear dos clientes con la misma cédula (validación backend funciona)\n');
-    // Nota: Este test espera que falle en backend, no en base de datos
-    return true;
+    console.error('❌ Se permitió crear dos clientes con la misma cédula\n');
+    return false;
   } catch (error) {
     if (error.response?.status === 400 && error.response?.data?.error?.includes('cédula')) {
       console.log('✅ Validación correcta: Backend previene cédulas duplicadas\n');
