@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useContext, useCallback, useMemo } from 'react';
 
 const SelectionContext = createContext(null);
 
@@ -62,7 +62,7 @@ export const SelectionProvider = ({ children }) => {
     });
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     selectedIds,
     toggleSelection,
     clearSelection,
@@ -70,7 +70,7 @@ export const SelectionProvider = ({ children }) => {
     getSelectionCount,
     getSelectedIds,
     toggleMultiple
-  };
+  }), [selectedIds, toggleSelection, clearSelection, isSelected, getSelectionCount, getSelectedIds, toggleMultiple]);
 
   return (
     <SelectionContext.Provider value={value}>
