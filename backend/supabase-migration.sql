@@ -157,6 +157,29 @@ CREATE TABLE IF NOT EXISTS abonos (
 );
 
 -- =========================================
+-- TABLA: movimientos_cuenta (historial de movimientos en cuentas)
+-- =========================================
+CREATE TABLE IF NOT EXISTS movimientos_cuenta (
+  id BIGSERIAL PRIMARY KEY,
+  id_cuenta_por_cobrar BIGINT NOT NULL REFERENCES cuentas_por_cobrar(id) ON DELETE CASCADE,
+  id_venta BIGINT REFERENCES ventas(id),
+  tipo TEXT NOT NULL, -- 'venta_credito', 'abono', 'ajuste'
+  monto NUMERIC(10, 2) NOT NULL,
+  descripcion TEXT,
+  fecha_movimiento TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  usuario TEXT
+);
+
+-- Create indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_movimientos_cuenta_id_cuenta ON movimientos_cuenta(id_cuenta_por_cobrar);
+CREATE INDEX IF NOT EXISTS idx_movimientos_cuenta_fecha ON movimientos_cuenta(fecha_movimiento);
+
+-- Create unique index to prevent duplicate active accounts per client
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_cuenta_activa_por_cliente
+ON cuentas_por_cobrar (id_cliente)
+WHERE estado = 'Pendiente';
+
+-- =========================================
 -- TABLA: ventas_dia (base de datos temporal)
 -- =========================================
 CREATE TABLE IF NOT EXISTS ventas_dia (

@@ -294,6 +294,39 @@ function DetalleCuentaPorCobrar() {
           <p className="empty-abonos">No hay abonos registrados</p>
         )}
       </div>
+
+      {cuenta.movimientos && cuenta.movimientos.length > 0 && (
+        <div className="historial-movimientos">
+          <h3>📦 Historial de Ventas a Crédito</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Descripción</th>
+                <th>Venta #</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cuenta.movimientos.map((movimiento) => (
+                <tr key={movimiento.id}>
+                  <td>{formatearFecha(movimiento.fecha_movimiento)}</td>
+                  <td>
+                    <span className={`badge-tipo tipo-${movimiento.tipo}`}>
+                      {movimiento.tipo === 'venta_credito' ? '🛍️ Venta' : 
+                       movimiento.tipo === 'abono' ? '💰 Abono' : '⚙️ Ajuste'}
+                    </span>
+                  </td>
+                  <td className="monto">{formatearMoneda(movimiento.monto)}</td>
+                  <td>{movimiento.descripcion || '-'}</td>
+                  <td>{movimiento.id_venta ? `#${movimiento.id_venta}` : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
