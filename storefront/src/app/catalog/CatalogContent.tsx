@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useInfiniteProducts, useCategories } from '@/hooks/useApi';
 import { ProductGrid } from '@/components/product';
 import { debounce } from '@/lib/utils';
