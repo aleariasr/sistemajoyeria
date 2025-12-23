@@ -9,8 +9,8 @@ class Cliente {
       .from('clientes')
       .insert([{
         nombre,
-        telefono,
-        cedula,
+        telefono: telefono || null,
+        cedula: cedula || null,
         direccion: direccion || null,
         email: email || null,
         notas: notas || null
@@ -99,8 +99,8 @@ class Cliente {
       .from('clientes')
       .update({
         nombre,
-        telefono,
-        cedula,
+        telefono: telefono || null,
+        cedula: cedula || null,
         direccion,
         email,
         notas

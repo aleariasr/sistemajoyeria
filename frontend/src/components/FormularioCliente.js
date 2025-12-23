@@ -50,12 +50,12 @@ function FormularioCliente() {
     e.preventDefault();
     
     // Validaciones
-    if (!formData.nombre || !formData.cedula || !formData.telefono) {
-      setError('Nombre, cédula y teléfono son campos obligatorios');
+    if (!formData.nombre || formData.nombre.trim() === '') {
+      setError('El nombre es un campo obligatorio');
       return;
     }
 
-    // Validar email si se proporciona (same regex as backend)
+    // Validar email si se proporciona
     if (formData.email && formData.email.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
@@ -64,12 +64,14 @@ function FormularioCliente() {
       }
     }
 
-    // Validar teléfono (consistent with backend: only digits, plus, and parentheses after normalization)
-    const normalizedPhone = formData.telefono.replace(/[\s-]/g, '');
-    const phoneRegex = /^[0-9+()]{6,20}$/;
-    if (!phoneRegex.test(normalizedPhone)) {
-      setError('El teléfono debe tener entre 6 y 20 caracteres (solo números, +, y paréntesis)');
-      return;
+    // Validar teléfono si se proporciona
+    if (formData.telefono && formData.telefono.trim() !== '') {
+      const normalizedPhone = formData.telefono.replace(/[\s-]/g, '');
+      const phoneRegex = /^[0-9+()]{6,20}$/;
+      if (!phoneRegex.test(normalizedPhone)) {
+        setError('El teléfono debe tener entre 6 y 20 caracteres (solo números, +, y paréntesis)');
+        return;
+      }
     }
 
     try {
@@ -131,14 +133,13 @@ function FormularioCliente() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="cedula">Cédula *</label>
+              <label htmlFor="cedula">Cédula</label>
               <input
                 type="text"
                 id="cedula"
                 name="cedula"
                 value={formData.cedula}
                 onChange={handleChange}
-                required
                 placeholder="Número de cédula"
               />
             </div>
@@ -146,14 +147,13 @@ function FormularioCliente() {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="telefono">Teléfono *</label>
+              <label htmlFor="telefono">Teléfono</label>
               <input
                 type="tel"
                 id="telefono"
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleChange}
-                required
                 placeholder="Número de teléfono"
               />
             </div>
