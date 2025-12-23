@@ -42,11 +42,26 @@ export interface Product {
  */
 export interface ProductComponent {
   id: number;
-  producto_id: number;
-  producto_nombre: string;
-  producto_imagen: string | null;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  precio: number;
+  moneda: 'CRC' | 'USD' | 'EUR';
+  stock_disponible: boolean;
+  stock: number;
+  imagen_url: string | null;
   cantidad_requerida: number;
-  orden_display: number;
+  estado: string;
+  es_activo: boolean;
+}
+
+/**
+ * Components response from API
+ */
+export interface ComponentsResponse {
+  componentes: ProductComponent[];
+  stock_set: number;
+  completo: boolean;
 }
 
 /**

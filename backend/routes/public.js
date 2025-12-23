@@ -273,12 +273,15 @@ router.get('/products/:id/componentes', async (req, res) => {
       id: comp.producto.id,
       codigo: comp.producto.codigo,
       nombre: comp.producto.nombre,
+      descripcion: comp.producto.descripcion,
       precio: comp.producto.precio_venta,
       moneda: comp.producto.moneda,
-      stock_disponible: comp.producto.stock_actual > 0,
+      stock_disponible: comp.producto.stock_actual > 0 && comp.producto.estado === 'Activo',
       stock: comp.producto.stock_actual,
       imagen_url: comp.producto.imagen_url,
-      cantidad_requerida: comp.cantidad_requerida
+      cantidad_requerida: comp.cantidad_requerida,
+      estado: comp.producto.estado,
+      es_activo: comp.producto.estado === 'Activo'
     }));
 
     res.json({

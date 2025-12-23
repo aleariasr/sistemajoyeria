@@ -199,32 +199,95 @@ async function actualizarStockVenta(itemConJoya, motivo, username) {
 
 ## 🌐 Comportamiento en Storefront
 
+### Concepto Fundamental: Set vs Joyas Individuales
+
+**IMPORTANTE:** Los sets y las joyas individuales son productos SEPARADOS en el catálogo:
+
+1. **El SET (Producto Padre)**:
+   - Es un producto independiente con su propio ID, código, nombre, precio e imagen
+   - Aparece como un producto en el catálogo
+   - Tiene su propia página de detalle
+   - Su stock se calcula automáticamente basado en los componentes
+   - Al comprarlo, se descuenta 1 unidad de cada componente
+
+2. **Las JOYAS INDIVIDUALES (Componentes)**:
+   - Son productos independientes que TAMBIÉN aparecen en el catálogo
+   - Tienen su propia página de detalle
+   - Se pueden comprar por separado
+   - Tienen su propio stock individual
+
+3. **La Relación**:
+   - El SET "referencia" a las joyas como componentes
+   - Las joyas NO pertenecen exclusivamente al set
+   - Una joya puede ser componente de múltiples sets
+
 ### Detalle de Set
 
+El storefront muestra completamente todos los componentes de un set:
+
 ```html
-📦 Este set incluye:
+Producto SET (Página de detalle):
+┌─────────────────────────────────────────┐
+│ [IMAGEN DEL SET]                        │
+│ Trio de Pulseras Oro - ₡45,000         │
+│ ✅ Disponible (5 sets)                  │
+│ [Agregar set completo al carrito]      │
+└─────────────────────────────────────────┘
 
-┌──────────────────────────────┐
-│ 📿 Pulsera Oro Eslabones     │
-│    ₡18,000 | ✅ 10 disponibles│
-├──────────────────────────────┤
-│ 📿 Pulsera Oro Dije Corazón │
-│    ₡18,000 | ⚠️ 2 disponibles │
-├──────────────────────────────┤
-│ 📿 Pulsera Oro Perlas        │
-│    ₡18,000 | ✅ 15 disponibles│
-└──────────────────────────────┘
+Componentes del set:
+┌──────────────────────────────────────────┐
+│ 🔍 Piezas que componen este set         │
+│                                          │
+│ 📿 Pulsera Oro Eslabones                 │
+│    ₡18,000 | ✅ 10 disponibles            │
+│    [Agregar pieza]                       │
+├──────────────────────────────────────────┤
+│ 📿 Pulsera Oro Dije Corazón             │
+│    ₡18,000 | ✅ 5 disponibles             │
+│    [Agregar pieza]                       │
+├──────────────────────────────────────────┤
+│ 📿 Pulsera Oro Perlas                    │
+│    ₡18,000 | ✅ 15 disponibles            │
+│    [Agregar pieza]                       │
+└──────────────────────────────────────────┘
 
-✅ Set completo (2 disponibles)
+💡 Cada pieza es un producto individual disponible
+   también por separado en el catálogo
 ```
 
-### Badges de Disponibilidad
+### Características del Storefront
 
-- **Verde** ✅ "Set completo" → Todos los componentes tienen stock
-- **Amarillo** ⚠️ "Set parcial disponible" → Algún componente tiene poco stock
-- **Rojo** ❌ "Set no disponible" → Algún componente no tiene stock
+1. **Visualización de Componentes**: Muestra todos los componentes del set con:
+   - Imagen del componente
+   - Nombre y código
+   - Precio individual
+   - Stock disponible
+   - Estado (Activo/Agotado/Inactivo)
 
-### API Response
+2. **Selección Individual**: Permite agregar al carrito:
+   - ✅ Piezas activas con stock disponible
+   - ❌ Bloquea piezas agotadas o inactivas
+
+3. **Badges de Disponibilidad**:
+   - **Verde** ✅ "Set completo disponible" → Todos los componentes tienen stock
+   - **Rojo** ❌ "Set no disponible" → Algún componente no tiene stock
+
+### Componente SetComponents.tsx
+
+Nuevo componente en `storefront/src/components/product/SetComponents.tsx`:
+
+```tsx
+<SetComponents setId={999} setName="Trio de Pulseras Oro" />
+```
+
+Características:
+- Carga automática de componentes via API
+- Display responsive con animaciones
+- Integración con carrito de compras
+- Validación de stock en tiempo real
+- Estados visuales claros (disponible/agotado/inactivo)
+
+### API Response Actualizada
 
 ```javascript
 GET /api/public/products/999/componentes
@@ -233,10 +296,17 @@ GET /api/public/products/999/componentes
   "componentes": [
     {
       "id": 101,
+      "codigo": "PULS-001",
       "nombre": "Pulsera Oro Eslabones",
+      "descripcion": "Pulsera de oro con eslabones",
       "precio": 18000,
+      "moneda": "CRC",
       "stock": 10,
-      "cantidad_requerida": 1
+      "stock_disponible": true,
+      "imagen_url": "https://...",
+      "cantidad_requerida": 1,
+      "estado": "Activo",
+      "es_activo": true
     },
     // ...
   ],
