@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import api from '@/lib/api';
 import { useCartStore } from '@/hooks/useCart';
@@ -145,11 +146,15 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
             >
               {/* Component Image */}
               {component.imagen_url ? (
-                <img
-                  src={component.imagen_url}
-                  alt={component.nombre}
-                  className="w-20 h-20 object-cover rounded-md"
-                />
+                <div className="relative w-20 h-20 rounded-md overflow-hidden">
+                  <Image
+                    src={component.imagen_url}
+                    alt={component.nombre}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="w-20 h-20 bg-primary-100 rounded-md flex items-center justify-center text-3xl">
                   💎
@@ -170,7 +175,7 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
                   </span>
                   {component.cantidad_requerida > 1 && (
                     <span className="text-primary-500">
-                      × {component.cantidad_requerida} {component.cantidad_requerida === 1 ? 'unidad' : 'unidades'} por set
+                      × {component.cantidad_requerida} unidades por set
                     </span>
                   )}
                 </div>
@@ -183,7 +188,7 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
                     <>
                       <span className="inline-flex items-center gap-2 text-green-600 text-sm font-medium">
                         <span className="w-2 h-2 bg-green-500 rounded-full" />
-                        {component.stock} disponible{component.stock !== 1 ? 's' : ''}
+                        {component.stock} disponible{component.stock === 1 ? '' : 's'}
                       </span>
                       <Button
                         size="sm"
