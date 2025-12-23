@@ -110,7 +110,7 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
       className="mt-8"
     >
       <div className="bg-primary-50 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-primary-900">
             🔍 Piezas que componen este set
           </h3>
@@ -126,10 +126,6 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
             </span>
           )}
         </div>
-
-        <p className="text-sm text-primary-600 mb-6">
-          💡 Estas piezas también están disponibles individualmente en el catálogo. Puedes agregarlas por separado a tu carrito.
-        </p>
 
         <div className="space-y-4">
           {components.map((component, index) => (
@@ -214,14 +210,6 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
             </motion.div>
           ))}
         </div>
-
-        {components.some(c => c.es_activo && c.stock_disponible) && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              💡 <strong>Nota:</strong> Cada pieza mostrada arriba es un producto individual que también puedes encontrar y comprar por separado en nuestro catálogo.
-            </p>
-          </div>
-        )}
       </div>
     </motion.div>
   );
