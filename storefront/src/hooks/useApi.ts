@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type { CreateOrderRequest } from '@/lib/types';
 
@@ -39,6 +39,30 @@ export function useProducts(params?: {
   return useQuery({
     queryKey: queryKeys.products(params),
     queryFn: () => api.getProducts(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+/**
+ * Fetch products with infinite scroll support
+ * This hook automatically manages pagination for infinite scroll UI
+ */
+export function useInfiniteProducts(params?: {
+  search?: string;
+  category?: string;
+  price_min?: number;
+  price_max?: number;
+  per_page?: number;
+}) {
+  return useInfiniteQuery({
+    queryKey: ['products', 'infinite', params],
+    queryFn: ({ pageParam = 1 }) => 
+      api.getProducts({ ...params, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // Return next page number if there are more pages, otherwise undefined
+      return lastPage.has_more ? lastPage.page + 1 : undefined;
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }

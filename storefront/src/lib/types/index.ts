@@ -132,10 +132,12 @@ export interface OrderItemDetail {
  */
 export interface ProductsResponse {
   products: Product[];
-  total: number;
+  total: number; // Total products matching filters in database
+  total_products: number; // Products in current page (after variant expansion)
   page: number;
   per_page: number;
   total_pages: number;
+  has_more: boolean; // Indicates if there are more pages to load
 }
 
 /**

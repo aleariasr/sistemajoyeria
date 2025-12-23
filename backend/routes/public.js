@@ -120,10 +120,12 @@ for (const joya of resultado.joyas) {
 }
     res.json({
       products: productosExpandidos,
-      total: productosExpandidos.length,
+      total: resultado.total, // Total products in database matching filters
+      total_products: productosExpandidos.length, // Products returned in this page (after variant expansion)
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: Math.ceil(productosExpandidos.length / resultado.por_pagina)
+      total_pages: resultado.total_paginas, // Total pages based on database count
+      has_more: resultado.pagina < resultado.total_paginas // Indicates if there are more pages
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
