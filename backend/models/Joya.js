@@ -237,52 +237,40 @@ class Joya {
       detalles: []
     };
 
-    // Verificar ventas
-    const { data: ventas, error: errorVentas } = await supabase
+    // Verificar ventas - obtener count directamente
+    const { count: countVentas, error: errorVentas } = await supabase
       .from('items_venta')
-      .select('id_venta')
-      .eq('id_joya', id)
-      .limit(1);
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
 
     if (errorVentas) {
       throw errorVentas;
     }
 
-    if (ventas && ventas.length > 0) {
-      const { count: countVentas } = await supabase
-        .from('items_venta')
-        .select('id', { count: 'exact', head: true })
-        .eq('id_joya', id);
-      
+    if (countVentas && countVentas > 0) {
       dependencias.tiene_dependencias = true;
       dependencias.detalles.push({
         tipo: 'ventas',
-        cantidad: countVentas || 0,
+        cantidad: countVentas,
         mensaje: `Esta joya está asociada a ${countVentas} venta(s) registrada(s)`
       });
     }
 
-    // Verificar movimientos de inventario
-    const { data: movimientos, error: errorMovimientos } = await supabase
+    // Verificar movimientos de inventario - obtener count directamente
+    const { count: countMovimientos, error: errorMovimientos } = await supabase
       .from('movimientos_inventario')
-      .select('id')
-      .eq('id_joya', id)
-      .limit(1);
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
 
     if (errorMovimientos) {
       throw errorMovimientos;
     }
 
-    if (movimientos && movimientos.length > 0) {
-      const { count: countMovimientos } = await supabase
-        .from('movimientos_inventario')
-        .select('id', { count: 'exact', head: true })
-        .eq('id_joya', id);
-      
+    if (countMovimientos && countMovimientos > 0) {
       dependencias.tiene_dependencias = true;
       dependencias.detalles.push({
         tipo: 'movimientos',
-        cantidad: countMovimientos || 0,
+        cantidad: countMovimientos,
         mensaje: `Esta joya tiene ${countMovimientos} movimiento(s) de inventario registrado(s)`
       });
     }
@@ -307,27 +295,21 @@ class Joya {
       });
     }
 
-    // Verificar pedidos online
-    const { data: pedidos, error: errorPedidos } = await supabase
+    // Verificar pedidos online - obtener count directamente
+    const { count: countPedidos, error: errorPedidos } = await supabase
       .from('items_pedido_online')
-      .select('id_pedido')
-      .eq('id_joya', id)
-      .limit(1);
+      .select('id', { count: 'exact', head: true })
+      .eq('id_joya', id);
 
     if (errorPedidos) {
       throw errorPedidos;
     }
 
-    if (pedidos && pedidos.length > 0) {
-      const { count: countPedidos } = await supabase
-        .from('items_pedido_online')
-        .select('id', { count: 'exact', head: true })
-        .eq('id_joya', id);
-      
+    if (countPedidos && countPedidos > 0) {
       dependencias.tiene_dependencias = true;
       dependencias.detalles.push({
         tipo: 'pedidos_online',
-        cantidad: countPedidos || 0,
+        cantidad: countPedidos,
         mensaje: `Esta joya está en ${countPedidos} pedido(s) online`
       });
     }

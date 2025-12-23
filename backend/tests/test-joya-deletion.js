@@ -32,7 +32,7 @@ async function apiCall(method, endpoint, data = null, cookie = '') {
 
 async function runTests() {
   console.log('\n🧪 Testing Joya Deletion with Dependency Checks\n');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
 
   // Step 1: Login as admin
   console.log('\n1️⃣  Login as admin...');
@@ -208,7 +208,7 @@ async function runTests() {
   }
 
   // Summary
-  console.log('\n' + '=' .repeat(60));
+  console.log('\n' + '='.repeat(60));
   console.log('✅ Test suite completed!');
   console.log('\nSummary:');
   console.log('  - Physical deletion works for joyas without dependencies ✓');
