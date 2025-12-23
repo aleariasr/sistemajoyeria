@@ -34,6 +34,7 @@ import PedidosOnline from './components/PedidosOnline';
 function Sidebar() {
   const location = useLocation();
   const { user, isAdmin, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const isActive = (path) => {
     return location.pathname === path ? 'active' : '';
@@ -43,135 +44,160 @@ function Sidebar() {
     await logout();
   };
 
+  const closeMobileMenu = () => {
+    if (window.innerWidth <= 480) {
+      setMobileOpen(false);
+    }
+  };
+
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <h1>
-          <span>💎</span>
-          <span>Cuero & Perla</span>
-        </h1>
-        <div className="user-info">
-          <p>{user?.full_name}</p>
-          <small>{user?.role === 'administrador' ? '👨‍💼 Administrador' : '👤 Dependiente'}</small>
+    <>
+      {/* Mobile Menu Toggle Button */}
+      <button 
+        className="mobile-menu-toggle"
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle menu"
+      >
+        {mobileOpen ? '✕' : '☰'}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div 
+          className="mobile-overlay" 
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <div className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+        <div className="sidebar-header">
+          <h1>
+            <span>💎</span>
+            <span>Cuero & Perla</span>
+          </h1>
+          <div className="user-info">
+            <p>{user?.full_name}</p>
+            <small>{user?.role === 'administrador' ? '👨‍💼 Administrador' : '👤 Dependiente'}</small>
+          </div>
         </div>
-      </div>
-      <ul className="sidebar-nav">
-        {/* Módulo de Ventas - Todos los usuarios */}
-        <li>
-          <Link to="/ventas" className={isActive('/ventas')}>
-            <span className="icon">💰</span>
-            <span>Nueva Venta</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/historial-ventas" className={isActive('/historial-ventas')}>
-            <span className="icon">📊</span>
-            <span>Historial Ventas</span>
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/cuentas-por-cobrar" className={isActive('/cuentas-por-cobrar')}>
-            <span className="icon">💳</span>
-            <span>Cuentas por Cobrar</span>
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/clientes" className={isActive('/clientes')}>
-            <span className="icon">👥</span>
-            <span>Clientes</span>
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/ingresos-extras" className={isActive('/ingresos-extras')}>
-            <span className="icon">💵</span>
-            <span>Ingresos Extras</span>
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/devoluciones" className={isActive('/devoluciones')}>
-            <span className="icon">🔄</span>
-            <span>Devoluciones</span>
-          </Link>
-        </li>
-
-        <li>
-          <Link to="/cierre-caja" className={isActive('/cierre-caja')}>
-            <span className="icon">💰</span>
-            <span>Cierre de Caja</span>
-          </Link>
-        </li>
-        <li>
-          <Link to="/historial-cierres" className={isActive('/historial-cierres')}>
-            <span className="icon">🧾</span>
-            <span>Histórico de Cierres</span>
-          </Link>
-        </li>
-
-        {/* Separador */}
-        {isAdmin() && <li className="separator"></li>}
-
-        {/* Pedidos Online - Solo administradores */}
-        {isAdmin() && (
+        <ul className="sidebar-nav">
+          {/* Módulo de Ventas - Todos los usuarios */}
           <li>
-            <Link to="/pedidos-online" className={isActive('/pedidos-online')}>
-              <span className="icon">📦</span>
-              <span>Pedidos Online</span>
+            <Link to="/ventas" className={isActive('/ventas')} onClick={closeMobileMenu}>
+              <span className="icon">💰</span>
+              <span>Nueva Venta</span>
             </Link>
           </li>
-        )}
+          <li>
+            <Link to="/historial-ventas" className={isActive('/historial-ventas')} onClick={closeMobileMenu}>
+              <span className="icon">📊</span>
+              <span>Historial Ventas</span>
+            </Link>
+          </li>
 
-        {/* Separador */}
-        {isAdmin() && <li className="separator"></li>}
+          <li>
+            <Link to="/cuentas-por-cobrar" className={isActive('/cuentas-por-cobrar')} onClick={closeMobileMenu}>
+              <span className="icon">💳</span>
+              <span>Cuentas por Cobrar</span>
+            </Link>
+          </li>
 
-        {/* Módulos administrativos - Solo administradores */}
-        {isAdmin() && (
-          <>
+          <li>
+            <Link to="/clientes" className={isActive('/clientes')} onClick={closeMobileMenu}>
+              <span className="icon">👥</span>
+              <span>Clientes</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/ingresos-extras" className={isActive('/ingresos-extras')} onClick={closeMobileMenu}>
+              <span className="icon">💵</span>
+              <span>Ingresos Extras</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/devoluciones" className={isActive('/devoluciones')} onClick={closeMobileMenu}>
+              <span className="icon">🔄</span>
+              <span>Devoluciones</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/cierre-caja" className={isActive('/cierre-caja')} onClick={closeMobileMenu}>
+              <span className="icon">💰</span>
+              <span>Cierre de Caja</span>
+            </Link>
+          </li>
+          <li>
+            <Link to="/historial-cierres" className={isActive('/historial-cierres')} onClick={closeMobileMenu}>
+              <span className="icon">🧾</span>
+              <span>Histórico de Cierres</span>
+            </Link>
+          </li>
+
+          {/* Separador */}
+          {isAdmin() && <li className="separator"></li>}
+
+          {/* Pedidos Online - Solo administradores */}
+          {isAdmin() && (
             <li>
-              <Link to="/" className={isActive('/')}>
-                <span className="icon">📋</span>
-                <span>Inventario</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/nueva-joya" className={isActive('/nueva-joya')}>
-                <span className="icon">➕</span>
-                <span>Nueva Joya</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/movimientos" className={isActive('/movimientos')}>
+              <Link to="/pedidos-online" className={isActive('/pedidos-online')} onClick={closeMobileMenu}>
                 <span className="icon">📦</span>
-                <span>Movimientos</span>
+                <span>Pedidos Online</span>
               </Link>
             </li>
-            <li>
-              <Link to="/reportes" className={isActive('/reportes')}>
-                <span className="icon">📈</span>
-                <span>Reportes</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/usuarios" className={isActive('/usuarios')}>
-                <span className="icon">👤</span>
-                <span>Usuarios</span>
-              </Link>
-            </li>
-          </>
-        )}
+          )}
 
-        <li className="separator"></li>
-        <li>
-          <button onClick={handleLogout} className="logout-btn">
-            <span className="icon">🚪</span>
-            <span>Cerrar Sesión</span>
-          </button>
-        </li>
-      </ul>
-    </div>
+          {/* Separador */}
+          {isAdmin() && <li className="separator"></li>}
+
+          {/* Módulos administrativos - Solo administradores */}
+          {isAdmin() && (
+            <>
+              <li>
+                <Link to="/" className={isActive('/')} onClick={closeMobileMenu}>
+                  <span className="icon">📋</span>
+                  <span>Inventario</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/nueva-joya" className={isActive('/nueva-joya')} onClick={closeMobileMenu}>
+                  <span className="icon">➕</span>
+                  <span>Nueva Joya</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/movimientos" className={isActive('/movimientos')} onClick={closeMobileMenu}>
+                  <span className="icon">📦</span>
+                  <span>Movimientos</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/reportes" className={isActive('/reportes')} onClick={closeMobileMenu}>
+                  <span className="icon">📈</span>
+                  <span>Reportes</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/usuarios" className={isActive('/usuarios')} onClick={closeMobileMenu}>
+                  <span className="icon">👤</span>
+                  <span>Usuarios</span>
+                </Link>
+              </li>
+            </>
+          )}
+
+          <li className="separator"></li>
+          <li>
+            <button onClick={handleLogout} className="logout-btn">
+              <span className="icon">🚪</span>
+              <span>Cerrar Sesión</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </>
   );
 }
 

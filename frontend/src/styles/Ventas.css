@@ -485,14 +485,283 @@
   transform: none;
 }
 
+/* Responsive Design for Ventas */
+
+/* Tablets and smaller (1024px and below) */
 @media (max-width: 1024px) {
   .ventas-content {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
   
   .busqueda-section,
   .carrito-section {
     padding: 25px;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .ventas-container {
+    padding: 15px;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-header p {
+    font-size: 0.95rem;
+  }
+
+  .busqueda-section,
+  .carrito-section {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .busqueda-section h2,
+  .carrito-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+  }
+
+  .carrito-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .carrito-item-info {
+    width: 100%;
+  }
+
+  .carrito-item-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-direction: row;
+  }
+
+  .cantidad-controls {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .resumen-venta {
+    padding: 16px;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-procesar {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+  }
+
+  .mensaje {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .btn-imprimir-ticket {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .ventas-container {
+    padding: 10px;
+  }
+
+  .page-header {
+    margin-bottom: 20px;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .page-header p {
+    font-size: 0.85rem;
+  }
+
+  .ventas-content {
+    gap: 15px;
+  }
+
+  .busqueda-section,
+  .carrito-section {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .busqueda-section h2,
+  .carrito-section h2 {
+    font-size: 1.15rem;
+    margin-bottom: 16px;
+  }
+
+  .busqueda-input {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+  }
+
+  .resultados-busqueda {
+    max-height: 300px;
+  }
+
+  .resultado-item {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .carrito-items {
+    gap: 12px;
+  }
+
+  .carrito-item {
+    padding: 12px;
+    border-radius: 10px;
+    gap: 10px;
+  }
+
+  .carrito-item h4 {
+    font-size: 0.95rem;
+  }
+
+  .carrito-item p {
+    font-size: 0.85rem;
+  }
+
+  .cantidad-controls button {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+
+  .cantidad-controls input {
+    width: 50px;
+    font-size: 0.9rem;
+  }
+
+  .btn-eliminar {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .resumen-venta {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .resumen-venta h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .resumen-venta p {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .resumen-venta .total {
+    font-size: 1.15rem;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .btn-procesar {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .credito-section {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .cliente-seleccionado {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .btn-limpiar-cliente {
+    align-self: flex-end;
+    position: absolute;
+    right: 12px;
+    top: 12px;
+  }
+
+  .clientes-encontrados {
+    max-height: 250px;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .cliente-item {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .mensaje {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .btn-imprimir-ticket {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    margin-top: 8px;
+    display: block;
+    width: 100%;
+  }
+
+  /* Stack buttons vertically on mobile */
+  .mensaje div[style*="inline-flex"] {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 0 !important;
+    margin-top: 10px;
+    width: 100%;
   }
 }
 
