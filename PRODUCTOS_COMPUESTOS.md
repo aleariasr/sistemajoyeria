@@ -199,28 +199,60 @@ async function actualizarStockVenta(itemConJoya, motivo, username) {
 
 ## 🌐 Comportamiento en Storefront
 
+### Concepto Fundamental: Set vs Joyas Individuales
+
+**IMPORTANTE:** Los sets y las joyas individuales son productos SEPARADOS en el catálogo:
+
+1. **El SET (Producto Padre)**:
+   - Es un producto independiente con su propio ID, código, nombre, precio e imagen
+   - Aparece como un producto en el catálogo
+   - Tiene su propia página de detalle
+   - Su stock se calcula automáticamente basado en los componentes
+   - Al comprarlo, se descuenta 1 unidad de cada componente
+
+2. **Las JOYAS INDIVIDUALES (Componentes)**:
+   - Son productos independientes que TAMBIÉN aparecen en el catálogo
+   - Tienen su propia página de detalle
+   - Se pueden comprar por separado
+   - Tienen su propio stock individual
+
+3. **La Relación**:
+   - El SET "referencia" a las joyas como componentes
+   - Las joyas NO pertenecen exclusivamente al set
+   - Una joya puede ser componente de múltiples sets
+
 ### Detalle de Set
 
-El storefront ahora muestra completamente todos los componentes de un set con su información detallada:
+El storefront muestra completamente todos los componentes de un set:
 
 ```html
-📦 Este set incluye 3 piezas
+Producto SET (Página de detalle):
+┌─────────────────────────────────────────┐
+│ [IMAGEN DEL SET]                        │
+│ Trio de Pulseras Oro - ₡45,000         │
+│ ✅ Disponible (5 sets)                  │
+│ [Agregar set completo al carrito]      │
+└─────────────────────────────────────────┘
 
+Componentes del set:
 ┌──────────────────────────────────────────┐
+│ 🔍 Piezas que componen este set         │
+│                                          │
 │ 📿 Pulsera Oro Eslabones                 │
 │    ₡18,000 | ✅ 10 disponibles            │
-│    [Agregar pieza] ✅ Disponible          │
+│    [Agregar pieza]                       │
 ├──────────────────────────────────────────┤
 │ 📿 Pulsera Oro Dije Corazón             │
-│    ₡18,000 | ❌ Agotado                   │
-│    ⚠️ No seleccionable                    │
+│    ₡18,000 | ✅ 5 disponibles             │
+│    [Agregar pieza]                       │
 ├──────────────────────────────────────────┤
 │ 📿 Pulsera Oro Perlas                    │
 │    ₡18,000 | ✅ 15 disponibles            │
-│    [Agregar pieza] ✅ Disponible          │
+│    [Agregar pieza]                       │
 └──────────────────────────────────────────┘
 
-✅ Puedes comprar el set completo o piezas individuales
+💡 Cada pieza es un producto individual disponible
+   también por separado en el catálogo
 ```
 
 ### Características del Storefront

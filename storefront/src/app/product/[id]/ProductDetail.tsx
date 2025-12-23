@@ -157,6 +157,16 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             </div>
           )}
 
+          {/* Set Information Badge */}
+          {product.es_producto_compuesto && (
+            <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                📦 <strong>Este es un set completo</strong> que incluye múltiples piezas. 
+                El stock mostrado es para el set completo. Las piezas individuales también están disponibles por separado en el catálogo.
+              </p>
+            </div>
+          )}
+
           {/* Stock Status */}
           <div className="mb-8">
             {product.stock_disponible ? (
@@ -165,7 +175,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                 Disponible
                 {product.stock && product.stock <= 5 && (
                   <span className="text-orange-500 text-sm">
-                    (Solo {product.stock} unidades)
+                    (Solo {product.stock} {product.es_producto_compuesto ? 'sets' : 'unidades'})
                   </span>
                 )}
               </span>
@@ -217,7 +227,10 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               fullWidth
               size="xl"
             >
-              {product.stock_disponible ? 'Agregar al carrito' : 'No disponible'}
+              {product.stock_disponible 
+                ? (product.es_producto_compuesto ? 'Agregar set completo al carrito' : 'Agregar al carrito')
+                : 'No disponible'
+              }
             </Button>
 
             <Link href="/catalog">
