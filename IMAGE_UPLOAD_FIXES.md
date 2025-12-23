@@ -61,11 +61,26 @@ Se han implementado mejoras significativas para solucionar problemas intermitent
   - `cargarImagenes()`: Manejo de errores 404, 500, Network Error
   - `handleEliminar()`: Manejo de error 404 (imagen ya eliminada)
   - `handleMarcarPrincipal()`: Mensajes de error específicos
+- ✅ **Validación de respuestas vacías**: Detecta y maneja respuestas vacías de la API
+- ✅ **Mejor manejo de arrays**: Valida que response.data sea un array antes de usarlo
 
 ### Storefront
 
-#### 1. **components/product/ProductImageGallery.tsx**
+#### 1. **lib/utils/index.ts**
+- ✅ **Nueva función `getLowQualityPlaceholder()`**: Genera URLs de Cloudinary con:
+  - Tamaño pequeño (50x50 por defecto)
+  - Calidad baja (`auto:low`)
+  - Blur heavy (`e_blur:1000`)
+  - Para carga instantánea como placeholder
+
+#### 2. **components/product/ProductImageGallery.tsx**
+- ✅ **Progressive Image Loading (LQIP)**:
+  - Carga primero imagen de baja calidad (blur)
+  - Luego carga imagen de calidad media (`auto:good`)
+  - Modal zoom usa máxima calidad (`auto:best`)
+  - Transición suave con `opacity` y `duration-300`
 - ✅ **Error tracking por imagen**: Estado `Set<number>` para rastrear qué imágenes fallaron
+- ✅ **Estado de carga por imagen**: Nuevo estado `loadedImages` para controlar transiciones
 - ✅ **Placeholder mejorado**:
   - Vista principal: 🖼️ grande + "Error al cargar imagen" o "Sin imagen disponible"
   - Thumbnails: 🖼️ pequeño cuando falla la carga
@@ -75,12 +90,17 @@ Se han implementado mejoras significativas para solucionar problemas intermitent
 - ✅ **Protección contra zoom de imágenes rotas**:
   - Solo permite zoom si la imagen no tiene error
   - Cierra modal automáticamente si la imagen ampliada falla
-- ✅ **Callback `onError` en todas las imágenes**: Main, thumbnails y modal zoom
+- ✅ **Callback `onLoad`**: Detecta cuando la imagen de alta calidad termina de cargar
 
-#### 2. **components/product/ProductCard.tsx**
-- ✅ **Estado `imageError` individual**: Cada tarjeta rastrea su propio error
+#### 3. **components/product/ProductCard.tsx**
+- ✅ **Progressive Loading en tarjetas**:
+  - Placeholder de baja calidad instantáneo
+  - Imagen de calidad media carga progresivamente
+  - Transición suave con fade-in
+- ✅ **Estado `imageLoaded` individual**: Cada tarjeta rastrea su propio estado de carga
 - ✅ **Placeholder en tarjetas**: 🖼️ + "Sin imagen" cuando falla la carga
-- ✅ **Callback `onError`**: Detecta y maneja fallos de carga de imagen
+- ✅ **Callbacks `onError` y `onLoad`**: Detecta y maneja fallos y éxitos de carga de imagen
+- ✅ **Optimización de calidad**: Usa `auto:good` en lugar de `auto:best` para mejor balance carga/calidad
 
 ### Configuración
 
@@ -102,13 +122,59 @@ Se han implementado mejoras significativas para solucionar problemas intermitent
 2. **Placeholders visuales**: Íconos amigables (🖼️) en lugar de imágenes rotas
 3. **Lazy loading**: Mejor rendimiento en páginas con muchas imágenes
 4. **Sin límite artificial en cliente**: Permite fotografías de alta calidad de joyas
+5. **Progressive Loading (LQIP)**: 
+   - Las imágenes cargan primero en baja calidad (instantáneo)
+   - Luego mejoran a calidad media/alta progresivamente
+   - Mejor experiencia en conexiones lentas
+   - Reduce sensación de espera
 
-## Problemas Conocidos Pendientes
+## Técnica de Progressive Loading
 
-### Para investigar (necesita información del usuario):
-- ¿Problemas específicos con la galería del POS?
-- ¿Drag & drop funciona correctamente?
-- ¿Imágenes se renderizan en el storefront?
+El sistema implementa **LQIP (Low Quality Image Placeholder)** usando Cloudinary:
+
+### Storefront
+1. **Paso 1 - Placeholder instantáneo**: Carga imagen 50x50 con blur pesado
+2. **Paso 2 - Calidad media**: Carga imagen optimizada 800x800 con `auto:good`
+3. **Paso 3 - Zoom (opcional)**: Si el usuario hace zoom, carga 1600x1600 con `auto:best`
+
+### Ventajas
+- ✅ Percepción de carga instantánea
+- ✅ Reduce bandwidth inicial
+- ✅ Mejor experiencia en redes lentas (3G/4G)
+- ✅ Mantiene calidad alta para ver detalles cuando se necesita
+- ✅ Layout estable (no hay saltos de contenido)
+
+## Problemas Resueltos
+
+### Problema 1: "Error inesperado al cargar imágenes"
+**Causa**: API retornando respuesta vacía `""` en lugar de array
+**Solución**: 
+- Validación de tipo de respuesta en `cargarImagenes()`
+- Manejo específico de respuestas vacías
+- Log en consola para debugging
+- Fallback a array vacío
+
+### Problema 2: "Respuesta inesperada de la API de imágenes: ''"
+**Causa**: Response.data no es un array como se espera
+**Solución**:
+- Verificación `Array.isArray()` antes de usar datos
+- Manejo explícito de respuestas no válidas
+- Log descriptivo en consola
+- Previene crashes por datos inesperados
+
+### Problema 3: No se pueden agregar imágenes
+**Solución**:
+- Mejor manejo de errores con tipos específicos
+- Validación de idJoya antes de operaciones
+- Mensajes claros según el tipo de error
+- Fallback graceful en todos los casos
+
+### Problema 4: Imágenes cargan lento en conexiones lentas
+**Solución**:
+- Implementación de Progressive Loading (LQIP)
+- Placeholder blur instantáneo
+- Carga progresiva de calidad media → alta
+- Optimización de thumbnails con `auto:eco`
 
 ## Testing Recomendado
 
@@ -132,12 +198,15 @@ curl -X POST http://localhost:3001/api/imagenes-joya \
 2. Subir archivo .txt → Debe mostrar "Formato de archivo no válido"
 3. URL de imagen rota → Debe mostrar placeholder 🖼️
 4. Sin conexión → Debe mostrar "Error de conexión"
+5. Respuesta vacía de API → Debe manejar sin crash
 
 ### Storefront
 1. Producto sin imágenes → Debe mostrar "Sin imagen disponible"
 2. Imagen de Cloudinary rota → Debe mostrar placeholder
 3. Cambiar entre thumbnails → Lazy loading debe funcionar
 4. Click en zoom con imagen rota → No debe abrir modal
+5. **Conexión lenta** → Debe cargar blur primero, luego mejorar calidad
+6. **Scroll rápido** → Solo imágenes visibles deben cargar en alta calidad
 
 ## Compatibilidad
 
@@ -146,11 +215,13 @@ curl -X POST http://localhost:3001/api/imagenes-joya \
 - ✅ Next.js 14
 - ✅ Navegadores modernos (Chrome, Firefox, Safari, Edge)
 - ✅ Cloudinary API v2
+- ✅ Redes lentas (3G/4G) - Progressive Loading
 
 ## Próximos Pasos
 
-1. [ ] Instalar dependencias y probar en desarrollo
-2. [ ] Verificar problemas específicos reportados con la galería
-3. [ ] Testing manual de todos los flujos de imágenes
-4. [ ] Considerar agregar retry logic para fallos de red temporales
-5. [ ] Considerar agregar compresión de imágenes del lado del cliente antes de subir
+1. [x] Validar respuestas vacías de API
+2. [x] Implementar Progressive Loading (LQIP)
+3. [ ] Probar en desarrollo con imágenes reales
+4. [ ] Monitorear logs de Cloudinary para optimizaciones
+5. [ ] Considerar implementar retry logic para fallos de red temporales
+6. [ ] Considerar agregar loading skeleton animado

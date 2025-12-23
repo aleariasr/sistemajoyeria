@@ -12,7 +12,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useCartStore } from '@/hooks/useCart';
-import { formatPrice, optimizeCloudinaryImage } from '@/lib/utils';
+import { formatPrice, optimizeCloudinaryImage, getLowQualityPlaceholder } from '@/lib/utils';
 import { toast } from '@/components/ui/Toast';
 import type { Product } from '@/lib/types';
 
@@ -21,15 +21,13 @@ interface ProductCardProps {
   index?: number;
 }
 
-// Blur placeholder for images (base64 SVG - 600x600 gray rectangle)
-const BLUR_DATA_URL = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iI2Y1ZjVmNSIvPjwvc3ZnPg==";
-
 function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   const { addItem, openCart } = useCartStore();
   
   // Detect touch device safely on client side only
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   useEffect(() => {
     // Only run on client side
@@ -52,19 +50,26 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
 
   // Memoize URLs to prevent recalculation on every render
   const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
+  
   const imageUrl = useMemo(() => {
     // Find the primary image (sorted once and memoized)
-    // If API returns images sorted, this is O(n) worst case, O(1) best case
     const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
       || product.imagenes?.[0]?.url 
       || product.imagen_url;
     return optimizeCloudinaryImage(imagenPrincipal, {
       width: 800,
       height: 800,
-      quality: 'auto:best',
+      quality: 'auto:good',
       crop: 'fill',
       gravity: 'south',
     });
+  }, [product.imagenes, product.imagen_url]);
+  
+  const placeholderUrl = useMemo(() => {
+    const imagenPrincipal = product.imagenes?.find(img => img.es_principal)?.url 
+      || product.imagenes?.[0]?.url 
+      || product.imagen_url;
+    return getLowQualityPlaceholder(imagenPrincipal, { width: 50, height: 50 });
   }, [product.imagenes, product.imagen_url]);
 
   // Simplified animation config for better performance
@@ -85,7 +90,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
         className="block"
         aria-label={`Ver detalles de ${product.nombre}`}
       >
-        {/* Image Container */}
+        {/* Image Container con Progressive Loading */}
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-primary-50 mb-4">
           {imageError ? (
             <div className="w-full h-full flex items-center justify-center flex-col gap-2">
@@ -93,17 +98,37 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
               <span className="text-gray-400 text-xs">Sin imagen</span>
             </div>
           ) : (
-            <Image
-              src={imageUrl}
-              alt={product.nombre}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              onError={() => setImageError(true)}
-            />
+            <>
+              {/* Low quality placeholder - loads instantly */}
+              {!imageLoaded && (
+                <div className="absolute inset-0">
+                  <Image
+                    src={placeholderUrl}
+                    alt={`${product.nombre} - Cargando...`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover"
+                    priority={index < 4}
+                  />
+                </div>
+              )}
+              
+              {/* High quality image - loads progressively */}
+              <Image
+                src={imageUrl}
+                alt={product.nombre}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className={`object-cover transition-all duration-500 ${
+                  imageLoaded 
+                    ? 'opacity-100 group-hover:scale-105' 
+                    : 'opacity-0'
+                }`}
+                loading="lazy"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </>
           )}
           
           {/* Quick Add Button - Shows on hover (desktop only) */}

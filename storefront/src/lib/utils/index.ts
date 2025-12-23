@@ -94,6 +94,42 @@ export function optimizeCloudinaryImage(
 }
 
 /**
+ * Generate a low-quality placeholder image URL for progressive loading
+ * Creates a blurred, low-quality version that loads quickly
+ */
+export function getLowQualityPlaceholder(
+  url: string | null | undefined,
+  options: {
+    width?: number;
+    height?: number;
+  } = {}
+): string {
+  if (!url || !url.includes('cloudinary.com') || !url.includes('/upload/')) {
+    return '/placeholder-product.svg';
+  }
+
+  const uploadCount = (url.match(/\/upload\//g) || []).length;
+  if (uploadCount !== 1) {
+    return url;
+  }
+
+  const { width = 50, height = 50 } = options;
+
+  // Create a small, blurred, low-quality version for instant loading
+  const transforms: string[] = [
+    `w_${width}`,
+    `h_${height}`,
+    'c_fill',
+    'q_auto:low',
+    'f_auto',
+    'e_blur:1000', // Heavy blur effect
+  ];
+
+  const transformString = transforms.join(',');
+  return url.replace('/upload/', `/upload/${transformString}/`);
+}
+
+/**
  * Create a URL-friendly slug from text
  */
 export function createSlug(text: string): string {

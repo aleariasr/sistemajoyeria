@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductImage } from '@/lib/types';
-import { optimizeCloudinaryImage } from '@/lib/utils';
+import { optimizeCloudinaryImage, getLowQualityPlaceholder } from '@/lib/utils';
 
 interface ProductImageGalleryProps {
   imagenes: ProductImage[];
@@ -15,10 +15,15 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
 
   const handleImageError = (index: number) => {
     console.error('Error loading image at index:', index, imagenes[index]);
     setImageErrors(prev => new Set(prev).add(index));
+  };
+
+  const handleImageLoad = (index: number) => {
+    setLoadedImages(prev => new Set(prev).add(index));
   };
 
   if (!imagenes || imagenes.length === 0) {
@@ -35,7 +40,7 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
 
   return (
     <div className="space-y-4">
-      {/* Imagen Principal */}
+      {/* Imagen Principal con Progressive Loading */}
       <motion.div
         className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
         onClick={() => !hasError && setIsZoomed(true)}
@@ -57,23 +62,42 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
             <span className="text-gray-400 text-sm">Error al cargar imagen</span>
           </div>
         ) : (
-          <Image
-            src={optimizeCloudinaryImage(imagenActual.url, {
-              width: 800,
-              height: 800,
-              quality: 'auto:best',
-            })}
-            alt={`${productName} - Imagen ${selectedIndex + 1}`}
-            fill
-            className="object-cover"
-            priority={selectedIndex === 0}
-            loading={selectedIndex === 0 ? 'eager' : 'lazy'}
-            onError={() => handleImageError(selectedIndex)}
-          />
+          <>
+            {/* Low quality placeholder - loads instantly */}
+            {!loadedImages.has(selectedIndex) && (
+              <div className="absolute inset-0">
+                <Image
+                  src={getLowQualityPlaceholder(imagenActual.url, { width: 50, height: 50 })}
+                  alt={`${productName} - Cargando...`}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            )}
+            
+            {/* High quality image - loads progressively */}
+            <Image
+              src={optimizeCloudinaryImage(imagenActual.url, {
+                width: 800,
+                height: 800,
+                quality: 'auto:good',
+              })}
+              alt={`${productName} - Imagen ${selectedIndex + 1}`}
+              fill
+              className={`object-cover transition-opacity duration-300 ${
+                loadedImages.has(selectedIndex) ? 'opacity-100' : 'opacity-0'
+              }`}
+              priority={selectedIndex === 0}
+              loading={selectedIndex === 0 ? 'eager' : 'lazy'}
+              onError={() => handleImageError(selectedIndex)}
+              onLoad={() => handleImageLoad(selectedIndex)}
+            />
+          </>
         )}
       </motion.div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails con Progressive Loading */}
       {imagenes.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
           {imagenes.map((imagen, index) => {
@@ -100,7 +124,7 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
                     src={optimizeCloudinaryImage(imagen.url, {
                       width: 200,
                       height: 200,
-                      quality: 'auto:good',
+                      quality: 'auto:eco',
                     })}
                     alt={`Thumbnail ${index + 1}`}
                     fill
@@ -115,7 +139,7 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
         </div>
       )}
 
-      {/* Modal Zoom */}
+      {/* Modal Zoom - carga imagen de alta calidad cuando se abre */}
       <AnimatePresence>
         {isZoomed && !hasError && (
           <motion.div

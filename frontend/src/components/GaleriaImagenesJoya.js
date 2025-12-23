@@ -118,14 +118,28 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
     setCargando(true);
     try {
       const response = await axios.get(`/api/imagenes-joya/joya/${idJoya}`);
-      setImagenes(response.data || []);
+      
+      // Validar que la respuesta sea válida
+      if (!response.data) {
+        console.warn('Respuesta vacía de la API de imágenes');
+        setImagenes([]);
+        setCargando(false);
+        return;
+      }
+      
+      // Asegurarse que sea un array
+      if (Array.isArray(response.data)) {
+        setImagenes(response.data);
+      } else {
+        console.error('Respuesta inesperada de la API de imágenes:', response.data);
+        setImagenes([]);
+      }
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
       
       // Proporcionar mensaje específico según el error
       let errorMsg = 'Error al cargar imágenes';
       if (error.response?.status === 404) {
-        errorMsg = 'No se encontraron imágenes para este producto';
         // No mostrar alerta para 404, es esperado si no hay imágenes
         setImagenes([]);
         setCargando(false);
@@ -134,9 +148,12 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
         errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
       } else if (error.message === 'Network Error') {
         errorMsg = 'Error de conexión. Verifique su conexión a internet';
+      } else if (!error.response) {
+        errorMsg = 'No se pudo conectar con el servidor. Verifique su conexión';
       }
       
       alert(errorMsg);
+      setImagenes([]);
     } finally {
       setCargando(false);
     }
