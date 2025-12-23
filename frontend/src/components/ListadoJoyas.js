@@ -75,7 +75,7 @@ const SELECTION_STYLES = {
 
 function ListadoJoyas() {
   const navigate = useNavigate();
-  const { toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectedItems } = useSelection();
+  const { toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectedItems, getItemId } = useSelection();
   const [joyas, setJoyas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -229,7 +229,7 @@ function ListadoJoyas() {
   }, [getSelectedItems]);
 
   const toggleSeleccionItem = (j) => {
-    const key = j.id ?? j.codigo;
+    const key = getItemId(j);
     toggleSelection(key, j);
   };
 
@@ -368,9 +368,9 @@ function ListadoJoyas() {
             </div>
             <div style={SELECTION_STYLES.itemsContainer}>
               {joyasSeleccionadas.map((j) => {
-                const key = j.id ?? j.codigo;
+                const key = getItemId(j);
                 // Check if this item is on the current page
-                const enPaginaActual = joyas.some(joya => (joya.id ?? joya.codigo) === key);
+                const enPaginaActual = joyas.some(joya => getItemId(joya) === key);
                 return (
                   <div 
                     key={key}

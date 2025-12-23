@@ -15,6 +15,11 @@ export const SelectionProvider = ({ children }) => {
   // This allows us to access full joya data even when item is not on current page
   const [selectedItems, setSelectedItems] = useState({});
 
+  // Helper to get consistent item ID
+  const getItemId = useCallback((item) => {
+    return item.id ?? item.codigo;
+  }, []);
+
   // Toggle selection for a single item
   // When toggling, we need the full joya object to store
   // If item is already selected, it will be deselected (joya not needed)
@@ -66,7 +71,7 @@ export const SelectionProvider = ({ children }) => {
     setSelectedItems((prev) => {
       const newSelection = { ...prev };
       items.forEach((item) => {
-        const id = item.id ?? item.codigo;
+        const id = getItemId(item);
         if (selected) {
           // Select - store full joya object
           newSelection[id] = item;
@@ -77,7 +82,7 @@ export const SelectionProvider = ({ children }) => {
       });
       return newSelection;
     });
-  }, []);
+  }, [getItemId]);
 
   const value = useMemo(() => ({
     selectedItems,
@@ -87,8 +92,9 @@ export const SelectionProvider = ({ children }) => {
     getSelectionCount,
     getSelectedIds,
     getSelectedItems,
-    toggleMultiple
-  }), [selectedItems, toggleSelection, clearSelection, isSelected, getSelectionCount, getSelectedIds, getSelectedItems, toggleMultiple]);
+    toggleMultiple,
+    getItemId
+  }), [selectedItems, toggleSelection, clearSelection, isSelected, getSelectionCount, getSelectedIds, getSelectedItems, toggleMultiple, getItemId]);
 
   return (
     <SelectionContext.Provider value={value}>
