@@ -2,12 +2,13 @@
  * Catalog Content Component (Client)
  * 
  * Handles product fetching, filtering, and display for the catalog page.
+ * Uses infinite scroll for better performance with large catalogs.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useProducts, useCategories } from '@/hooks/useApi';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useInfiniteProducts, useCategories } from '@/hooks/useApi';
 import { ProductGrid } from '@/components/product';
 import { debounce } from '@/lib/utils';
 
@@ -15,6 +16,9 @@ export default function CatalogContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Ref for infinite scroll observer
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Debounce search input
   const handleSearchChange = useMemo(
@@ -25,19 +29,58 @@ export default function CatalogContent() {
     []
   );
 
-  // Fetch products
+  // Fetch products with infinite scroll
   const {
-    data: productsData,
-    isLoading: productsLoading,
-    error: productsError,
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-  } = useProducts({
+  } = useInfiniteProducts({
     search: debouncedSearch || undefined,
     category: selectedCategory || undefined,
+    per_page: 20, // Load 20 products at a time for smoother experience
   });
 
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+
+  // Flatten all pages into a single products array
+  const products = useMemo(() => {
+    return data?.pages.flatMap(page => page.products) || [];
+  }, [data]);
+
+  // Total count from first page
+  const totalCount = data?.pages[0]?.total || 0;
+
+  // Memoize fetchNextPage to prevent unnecessary useEffect re-runs
+  const handleFetchNextPage = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Setup Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleFetchNextPage();
+        }
+      },
+      {
+        rootMargin: '200px', // Start loading 200px before reaching the element
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, handleFetchNextPage]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -170,21 +213,50 @@ export default function CatalogContent() {
       )}
 
       {/* Results Count */}
-      {productsData && !productsLoading && (
+      {!isLoading && (
         <p className="text-primary-500">
-          {productsData.products.length} producto
-          {productsData.products.length !== 1 && 's'} encontrado
-          {productsData.products.length !== 1 && 's'}
+          Mostrando {products.length} de {totalCount} producto
+          {totalCount !== 1 && 's'}
         </p>
       )}
 
       {/* Products Grid */}
       <ProductGrid
-        products={productsData?.products || []}
-        isLoading={productsLoading}
-        error={productsError as Error | null}
+        products={products}
+        isLoading={isLoading}
+        error={error as Error | null}
         onRetry={refetch}
       />
+
+      {/* Infinite Scroll Trigger & Load More Button */}
+      {hasNextPage && (
+        <div ref={loadMoreRef} className="mt-8 text-center">
+          {isFetchingNextPage ? (
+            <div className="flex justify-center items-center gap-2 py-8">
+              <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-900 rounded-full animate-spin" />
+              <span className="text-primary-600">Cargando más productos...</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => fetchNextPage()}
+              className="px-6 py-3 bg-primary-900 text-white font-medium rounded-full
+                         hover:bg-primary-800 transition-colors duration-200
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            >
+              Cargar más productos
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* End of catalog message */}
+      {!hasNextPage && products.length > 0 && (
+        <div className="mt-8 text-center py-8 border-t border-primary-200">
+          <p className="text-primary-500">
+            Has llegado al final del catálogo
+          </p>
+        </div>
+      )}
     </div>
   );
 }
