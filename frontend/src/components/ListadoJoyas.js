@@ -8,9 +8,74 @@ import { useSelection } from '../context/SelectionContext';
 // Constantes para thumbnail de imagen
 const THUMBNAIL_SIZE = '50px';
 
+// Constantes para estilos de selección
+const SELECTION_STYLES = {
+  container: {
+    marginTop: '15px',
+    padding: '12px',
+    background: '#e3f2fd',
+    borderRadius: '6px',
+    border: '1px solid #90caf9'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px'
+  },
+  title: {
+    color: '#1976d2'
+  },
+  clearButton: {
+    background: 'transparent',
+    border: 'none',
+    color: '#1976d2',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    textDecoration: 'underline'
+  },
+  itemsContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '6px',
+    maxHeight: '120px',
+    overflowY: 'auto'
+  },
+  itemChip: (isOnCurrentPage) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '4px 8px',
+    background: isOnCurrentPage ? '#ffffff' : '#fff9c4',
+    border: isOnCurrentPage ? '1px solid #90caf9' : '1px solid #ffd54f',
+    borderRadius: '4px',
+    fontSize: '0.85rem'
+  }),
+  itemName: {
+    maxWidth: '150px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+  },
+  removeButton: {
+    background: 'transparent',
+    border: 'none',
+    color: '#d32f2f',
+    cursor: 'pointer',
+    padding: '0 4px',
+    fontSize: '1rem',
+    lineHeight: 1
+  },
+  hint: {
+    marginTop: '8px',
+    fontSize: '0.8rem',
+    color: '#666'
+  }
+};
+
 function ListadoJoyas() {
   const navigate = useNavigate();
-  const { toggleSelection, isSelected, clearSelection, toggleMultiple } = useSelection();
+  const { toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectedItems, getItemId } = useSelection();
   const [joyas, setJoyas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -158,18 +223,18 @@ function ListadoJoyas() {
     setJoyaSeleccionada(null);
   };
 
+  // Get all selected joyas from context (persists across pages/filters)
   const joyasSeleccionadas = useMemo(() => {
-    return joyas.filter((j) => isSelected(j.id) || isSelected(j.codigo));
-  }, [joyas, isSelected]);
+    return getSelectedItems();
+  }, [getSelectedItems]);
 
   const toggleSeleccionItem = (j) => {
-    const key = j.id ?? j.codigo;
-    toggleSelection(key);
+    const key = getItemId(j);
+    toggleSelection(key, j);
   };
 
   const toggleSeleccionPagina = (checked) => {
-    const ids = joyas.map((j) => j.id ?? j.codigo);
-    toggleMultiple(ids, checked);
+    toggleMultiple(joyas, checked);
   };
 
   return (
@@ -261,7 +326,7 @@ function ListadoJoyas() {
           </div>
         </div>
 
-        <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+        <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn btn-secondary" onClick={limpiarFiltros}>
             🔄 Limpiar Filtros
           </button>
@@ -286,6 +351,56 @@ function ListadoJoyas() {
             Total: {total} joyas
           </span>
         </div>
+
+        {/* Mostrar ítems seleccionados */}
+        {joyasSeleccionadas.length > 0 && (
+          <div style={SELECTION_STYLES.container}>
+            <div style={SELECTION_STYLES.header}>
+              <strong style={SELECTION_STYLES.title}>
+                ✓ {joyasSeleccionadas.length} {joyasSeleccionadas.length === 1 ? 'ítem seleccionado' : 'ítems seleccionados'}
+              </strong>
+              <button
+                onClick={clearSelection}
+                style={SELECTION_STYLES.clearButton}
+              >
+                Limpiar todo
+              </button>
+            </div>
+            <div style={SELECTION_STYLES.itemsContainer}>
+              {joyasSeleccionadas.map((j) => {
+                const key = getItemId(j);
+                // Check if this item is on the current page
+                const enPaginaActual = joyas.some(joya => getItemId(joya) === key);
+                return (
+                  <div 
+                    key={key}
+                    style={SELECTION_STYLES.itemChip(enPaginaActual)}
+                    title={enPaginaActual ? 'En página actual' : 'En otra página/filtro'}
+                  >
+                    <strong>{j.codigo}</strong>
+                    <span style={{ color: '#666' }}>-</span>
+                    <span style={SELECTION_STYLES.itemName}>
+                      {j.nombre}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSeleccionItem(j);
+                      }}
+                      style={SELECTION_STYLES.removeButton}
+                      title="Remover selección"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={SELECTION_STYLES.hint}>
+              💡 Los ítems en amarillo no están en la página actual. Todas las selecciones se mantendrán al imprimir.
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="card">
