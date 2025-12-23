@@ -10,7 +10,7 @@ const THUMBNAIL_SIZE = '50px';
 
 function ListadoJoyas() {
   const navigate = useNavigate();
-  const { selectedIds, toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectionCount } = useSelection();
+  const { toggleSelection, isSelected, clearSelection, toggleMultiple } = useSelection();
   const [joyas, setJoyas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -160,7 +160,7 @@ function ListadoJoyas() {
 
   const joyasSeleccionadas = useMemo(() => {
     return joyas.filter((j) => isSelected(j.id) || isSelected(j.codigo));
-  }, [joyas, selectedIds, isSelected]);
+  }, [joyas, isSelected]);
 
   const toggleSeleccionItem = (j) => {
     const key = j.id ?? j.codigo;
