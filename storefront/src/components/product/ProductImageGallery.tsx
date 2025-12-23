@@ -9,9 +9,10 @@ import { optimizeCloudinaryImage, getLowQualityPlaceholder } from '@/lib/utils';
 interface ProductImageGalleryProps {
   imagenes: ProductImage[];
   productName: string;
+  fallbackImageUrl?: string | null;
 }
 
-export function ProductImageGallery({ imagenes, productName }: ProductImageGalleryProps) {
+export function ProductImageGallery({ imagenes, productName, fallbackImageUrl }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
@@ -26,7 +27,12 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
     setLoadedImages(prev => new Set(prev).add(index));
   };
 
-  if (!imagenes || imagenes.length === 0) {
+  // If no images in array but fallbackImageUrl exists, create a single-image array
+  const imagenesDisplay = (!imagenes || imagenes.length === 0) && fallbackImageUrl
+    ? [{ id: 0, url: fallbackImageUrl, orden: 0, es_principal: true }]
+    : imagenes;
+
+  if (!imagenesDisplay || imagenesDisplay.length === 0) {
     return (
       <div className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center flex-col gap-3">
         <span className="text-6xl">🖼️</span>
@@ -35,7 +41,7 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
     );
   }
 
-  const imagenActual = imagenes[selectedIndex];
+  const imagenActual = imagenesDisplay[selectedIndex];
   const hasError = imageErrors.has(selectedIndex);
 
   return (
@@ -98,9 +104,9 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
       </motion.div>
 
       {/* Thumbnails con Progressive Loading */}
-      {imagenes.length > 1 && (
+      {imagenesDisplay.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
-          {imagenes.map((imagen, index) => {
+          {imagenesDisplay.map((imagen, index) => {
             const thumbnailHasError = imageErrors.has(index);
             return (
               <button

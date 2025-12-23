@@ -115,6 +115,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           <ProductImageGallery 
             imagenes={product.imagenes || []}
             productName={product.nombre}
+            fallbackImageUrl={product.imagen_url}
           />
           {product.categoria && (
             <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm pointer-events-none z-10">
@@ -162,7 +163,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
             <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
                 📦 <strong>Este es un set completo</strong> que incluye múltiples piezas. 
-                El stock mostrado es para el set completo. Las piezas individuales también están disponibles por separado en el catálogo.
+                Las piezas individuales también están disponibles por separado en el catálogo.
               </p>
             </div>
           )}
