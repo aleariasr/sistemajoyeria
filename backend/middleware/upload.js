@@ -36,7 +36,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 15 * 1024 * 1024 // Límite de 5MB
+    fileSize: 50 * 1024 * 1024 // Límite de 50MB para permitir imágenes de alta calidad
   },
   fileFilter: fileFilter
 });
@@ -51,13 +51,26 @@ const uploadMiddleware = (req, res, next) => {
       // Error de Multer
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({ 
-          error: 'El archivo es demasiado grande. Tamaño máximo: 5MB' 
+          error: 'El archivo es demasiado grande. Tamaño máximo: 50MB',
+          errorType: 'FILE_TOO_LARGE'
         });
       }
-      return res.status(400).json({ error: err.message });
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ 
+          error: 'Número de archivos no esperado',
+          errorType: 'UNEXPECTED_FILE'
+        });
+      }
+      return res.status(400).json({ 
+        error: err.message,
+        errorType: 'MULTER_ERROR'
+      });
     } else if (err) {
-      // Otro tipo de error
-      return res.status(400).json({ error: err.message });
+      // Otro tipo de error (ej: fileFilter)
+      return res.status(400).json({ 
+        error: err.message,
+        errorType: 'VALIDATION_ERROR'
+      });
     }
     // Todo bien, continuar
     next();

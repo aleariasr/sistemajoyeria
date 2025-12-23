@@ -13,7 +13,40 @@ router.post('/imagenes-joya', requireAuth, async (req, res) => {
     
     // Validaciones
     if (!id_joya || !imagen_url) {
-      return res.status(400).json({ error: 'Faltan campos requeridos' });
+      return res.status(400).json({ 
+        error: 'Faltan campos requeridos',
+        errorType: 'MISSING_FIELDS'
+      });
+    }
+    
+    // Validar que imagen_url sea una URL válida
+    if (typeof imagen_url !== 'string' || imagen_url.trim().length === 0) {
+      return res.status(400).json({ 
+        error: 'La URL de la imagen no es válida',
+        errorType: 'INVALID_URL'
+      });
+    }
+    
+    // Validar formato de URL básico
+    try {
+      new URL(imagen_url);
+    } catch (urlError) {
+      return res.status(400).json({ 
+        error: 'La URL de la imagen no tiene un formato válido',
+        errorType: 'INVALID_URL_FORMAT'
+      });
+    }
+    
+    // Validar que la URL sea de un dominio permitido (seguridad)
+    const allowedDomains = ['cloudinary.com', 'res.cloudinary.com'];
+    const url = new URL(imagen_url);
+    const isAllowedDomain = allowedDomains.some(domain => url.hostname.includes(domain));
+    
+    if (!isAllowedDomain) {
+      return res.status(400).json({ 
+        error: 'Solo se permiten URLs de Cloudinary',
+        errorType: 'DOMAIN_NOT_ALLOWED'
+      });
     }
     
     const imagen = await ImagenJoya.crear({
@@ -26,7 +59,10 @@ router.post('/imagenes-joya', requireAuth, async (req, res) => {
     res.status(201).json(imagen);
   } catch (error) {
     console.error('Error al crear imagen:', error);
-    res.status(500).json({ error: 'Error al crear imagen' });
+    res.status(500).json({ 
+      error: 'Error al crear imagen',
+      errorType: 'SERVER_ERROR'
+    });
   }
 });
 

@@ -341,7 +341,10 @@ router.delete('/:id', async (req, res) => {
 router.post('/upload-image', uploadMiddleware, async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+      return res.status(400).json({ 
+        error: 'No se proporcionó ninguna imagen',
+        errorType: 'NO_FILE'
+      });
     }
 
     // Subir imagen a Cloudinary
@@ -352,7 +355,10 @@ router.post('/upload-image', uploadMiddleware, async (req, res) => {
     
     res.json({
       url: resultadoImagen.url,
-      publicId: resultadoImagen.publicId
+      publicId: resultadoImagen.publicId,
+      width: resultadoImagen.width,
+      height: resultadoImagen.height,
+      format: resultadoImagen.format
     });
   } catch (error) {
     console.error('Error al subir imagen:', error);
@@ -360,7 +366,10 @@ router.post('/upload-image', uploadMiddleware, async (req, res) => {
     if (req.file) {
       cleanupTempFile(req.file.path);
     }
-    res.status(500).json({ error: 'Error al subir imagen' });
+    res.status(500).json({ 
+      error: error.message || 'Error al subir imagen',
+      errorType: 'UPLOAD_ERROR'
+    });
   }
 });
 

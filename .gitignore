@@ -38,3 +38,7 @@ Thumbs.db
 
 # Testing
 coverage/
+
+# Temporary uploads
+backend/tmp/
+**/tmp/uploads/

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProductImage } from '@/lib/types';
-import { optimizeCloudinaryImage } from '@/lib/utils';
+import { optimizeCloudinaryImage, getLowQualityPlaceholder } from '@/lib/utils';
 
 interface ProductImageGalleryProps {
   imagenes: ProductImage[];
@@ -14,25 +14,38 @@ interface ProductImageGalleryProps {
 export function ProductImageGallery({ imagenes, productName }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+
+  const handleImageError = (index: number) => {
+    console.error('Error loading image at index:', index, imagenes[index]);
+    setImageErrors(prev => new Set(prev).add(index));
+  };
+
+  const handleImageLoad = (index: number) => {
+    setLoadedImages(prev => new Set(prev).add(index));
+  };
 
   if (!imagenes || imagenes.length === 0) {
     return (
-      <div className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center">
-        <span className="text-gray-400">Sin imagen</span>
+      <div className="aspect-square bg-gray-100 rounded-2xl flex items-center justify-center flex-col gap-3">
+        <span className="text-6xl">🖼️</span>
+        <span className="text-gray-400 text-sm">Sin imagen disponible</span>
       </div>
     );
   }
 
   const imagenActual = imagenes[selectedIndex];
+  const hasError = imageErrors.has(selectedIndex);
 
   return (
     <div className="space-y-4">
-      {/* Imagen Principal */}
+      {/* Imagen Principal con Progressive Loading */}
       <motion.div
         className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100 cursor-zoom-in"
-        onClick={() => setIsZoomed(true)}
+        onClick={() => !hasError && setIsZoomed(true)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (!hasError && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             setIsZoomed(true);
           }
@@ -40,56 +53,95 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
         tabIndex={0}
         role="button"
         aria-label="Click to zoom image"
-        whileHover={{ scale: 1.02 }}
+        whileHover={!hasError ? { scale: 1.02 } : undefined}
         transition={{ duration: 0.2 }}
       >
-        <Image
-          src={optimizeCloudinaryImage(imagenActual.url, {
-            width: 800,
-            height: 800,
-            quality: 'auto:best',
-          })}
-          alt={`${productName} - Imagen ${selectedIndex + 1}`}
-          fill
-          className="object-cover"
-          priority={selectedIndex === 0}
-        />
+        {hasError ? (
+          <div className="w-full h-full flex items-center justify-center flex-col gap-3">
+            <span className="text-6xl text-gray-300">🖼️</span>
+            <span className="text-gray-400 text-sm">Error al cargar imagen</span>
+          </div>
+        ) : (
+          <>
+            {/* Low quality placeholder - loads instantly */}
+            {!loadedImages.has(selectedIndex) && (
+              <div className="absolute inset-0">
+                <Image
+                  src={getLowQualityPlaceholder(imagenActual.url, { width: 50, height: 50 })}
+                  alt={`${productName} - Cargando...`}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            )}
+            
+            {/* High quality image - loads progressively */}
+            <Image
+              src={optimizeCloudinaryImage(imagenActual.url, {
+                width: 800,
+                height: 800,
+                quality: 'auto:good',
+              })}
+              alt={`${productName} - Imagen ${selectedIndex + 1}`}
+              fill
+              className={`object-cover transition-opacity duration-300 ${
+                loadedImages.has(selectedIndex) ? 'opacity-100' : 'opacity-0'
+              }`}
+              priority={selectedIndex === 0}
+              loading={selectedIndex === 0 ? 'eager' : 'lazy'}
+              onError={() => handleImageError(selectedIndex)}
+              onLoad={() => handleImageLoad(selectedIndex)}
+            />
+          </>
+        )}
       </motion.div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails con Progressive Loading */}
       {imagenes.length > 1 && (
         <div className="grid grid-cols-5 gap-2">
-          {imagenes.map((imagen, index) => (
-            <button
-              key={imagen.id}
-              onClick={() => setSelectedIndex(index)}
-              className={`
-                relative aspect-square rounded-lg overflow-hidden
-                ${selectedIndex === index
-                  ? 'ring-2 ring-blue-500'
-                  : 'ring-1 ring-gray-200 hover:ring-gray-400'
-                }
-                transition-all
-              `}
-            >
-              <Image
-                src={optimizeCloudinaryImage(imagen.url, {
-                  width: 200,
-                  height: 200,
-                  quality: 'auto:good',
-                })}
-                alt={`Thumbnail ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
+          {imagenes.map((imagen, index) => {
+            const thumbnailHasError = imageErrors.has(index);
+            return (
+              <button
+                key={imagen.id}
+                onClick={() => setSelectedIndex(index)}
+                className={`
+                  relative aspect-square rounded-lg overflow-hidden
+                  ${selectedIndex === index
+                    ? 'ring-2 ring-blue-500'
+                    : 'ring-1 ring-gray-200 hover:ring-gray-400'
+                  }
+                  transition-all
+                `}
+              >
+                {thumbnailHasError ? (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <span className="text-2xl text-gray-300">🖼️</span>
+                  </div>
+                ) : (
+                  <Image
+                    src={optimizeCloudinaryImage(imagen.url, {
+                      width: 200,
+                      height: 200,
+                      quality: 'auto:eco',
+                    })}
+                    alt={`Thumbnail ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                    onError={() => handleImageError(index)}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Modal Zoom */}
+      {/* Modal Zoom - carga imagen de alta calidad cuando se abre */}
       <AnimatePresence>
-        {isZoomed && (
+        {isZoomed && !hasError && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -114,6 +166,10 @@ export function ProductImageGallery({ imagenes, productName }: ProductImageGalle
                 width={1600}
                 height={1600}
                 className="object-contain"
+                onError={() => {
+                  handleImageError(selectedIndex);
+                  setIsZoomed(false);
+                }}
               />
             </motion.div>
             <button
