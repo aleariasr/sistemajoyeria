@@ -63,11 +63,13 @@ CREATE TABLE IF NOT EXISTS joyas (
 -- =========================================
 -- TABLA: clientes
 -- =========================================
+-- NOTA: telefono y cedula son opcionales desde make-cliente-fields-optional.sql
+-- Para nuevas instalaciones, usar directamente la estructura actualizada
 CREATE TABLE IF NOT EXISTS clientes (
   id BIGSERIAL PRIMARY KEY,
   nombre TEXT NOT NULL,
-  telefono TEXT NOT NULL,
-  cedula TEXT UNIQUE NOT NULL,
+  telefono TEXT,
+  cedula TEXT,
   direccion TEXT,
   email TEXT,
   notas TEXT,
