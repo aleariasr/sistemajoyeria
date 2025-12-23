@@ -201,30 +201,61 @@ async function actualizarStockVenta(itemConJoya, motivo, username) {
 
 ### Detalle de Set
 
+El storefront ahora muestra completamente todos los componentes de un set con su información detallada:
+
 ```html
-📦 Este set incluye:
+📦 Este set incluye 3 piezas
 
-┌──────────────────────────────┐
-│ 📿 Pulsera Oro Eslabones     │
-│    ₡18,000 | ✅ 10 disponibles│
-├──────────────────────────────┤
-│ 📿 Pulsera Oro Dije Corazón │
-│    ₡18,000 | ⚠️ 2 disponibles │
-├──────────────────────────────┤
-│ 📿 Pulsera Oro Perlas        │
-│    ₡18,000 | ✅ 15 disponibles│
-└──────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ 📿 Pulsera Oro Eslabones                 │
+│    ₡18,000 | ✅ 10 disponibles            │
+│    [Agregar pieza] ✅ Disponible          │
+├──────────────────────────────────────────┤
+│ 📿 Pulsera Oro Dije Corazón             │
+│    ₡18,000 | ❌ Agotado                   │
+│    ⚠️ No seleccionable                    │
+├──────────────────────────────────────────┤
+│ 📿 Pulsera Oro Perlas                    │
+│    ₡18,000 | ✅ 15 disponibles            │
+│    [Agregar pieza] ✅ Disponible          │
+└──────────────────────────────────────────┘
 
-✅ Set completo (2 disponibles)
+✅ Puedes comprar el set completo o piezas individuales
 ```
 
-### Badges de Disponibilidad
+### Características del Storefront
 
-- **Verde** ✅ "Set completo" → Todos los componentes tienen stock
-- **Amarillo** ⚠️ "Set parcial disponible" → Algún componente tiene poco stock
-- **Rojo** ❌ "Set no disponible" → Algún componente no tiene stock
+1. **Visualización de Componentes**: Muestra todos los componentes del set con:
+   - Imagen del componente
+   - Nombre y código
+   - Precio individual
+   - Stock disponible
+   - Estado (Activo/Agotado/Inactivo)
 
-### API Response
+2. **Selección Individual**: Permite agregar al carrito:
+   - ✅ Piezas activas con stock disponible
+   - ❌ Bloquea piezas agotadas o inactivas
+
+3. **Badges de Disponibilidad**:
+   - **Verde** ✅ "Set completo disponible" → Todos los componentes tienen stock
+   - **Rojo** ❌ "Set no disponible" → Algún componente no tiene stock
+
+### Componente SetComponents.tsx
+
+Nuevo componente en `storefront/src/components/product/SetComponents.tsx`:
+
+```tsx
+<SetComponents setId={999} setName="Trio de Pulseras Oro" />
+```
+
+Características:
+- Carga automática de componentes via API
+- Display responsive con animaciones
+- Integración con carrito de compras
+- Validación de stock en tiempo real
+- Estados visuales claros (disponible/agotado/inactivo)
+
+### API Response Actualizada
 
 ```javascript
 GET /api/public/products/999/componentes
@@ -233,10 +264,17 @@ GET /api/public/products/999/componentes
   "componentes": [
     {
       "id": 101,
+      "codigo": "PULS-001",
       "nombre": "Pulsera Oro Eslabones",
+      "descripcion": "Pulsera de oro con eslabones",
       "precio": 18000,
+      "moneda": "CRC",
       "stock": 10,
-      "cantidad_requerida": 1
+      "stock_disponible": true,
+      "imagen_url": "https://...",
+      "cantidad_requerida": 1,
+      "estado": "Activo",
+      "es_activo": true
     },
     // ...
   ],

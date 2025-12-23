@@ -30,6 +30,7 @@ export function SetComponents({ setId, setName }: SetComponentsProps) {
 
   useEffect(() => {
     loadComponents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setId]);
 
   const loadComponents = async () => {
