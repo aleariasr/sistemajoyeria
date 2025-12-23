@@ -65,29 +65,7 @@ BEGIN
 END $$;
 
 -- =========================================
--- STEP 3: Migrate abonos to principal account
--- =========================================
-
--- Update abonos to point to the principal account for each client
-UPDATE abonos 
-SET id_cuenta_por_cobrar = c.cuenta_principal_id
-FROM (
-  SELECT 
-    id_cuenta_por_cobrar as cuenta_antigua_id,
-    (SELECT cuenta_principal_id 
-     FROM cuentas_a_consolidar 
-     WHERE id_cliente = cpc.id_cliente) as cuenta_principal_id
-  FROM cuentas_por_cobrar cpc
-  WHERE EXISTS (
-    SELECT 1 FROM cuentas_a_consolidar 
-    WHERE id_cliente = cpc.id_cliente 
-    AND cpc.id != cuenta_principal_id
-  )
-) c
-WHERE abonos.id_cuenta_por_cobrar = c.cuenta_antigua_id;
-
--- =========================================
--- STEP 4: Create movimientos for historical credit sales
+-- STEP 3: Create movimientos for historical credit sales BEFORE consolidation
 -- =========================================
 
 -- Insert movimientos for each credit sale (from cuentas that will be consolidated)
@@ -105,7 +83,7 @@ JOIN cuentas_a_consolidar c ON cpc.id_cliente = c.id_cliente
 WHERE cpc.estado = 'Pendiente'
 ORDER BY cpc.fecha_creacion;
 
--- Insert movimientos for historical abonos
+-- Insert movimientos for historical abonos (before moving them to principal account)
 INSERT INTO movimientos_cuenta (id_cuenta_por_cobrar, id_venta, tipo, monto, descripcion, fecha_movimiento, usuario)
 SELECT 
   c.cuenta_principal_id,
@@ -120,6 +98,25 @@ JOIN cuentas_por_cobrar cpc ON a.id_cuenta_por_cobrar = cpc.id
 JOIN cuentas_a_consolidar c ON cpc.id_cliente = c.id_cliente
 WHERE cpc.estado = 'Pendiente'
 ORDER BY a.fecha_abono;
+
+-- =========================================
+-- STEP 4: Migrate abonos to principal account
+-- =========================================
+
+-- Update abonos to point to the principal account for each client
+-- Using a simpler approach with explicit joins
+UPDATE abonos 
+SET id_cuenta_por_cobrar = consolidacion.cuenta_principal_id
+FROM (
+  SELECT 
+    cpc.id as cuenta_antigua_id,
+    cac.cuenta_principal_id
+  FROM cuentas_por_cobrar cpc
+  INNER JOIN cuentas_a_consolidar cac ON cpc.id_cliente = cac.id_cliente
+  WHERE cpc.estado = 'Pendiente' 
+    AND cpc.id != cac.cuenta_principal_id
+) consolidacion
+WHERE abonos.id_cuenta_por_cobrar = consolidacion.cuenta_antigua_id;
 
 -- =========================================
 -- STEP 5: Update principal accounts with consolidated totals
