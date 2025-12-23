@@ -29,6 +29,7 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   
   // Detect touch device safely on client side only
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   useEffect(() => {
     // Only run on client side
@@ -86,16 +87,24 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
       >
         {/* Image Container */}
         <div className="relative aspect-square rounded-2xl overflow-hidden bg-primary-50 mb-4">
-          <Image
-            src={imageUrl}
-            alt={product.nombre}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
-          />
+          {imageError ? (
+            <div className="w-full h-full flex items-center justify-center flex-col gap-2">
+              <span className="text-5xl text-gray-300">🖼️</span>
+              <span className="text-gray-400 text-xs">Sin imagen</span>
+            </div>
+          ) : (
+            <Image
+              src={imageUrl}
+              alt={product.nombre}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              onError={() => setImageError(true)}
+            />
+          )}
           
           {/* Quick Add Button - Shows on hover (desktop only) */}
           {!isTouchDevice && (

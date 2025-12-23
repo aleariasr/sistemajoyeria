@@ -8,6 +8,8 @@ import axios from 'axios';
  * Componente individual de imagen sortable (drag and drop)
  */
 function ImagenSortable({ imagen, onEliminar, onMarcarPrincipal }) {
+  const [imageError, setImageError] = React.useState(false);
+  
   const {
     attributes,
     listeners,
@@ -20,6 +22,11 @@ function ImagenSortable({ imagen, onEliminar, onMarcarPrincipal }) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+  
+  const handleImageError = () => {
+    console.error('Error al cargar imagen:', imagen.imagen_url);
+    setImageError(true);
+  };
 
   return (
     <div
@@ -28,13 +35,21 @@ function ImagenSortable({ imagen, onEliminar, onMarcarPrincipal }) {
       className="imagen-sortable"
     >
       <div className="imagen-container">
-        <img
-          src={imagen.imagen_url}
-          alt="Producto"
-          className="imagen-preview"
-          {...attributes}
-          {...listeners}
-        />
+        {imageError ? (
+          <div className="imagen-placeholder">
+            <span className="placeholder-icon">🖼️</span>
+            <span className="placeholder-text">Error al cargar</span>
+          </div>
+        ) : (
+          <img
+            src={imagen.imagen_url}
+            alt="Producto"
+            className="imagen-preview"
+            onError={handleImageError}
+            {...attributes}
+            {...listeners}
+          />
+        )}
         
         {imagen.es_principal && (
           <div className="badge-principal">
@@ -101,7 +116,18 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       setImagenes(response.data);
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
-      alert('Error al cargar imágenes');
+      
+      // Proporcionar mensaje específico según el error
+      let errorMsg = 'Error al cargar imágenes';
+      if (error.response?.status === 404) {
+        errorMsg = 'No se encontraron imágenes para este producto';
+      } else if (error.response?.status === 500) {
+        errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
+      } else if (error.message === 'Network Error') {
+        errorMsg = 'Error de conexión. Verifique su conexión a internet';
+      }
+      
+      alert(errorMsg);
     } finally {
       setCargando(false);
     }
@@ -118,12 +144,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       return;
     }
 
-    // Validar tamaño (5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (archivo.size > maxSize) {
-      alert('El archivo es muy grande. Tamaño máximo: 5MB');
-      return;
-    }
+    // Nota: Sin límite de tamaño para permitir imágenes de alta calidad de joyas
 
     setSubiendoImagen(true);
     try {
@@ -154,7 +175,38 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       }
     } catch (error) {
       console.error('Error al subir imagen:', error);
-      alert('Error al subir imagen: ' + (error.response?.data?.error || error.message));
+      
+      // Proporcionar mensajes de error más específicos
+      let errorMessage = 'Error al subir imagen';
+      
+      if (error.response?.data?.errorType) {
+        const errorType = error.response.data.errorType;
+        const errorText = error.response.data.error;
+        
+        switch (errorType) {
+          case 'FILE_TOO_LARGE':
+            errorMessage = 'El archivo es demasiado grande. Tamaño máximo: 50MB';
+            break;
+          case 'VALIDATION_ERROR':
+            errorMessage = errorText || 'Formato de archivo no válido. Use JPG, PNG, GIF o WebP';
+            break;
+          case 'UPLOAD_ERROR':
+            errorMessage = errorText || 'Error al subir la imagen a la nube. Por favor, intente de nuevo';
+            break;
+          case 'INVALID_URL':
+          case 'DOMAIN_NOT_ALLOWED':
+            errorMessage = errorText || 'URL de imagen no válida';
+            break;
+          default:
+            errorMessage = errorText || errorMessage;
+        }
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setSubiendoImagen(false);
       // Limpiar el input
@@ -174,7 +226,15 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       }
     } catch (error) {
       console.error('Error al eliminar imagen:', error);
-      alert('Error al eliminar imagen');
+      
+      let errorMsg = 'Error al eliminar imagen';
+      if (error.response?.status === 404) {
+        errorMsg = 'La imagen no existe o ya fue eliminada';
+      } else if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      }
+      
+      alert(errorMsg);
     }
   };
 
@@ -188,7 +248,13 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       }
     } catch (error) {
       console.error('Error al marcar como principal:', error);
-      alert('Error al marcar como principal');
+      
+      let errorMsg = 'Error al marcar como principal';
+      if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      }
+      
+      alert(errorMsg);
     }
   };
 
@@ -316,6 +382,26 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+        
+        .imagen-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background-color: #f5f5f5;
+          color: #999;
+        }
+        
+        .placeholder-icon {
+          font-size: 32px;
+          margin-bottom: 8px;
+        }
+        
+        .placeholder-text {
+          font-size: 12px;
         }
         
         .badge-principal {

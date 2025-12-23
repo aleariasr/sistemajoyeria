@@ -25,16 +25,42 @@ const uploadImage = async (filePath, folder = 'joyas') => {
       folder,
       resource_type: 'image',
       use_filename: true,
-      overwrite: false
+      overwrite: false,
+      // Configuración de calidad y formato
+      quality: 'auto:best',
+      fetch_format: 'auto',
+      // Configuración de CORS - permitir acceso desde diferentes orígenes
+      type: 'upload',
+      // Generar responsive breakpoints automáticamente
+      responsive_breakpoints: {
+        create_derived: true,
+        bytes_step: 20000,
+        min_width: 200,
+        max_width: 1000,
+        max_images: 5
+      }
     });
     
     return {
       url: result.secure_url,
-      publicId: result.public_id
+      publicId: result.public_id,
+      width: result.width,
+      height: result.height,
+      format: result.format
     };
   } catch (error) {
     console.error('Error al subir imagen a Cloudinary:', error);
-    throw error;
+    
+    // Proporcionar mensajes de error más específicos
+    if (error.http_code === 401) {
+      throw new Error('Error de autenticación con Cloudinary. Verifique las credenciales.');
+    } else if (error.http_code === 400) {
+      throw new Error('Imagen inválida o corrupta. Por favor, intente con otra imagen.');
+    } else if (error.http_code === 420) {
+      throw new Error('Límite de uso de Cloudinary excedido.');
+    } else {
+      throw new Error('Error al subir imagen: ' + (error.message || 'Error desconocido'));
+    }
   }
 };
 
