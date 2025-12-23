@@ -746,21 +746,18 @@
     display: block;
   }
 
-  .btn-imprimir-ticket {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    margin-top: 8px;
-    display: block;
+  .mensaje .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
     width: 100%;
   }
 
-  /* Stack buttons vertically on mobile */
-  .mensaje div[style*="inline-flex"] {
-    display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    margin-left: 0 !important;
-    margin-top: 10px;
+  .btn-imprimir-ticket {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    display: block;
     width: 100%;
   }
 }
@@ -855,4 +852,28 @@
 
 .btn-imprimir-ticket:active {
   transform: translateY(0);
+}
+
+.btn-imprimir-ticket-secondary {
+  background: #6c757d;
+}
+
+.btn-imprimir-ticket-secondary:hover {
+  background: #5a6268;
+}
+
+/* Desktop/tablet button group styling */
+@media (min-width: 481px) {
+  .mensaje .btn-group {
+    display: inline-flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-left: 15px;
+    margin-top: 0;
+    width: auto;
+  }
+
+  .btn-imprimir-ticket {
+    width: auto;
+  }
 }

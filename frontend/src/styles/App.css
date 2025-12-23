@@ -1195,8 +1195,9 @@ table tbody tr.stock-agotado:hover {
     position: relative;
   }
 
+  /* Scroll indicator using data attribute for i18n support */
   .table-container::after {
-    content: '← Deslice →';
+    content: attr(data-scroll-hint);
     position: sticky;
     right: 10px;
     top: 10px;
@@ -1209,6 +1210,11 @@ table tbody tr.stock-agotado:hover {
     pointer-events: none;
     float: right;
     margin: -8px -8px 0 0;
+  }
+
+  /* Fallback if data attribute not set */
+  .table-container:not([data-scroll-hint])::after {
+    content: '← Deslice →';
   }
 
   table {

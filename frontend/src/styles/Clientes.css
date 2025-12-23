@@ -302,8 +302,9 @@
     position: relative;
   }
 
+  /* Scroll indicator using data attribute for i18n support */
   .clientes-table::after {
-    content: '← Deslice →';
+    content: attr(data-scroll-hint);
     position: sticky;
     right: 10px;
     top: 10px;
@@ -316,6 +317,11 @@
     pointer-events: none;
     float: right;
     margin: -8px -8px 0 0;
+  }
+
+  /* Fallback if data attribute not set */
+  .clientes-table:not([data-scroll-hint])::after {
+    content: '← Deslice →';
   }
 
   .clientes-table table {
