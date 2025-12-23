@@ -147,6 +147,7 @@ async function runIntegrationTests() {
     console.log('   • Summary calculations exclude consolidated accounts');
     console.log('   • Active account retrieval works correctly');
     console.log('   • Client-specific queries work correctly');
+    process.exit(0);
   }
 }
 
