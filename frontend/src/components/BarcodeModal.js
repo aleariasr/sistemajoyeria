@@ -40,14 +40,17 @@ function BarcodeModal({ joya, joyas = [], onClose }) {
     documentTitle: isMulti ? 'Codigos-Barras-Seleccion' : `Codigos-Barras-${joya?.codigo}`,
   });
 
+  // Small delay to ensure print dialog opens before clearing
+  const PRINT_DIALOG_DELAY_MS = 100;
+
   const handlePrintClick = () => {
     handlePrint();
     if (clearAfterPrint && isMulti) {
-      // Small delay to ensure print dialog opens before clearing
+      // Wait briefly to ensure print dialog opens before clearing selection and closing modal
       setTimeout(() => {
         clearSelection();
         onClose();
-      }, 100);
+      }, PRINT_DIALOG_DELAY_MS);
     }
   };
 

@@ -39,12 +39,12 @@ export const SelectionProvider = ({ children }) => {
 
   // Get count of selected items
   const getSelectionCount = useCallback(() => {
-    return Object.keys(selectedIds).filter(id => selectedIds[id]).length;
+    return Object.keys(selectedIds).length;
   }, [selectedIds]);
 
   // Get array of selected IDs
   const getSelectedIds = useCallback(() => {
-    return Object.keys(selectedIds).filter(id => selectedIds[id]);
+    return Object.keys(selectedIds);
   }, [selectedIds]);
 
   // Toggle multiple items (e.g., all items on current page)
