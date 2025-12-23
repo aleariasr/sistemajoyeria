@@ -15,15 +15,21 @@ export const SelectionProvider = ({ children }) => {
   // This allows us to access full joya data even when item is not on current page
   const [selectedItems, setSelectedItems] = useState({});
 
-  // Toggle selection for a single item (now requires full joya object)
-  const toggleSelection = useCallback((id, joya = null) => {
+  // Toggle selection for a single item
+  // When toggling, we need the full joya object to store
+  // If item is already selected, it will be deselected (joya not needed)
+  const toggleSelection = useCallback((id, joya) => {
     setSelectedItems((prev) => {
       const newSelection = { ...prev };
       if (newSelection[id]) {
-        // Deselect
+        // Deselect - joya not needed
         delete newSelection[id];
-      } else if (joya) {
-        // Select - store full joya object
+      } else {
+        // Select - joya is required
+        if (!joya) {
+          console.warn('toggleSelection: joya object is required when selecting an item');
+          return prev; // Don't update if joya is missing
+        }
         newSelection[id] = joya;
       }
       return newSelection;
