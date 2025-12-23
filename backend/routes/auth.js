@@ -94,6 +94,41 @@ router.get('/session', (req, res) => {
   }
 });
 
+// Renovar/extender sesión
+// Este endpoint permite mantener la sesión activa mientras el usuario está usando el sistema
+router.post('/refresh-session', (req, res) => {
+  // Verificar que existe una sesión válida
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ 
+      error: 'Sesión no válida o expirada',
+      expired: true 
+    });
+  }
+
+  try {
+    // Actualizar la marca de tiempo para forzar que cookie-session detecte el cambio
+    // y envíe un nuevo Set-Cookie header con maxAge renovado
+    req.session.lastActivity = Date.now();
+    
+    // Marcar como modificada para forzar el envío del Set-Cookie header
+    req.session.isNew = true;
+    
+    res.json({ 
+      success: true,
+      mensaje: 'Sesión renovada exitosamente',
+      usuario: {
+        id: req.session.userId,
+        username: req.session.username,
+        role: req.session.role,
+        full_name: req.session.fullName
+      }
+    });
+  } catch (error) {
+    console.error('Error al renovar sesión:', error);
+    res.status(500).json({ error: 'Error al renovar sesión' });
+  }
+});
+
 // Obtener todos los usuarios (solo administrador)
 router.get('/', async (req, res) => {
   try {

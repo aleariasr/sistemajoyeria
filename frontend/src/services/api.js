@@ -70,12 +70,39 @@ const api = axios.create({
   withCredentials: true
 });
 
-// Manejo global de errores
+// Variable para evitar múltiples llamadas de logout simultáneas
+let isLoggingOut = false;
+
+// Manejo global de errores con detección de 401 (sesión expirada)
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response) {
       console.error("❌ Error servidor:", err.response.status, err.response.data);
+      
+      // Detectar 401 Unauthorized - sesión expirada
+      if (err.response.status === 401 && !isLoggingOut) {
+        console.warn("⚠️ Sesión expirada detectada (401), cerrando sesión automáticamente...");
+        
+        // Evitar loops de logout
+        isLoggingOut = true;
+        
+        // Llamar al handler de sesión expirada que será configurado por AuthContext
+        if (window.onSessionExpired && typeof window.onSessionExpired === 'function') {
+          try {
+            await window.onSessionExpired();
+          } catch (logoutError) {
+            console.error("Error al cerrar sesión automáticamente:", logoutError);
+          }
+        } else {
+          console.warn("⚠️ Handler de sesión expirada no configurado");
+        }
+        
+        // Reset flag después de un tiempo
+        setTimeout(() => {
+          isLoggingOut = false;
+        }, 2000);
+      }
     } else if (err.request) {
       console.error("❌ No hay respuesta del backend. URL intentada:", API_URL);
       console.error("❌ Verifique que el backend esté ejecutándose y sea accesible desde este dispositivo");
@@ -175,3 +202,6 @@ export const obtenerVapidPublicKey = () => api.get('/notifications/vapid-public'
 export const suscribirseNotificaciones = (subscription) => api.post('/notifications/subscribe', subscription);
 export const desuscribirseNotificaciones = (endpoint) => api.delete('/notifications/unsubscribe', { data: { endpoint } });
 export const enviarNotificacionPrueba = (data = {}) => api.post('/notifications/test', data);
+
+// ------- GESTIÓN DE SESIÓN -------
+export const refreshSession = () => api.post('/auth/refresh-session', {}, { withCredentials: true });

@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './styles/App.css';
 
 // Context
@@ -192,7 +194,63 @@ function ProtectedRoute({ children, adminOnly = false }) {
 }
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
+  const lastActivityRef = useRef(Date.now());
+  const refreshTimerRef = useRef(null);
+
+  // Constantes de configuración
+  const ACTIVITY_DEBOUNCE = 5 * 60 * 1000; // 5 minutos entre refresh de sesión
+  const SESSION_CHECK_INTERVAL = 60 * 1000; // Verificar cada 1 minuto si hay actividad
+
+  // Manejador de actividad del usuario
+  const handleUserActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  // Efecto para rastrear actividad del usuario
+  useEffect(() => {
+    if (!user) return;
+
+    // Eventos que consideramos como "actividad"
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, handleUserActivity, { passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleUserActivity);
+      });
+    };
+  }, [user, handleUserActivity]);
+
+  // Efecto para renovar sesión periódicamente basado en actividad
+  useEffect(() => {
+    if (!user) return;
+
+    const checkAndRefreshSession = async () => {
+      const now = Date.now();
+      const timeSinceLastActivity = now - lastActivityRef.current;
+
+      // Si hay actividad reciente (dentro del período de debounce), renovar sesión
+      if (timeSinceLastActivity < ACTIVITY_DEBOUNCE) {
+        console.log('🔄 Usuario activo, renovando sesión...');
+        await refreshSession();
+      } else {
+        console.log('⏸️ Usuario inactivo, no se renueva la sesión');
+      }
+    };
+
+    // Verificar y renovar sesión periódicamente
+    refreshTimerRef.current = setInterval(checkAndRefreshSession, SESSION_CHECK_INTERVAL);
+
+    return () => {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+      }
+    };
+  }, [user, refreshSession, ACTIVITY_DEBOUNCE, SESSION_CHECK_INTERVAL]);
 
   if (loading) {
     return <div className="loading">Cargando...</div>;
@@ -253,6 +311,18 @@ function App() {
       <SelectionProvider>
         <Router>
           <AppContent />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </Router>
       </SelectionProvider>
     </AuthProvider>
