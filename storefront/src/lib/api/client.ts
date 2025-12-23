@@ -20,6 +20,7 @@ import type {
   CreateOrderResponse,
   Order,
   ApiError,
+  ComponentsResponse,
 } from '../types';
 
 /**
@@ -218,6 +219,16 @@ export const api = {
   async getProduct(id: number): Promise<Product> {
     return withRetry(async () => {
       const response = await apiClient.get<Product>(`/public/products/${id}`);
+      return response.data;
+    });
+  },
+
+  /**
+   * Get components for a composite product (set)
+   */
+  async getProductComponents(id: number): Promise<ComponentsResponse> {
+    return withRetry(async () => {
+      const response = await apiClient.get<ComponentsResponse>(`/public/products/${id}/componentes`);
       return response.data;
     });
   },

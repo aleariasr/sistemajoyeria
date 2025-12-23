@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
+import { SetComponents } from '@/components/product/SetComponents';
 import { formatPrice } from '@/lib/utils';
 
 interface ProductDetailProps {
@@ -227,6 +228,11 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           </div>
         </motion.div>
       </div>
+
+      {/* Set Components - Show if this is a composite product */}
+      {product.es_producto_compuesto && (
+        <SetComponents setId={product.id} setName={product.nombre} />
+      )}
     </div>
   );
 }
