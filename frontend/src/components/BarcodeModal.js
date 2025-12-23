@@ -1,10 +1,12 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import BarcodePrint from './BarcodePrint';
+import { useSelection } from '../context/SelectionContext';
 import '../styles/BarcodeModal.css';
 
 // Soporta modo simple (una joya) y modo múltiple (varias joyas)
 function BarcodeModal({ joya, joyas = [], onClose }) {
+  const { clearSelection } = useSelection();
   const isMulti = Array.isArray(joyas) && joyas.length > 0;
 
   // Estado de cantidades
@@ -17,6 +19,7 @@ function BarcodeModal({ joya, joyas = [], onClose }) {
     });
     return initial;
   });
+  const [clearAfterPrint, setClearAfterPrint] = useState(false);
 
   const itemsParaImprimir = useMemo(() => {
     if (!isMulti && joya) return [{ joya, cantidad }];
@@ -39,6 +42,13 @@ function BarcodeModal({ joya, joyas = [], onClose }) {
 
   const handlePrintClick = () => {
     handlePrint();
+    if (clearAfterPrint && isMulti) {
+      // Small delay to ensure print dialog opens before clearing
+      setTimeout(() => {
+        clearSelection();
+        onClose();
+      }, 100);
+    }
   };
 
   const setCantidadItem = (key, value) => {
@@ -145,6 +155,19 @@ function BarcodeModal({ joya, joyas = [], onClose }) {
               )}
             </div>
           </div>
+
+          {isMulti && (
+            <div style={{ marginTop: '15px', padding: '10px', background: '#f8f9fa', borderRadius: '4px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={clearAfterPrint}
+                  onChange={(e) => setClearAfterPrint(e.target.checked)}
+                />
+                <span>Limpiar selección después de imprimir</span>
+              </label>
+            </div>
+          )}
         </div>
 
         <div className="barcode-modal-footer">

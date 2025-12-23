@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 import BarcodeModal from './BarcodeModal';
 import NotificacionesPush from './NotificacionesPush';
+import { useSelection } from '../context/SelectionContext';
 
 // Constantes para thumbnail de imagen
 const THUMBNAIL_SIZE = '50px';
 
 function ListadoJoyas() {
   const navigate = useNavigate();
+  const { selectedIds, toggleSelection, isSelected, clearSelection, toggleMultiple, getSelectionCount } = useSelection();
   const [joyas, setJoyas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +36,6 @@ function ListadoJoyas() {
   // Estado para modal de código de barras
   const [joyaSeleccionada, setJoyaSeleccionada] = useState(null);
   const [mostrarModalBarcode, setMostrarModalBarcode] = useState(false);
-  const [seleccion, setSeleccion] = useState({});
   const [mostrarModalMulti, setMostrarModalMulti] = useState(false);
 
   useEffect(() => {
@@ -72,8 +73,7 @@ function ListadoJoyas() {
         }
       }
       setJoyas(dedup);
-      // Reset selección al cambiar página o filtros
-      setSeleccion({});
+      // Selection now persists across page/filter changes (managed by SelectionContext)
       setTotalPaginas(response.data.total_paginas);
       setTotal(response.data.total);
     } catch (err) {
@@ -159,23 +159,17 @@ function ListadoJoyas() {
   };
 
   const joyasSeleccionadas = useMemo(() => {
-    return joyas.filter((j) => seleccion[j.id] || seleccion[j.codigo]);
-  }, [joyas, seleccion]);
+    return joyas.filter((j) => isSelected(j.id) || isSelected(j.codigo));
+  }, [joyas, selectedIds, isSelected]);
 
-  const toggleSeleccion = (j) => {
+  const toggleSeleccionItem = (j) => {
     const key = j.id ?? j.codigo;
-    setSeleccion((prev) => ({ ...prev, [key]: !prev[key] }));
+    toggleSelection(key);
   };
 
   const toggleSeleccionPagina = (checked) => {
-    setSeleccion((prev) => {
-      const next = { ...prev };
-      joyas.forEach((j) => {
-        const key = j.id ?? j.codigo;
-        next[key] = checked;
-      });
-      return next;
-    });
+    const ids = joyas.map((j) => j.id ?? j.codigo);
+    toggleMultiple(ids, checked);
   };
 
   return (
@@ -279,6 +273,15 @@ function ListadoJoyas() {
           >
             🖨️ Imprimir códigos seleccionados ({joyasSeleccionadas.length})
           </button>
+          {joyasSeleccionadas.length > 0 && (
+            <button
+              className="btn btn-secondary"
+              onClick={clearSelection}
+              title="Limpiar selección"
+            >
+              ✕ Limpiar Selección
+            </button>
+          )}
           <span style={{ color: '#666', alignSelf: 'center' }}>
             Total: {total} joyas
           </span>
@@ -308,7 +311,7 @@ function ListadoJoyas() {
                       <input
                         type="checkbox"
                         aria-label="Seleccionar página"
-                        checked={joyas.length > 0 && joyas.every((j) => seleccion[j.id] || seleccion[j.codigo])}
+                        checked={joyas.length > 0 && joyas.every((j) => isSelected(j.id) || isSelected(j.codigo))}
                         onChange={(e) => toggleSeleccionPagina(e.target.checked)}
                       />
                     </th>
@@ -330,8 +333,8 @@ function ListadoJoyas() {
                       <td>
                         <input
                           type="checkbox"
-                          checked={!!(seleccion[joya.id] || seleccion[joya.codigo])}
-                          onChange={() => toggleSeleccion(joya)}
+                          checked={!!(isSelected(joya.id) || isSelected(joya.codigo))}
+                          onChange={() => toggleSeleccionItem(joya)}
                           aria-label={`Seleccionar ${joya.codigo}`}
                         />
                       </td>
