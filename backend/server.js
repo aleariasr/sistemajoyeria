@@ -7,6 +7,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const os = require('os');
+const path = require('path');
+const fs = require('fs');
 const { initDatabase, initDatabaseDia } = require('./supabase-db');
 const { crearUsuariosIniciales } = require('./init-users');
 
@@ -401,14 +403,49 @@ app.get('/', (req, res) => {
 
 
 /* ============================================================
-   404
+   FRONTEND BUILD SERVING (React SPA)
    ============================================================ */
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Ruta no encontrada',
-    path: req.path
+// Serve React frontend build files (if available)
+// This must come AFTER all API routes to avoid overriding them
+
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+const frontendIndexPath = path.join(frontendBuildPath, 'index.html');
+
+// Check if frontend build exists
+if (fs.existsSync(frontendBuildPath)) {
+  console.log('✅ Frontend build encontrado, sirviendo archivos estáticos');
+  
+  // Serve static files from the React build directory
+  app.use(express.static(frontendBuildPath));
+  
+  // Catch-all handler: serve React's index.html for all non-API routes
+  // This enables React Router to handle client-side routing
+  app.get('*', (req, res) => {
+    // Only serve index.html if the request is not for an API route
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(frontendIndexPath);
+    } else {
+      // API route not found - return JSON 404
+      res.status(404).json({
+        error: 'Ruta API no encontrada',
+        path: req.path
+      });
+    }
   });
-});
+} else {
+  console.log('ℹ️  Frontend build no encontrado, solo sirviendo API');
+  
+  // No frontend build - return 404 JSON for all unmatched routes
+  app.use((req, res) => {
+    res.status(404).json({
+      error: 'Ruta no encontrada',
+      path: req.path,
+      message: req.path.startsWith('/api') 
+        ? 'Ruta API no encontrada' 
+        : 'Frontend build no disponible. Use frontend por separado en desarrollo.'
+    });
+  });
+}
 
 
 /* ============================================================
