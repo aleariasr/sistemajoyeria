@@ -1039,9 +1039,6 @@ table tbody tr.stock-agotado:hover {
     font-size: 0.875rem;
     /* Add scroll indicator */
     border-left: 3px solid var(--primary-blue);
-    /* Smooth scrolling on touch devices */
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
   }
 
   table {
@@ -1207,9 +1204,6 @@ table tbody tr.stock-agotado:hover {
     /* Enhanced scroll indicator for mobile */
     border-left: 4px solid var(--primary-blue);
     position: relative;
-    /* Better touch scrolling */
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
   }
 
   /* Scroll indicator using data attribute for i18n support */
