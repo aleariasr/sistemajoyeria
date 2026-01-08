@@ -55,7 +55,7 @@ function shuffleWithBalance(products: Product[]): Product[] {
 
   // Distribute products evenly across categories
   const shuffled: Product[] = [];
-  const categoryKeys = Object.keys(categories);
+  let categoryKeys = Object.keys(categories);
   
   while (categoryKeys.length > 0) {
     // Shuffle category order for more randomness
@@ -67,12 +67,8 @@ function shuffleWithBalance(products: Product[]): Product[] {
       }
     });
     
-    // Remove empty categories
-    categoryKeys.forEach((key, index) => {
-      if (categories[key].length === 0) {
-        categoryKeys.splice(index, 1);
-      }
-    });
+    // Remove empty categories by filtering
+    categoryKeys = categoryKeys.filter(key => categories[key].length > 0);
   }
   
   return shuffled;
@@ -100,9 +96,10 @@ function getShuffledProducts(products: Product[]): Product[] {
         .map((id) => productMap.get(id))
         .filter((p): p is Product => p !== undefined);
       
-      // If all products are accounted for, return the stored order
-      // Otherwise, regenerate (products list may have changed)
-      if (orderedProducts.length === products.length) {
+      // Verify that all current products are in the stored order and counts match
+      // This handles cases where products were added/removed/changed
+      if (orderedProducts.length === products.length && 
+          products.every(p => orderedProducts.some(op => op.id === p.id))) {
         return orderedProducts;
       }
     }
