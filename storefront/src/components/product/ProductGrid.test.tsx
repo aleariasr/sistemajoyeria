@@ -177,6 +177,51 @@ describe('ProductGrid', () => {
     expect(storedOrder2).not.toEqual(storedOrder1);
   });
 
+  it('maintains order across multiple infinite scroll loads', () => {
+    // Simulate initial load
+    const page1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
+    
+    const { rerender } = render(<ProductGrid products={page1} />);
+    const order1 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Load page 2
+    const page2 = [
+      ...page1,
+      ...Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6))
+    ];
+    rerender(<ProductGrid products={page2} />);
+    const order2 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Load page 3
+    const page3 = [
+      ...page2,
+      ...Array.from({ length: 5 }, (_, i) => createMockProduct(i + 11))
+    ];
+    rerender(<ProductGrid products={page3} />);
+    const order3 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // First 5 should remain consistent across all loads
+    expect(order2.slice(0, 5)).toEqual(order1);
+    expect(order3.slice(0, 5)).toEqual(order1);
+    
+    // First 10 should remain consistent in page 3
+    expect(order3.slice(0, 10)).toEqual(order2);
+    
+    // Total products should increase
+    expect(order1).toHaveLength(5);
+    expect(order2).toHaveLength(10);
+    expect(order3).toHaveLength(15);
+  });
+
   it('balances categories in shuffle', () => {
     // Create products with multiple categories
     const products = [
