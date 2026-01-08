@@ -7,7 +7,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ProductCard } from './ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
@@ -20,12 +20,29 @@ interface ProductGridProps {
   onRetry?: () => void;
 }
 
+/**
+ * Shuffle array using Fisher-Yates algorithm
+ * More reliable than array.sort(() => Math.random() - 0.5)
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]; // Create a copy to avoid mutating the original
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function ProductGridComponent({
   products,
   isLoading = false,
   error = null,
   onRetry,
 }: ProductGridProps) {
+  // Shuffle products when the products array changes to provide a dynamic experience
+  // useMemo ensures the shuffle happens only when products array changes, not on every render
+  const shuffledProducts = useMemo(() => shuffleArray(products), [products]);
+
   // Loading state
   if (isLoading) {
     return <ProductGridSkeleton count={8} />;
@@ -66,7 +83,7 @@ function ProductGridComponent({
   }
 
   // Empty state
-  if (products.length === 0) {
+  if (shuffledProducts.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="max-w-md mx-auto">
@@ -97,7 +114,7 @@ function ProductGridComponent({
   // Products grid
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      {products.map((product, index) => (
+      {shuffledProducts.map((product, index) => (
         <ProductCard key={product.id} product={product} index={index} />
       ))}
     </div>
