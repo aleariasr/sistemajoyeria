@@ -33,15 +33,97 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+/**
+ * Shuffle products with balanced category distribution
+ * Ensures that products of the same category are not grouped consecutively
+ */
+function shuffleWithBalance(products: Product[]): Product[] {
+  // Group products by category
+  const categories = products.reduce((acc, product) => {
+    const category = product.categoria || 'Sin categoría';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(product);
+    return acc;
+  }, {} as Record<string, Product[]>);
+
+  // Shuffle products within each category first
+  Object.keys(categories).forEach((key) => {
+    categories[key] = shuffleArray(categories[key]);
+  });
+
+  // Distribute products evenly across categories
+  const shuffled: Product[] = [];
+  let categoryKeys = Object.keys(categories);
+  
+  while (categoryKeys.length > 0) {
+    // Shuffle category order for more randomness
+    const shuffledKeys = shuffleArray(categoryKeys);
+    
+    shuffledKeys.forEach((key) => {
+      if (categories[key].length > 0) {
+        shuffled.push(categories[key].shift()!);
+      }
+    });
+    
+    // Remove empty categories by filtering
+    categoryKeys = categoryKeys.filter(key => categories[key].length > 0);
+  }
+  
+  return shuffled;
+}
+
+/**
+ * Get shuffled products with localStorage persistence
+ * Maintains the same order across page navigation until browser reload
+ */
+function getShuffledProducts(products: Product[]): Product[] {
+  // Only use localStorage in browser environment
+  if (typeof window === 'undefined') {
+    return shuffleWithBalance(products);
+  }
+
+  try {
+    const storedOrder = localStorage.getItem('productOrder');
+    
+    if (storedOrder) {
+      const productIds = storedOrder.split(',').map((id) => parseInt(id, 10));
+      const productMap = new Map(products.map((p) => [p.id, p]));
+      
+      // Reconstruct the order from stored IDs
+      const orderedProducts = productIds
+        .map((id) => productMap.get(id))
+        .filter((p): p is Product => p !== undefined);
+      
+      // Verify that all current products are in the stored order and counts match
+      // This handles cases where products were added/removed/changed
+      if (orderedProducts.length === products.length && 
+          products.every(p => orderedProducts.some(op => op.id === p.id))) {
+        return orderedProducts;
+      }
+    }
+    
+    // Generate new shuffled order
+    const shuffled = shuffleWithBalance(products);
+    localStorage.setItem('productOrder', shuffled.map((p) => p.id).join(','));
+    return shuffled;
+  } catch (error) {
+    // If localStorage is not available or fails, fall back to regular shuffle
+    console.warn('localStorage not available, using regular shuffle:', error);
+    return shuffleWithBalance(products);
+  }
+}
+
 function ProductGridComponent({
   products,
   isLoading = false,
   error = null,
   onRetry,
 }: ProductGridProps) {
-  // Shuffle products when the products array changes to provide a dynamic experience
+  // Get shuffled products with persistent order from localStorage
   // useMemo ensures the shuffle happens only when products array changes, not on every render
-  const shuffledProducts = useMemo(() => shuffleArray(products), [products]);
+  const shuffledProducts = useMemo(() => getShuffledProducts(products), [products]);
 
   // Loading state
   if (isLoading) {
