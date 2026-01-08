@@ -47,7 +47,8 @@ class Joya {
       busqueda, categoria, precio_min, precio_max,
       stock_bajo, sin_stock, estado, con_stock, mostrar_en_storefront,
       pagina = 1,
-      por_pagina = 20
+      por_pagina = 20,
+      shuffle = false
     } = filtros;
 
     const paginaNum = Math.max(1, parseInt(pagina, 10) || 1);
@@ -104,7 +105,33 @@ class Joya {
       query = query.eq('estado', estado);
     }
 
-    // Ordenar y paginar
+    // If shuffle is requested, fetch all results first, shuffle, then paginate
+    if (shuffle === true || shuffle === 'true') {
+      // Fetch all matching products (without pagination, but with count)
+      const allQuery = query.order('fecha_creacion', { ascending: false });
+      const { data: allData, error: allError, count } = await allQuery;
+
+      if (allError) {
+        throw allError;
+      }
+
+      // Shuffle the entire result set using Fisher-Yates algorithm
+      const shuffled = this._shuffleArray(allData || []);
+
+      // Apply pagination to shuffled results
+      const offset = (paginaNum - 1) * porPaginaNum;
+      const paginatedData = shuffled.slice(offset, offset + porPaginaNum);
+
+      return {
+        joyas: paginatedData,
+        total: count || 0,
+        pagina: paginaNum,
+        por_pagina: porPaginaNum,
+        total_paginas: Math.max(1, Math.ceil((count || 0) / porPaginaNum))
+      };
+    }
+
+    // Normal path: order and paginate directly in database
     const offset = (paginaNum - 1) * porPaginaNum;
     const hasta = offset + porPaginaNum - 1;
     query = query
@@ -124,6 +151,16 @@ class Joya {
       por_pagina: porPaginaNum,
       total_paginas: Math.max(1, Math.ceil((count || 0) / porPaginaNum))
     };
+  }
+
+  // Fisher-Yates shuffle algorithm for randomizing arrays
+  static _shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   // Obtener una joya por ID

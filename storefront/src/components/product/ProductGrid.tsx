@@ -5,9 +5,9 @@
  * Optimized with React.memo to prevent unnecessary re-renders.
  * 
  * Randomization Strategy:
- * - Maintains a persistent shuffled order in localStorage across navigation
- * - When new products load (infinite scroll), appends them without reshuffling existing order
- * - Ensures balanced category distribution to avoid consecutive grouping
+ * - Backend shuffle provides global randomization across entire inventory
+ * - localStorage maintains persistent order across navigation for continuity
+ * - New products from infinite scroll are appended without client-side reshuffling
  */
 
 'use client';
@@ -26,78 +26,26 @@ interface ProductGridProps {
 }
 
 /**
- * Shuffle array using Fisher-Yates algorithm
- * More reliable than array.sort(() => Math.random() - 0.5)
- */
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array]; // Create a copy to avoid mutating the original
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-/**
- * Shuffle products with balanced category distribution
- * Ensures that products of the same category are not grouped consecutively
- */
-function shuffleWithBalance(products: Product[]): Product[] {
-  // Group products by category
-  const categories = products.reduce((acc, product) => {
-    const category = product.categoria || 'Sin categoría';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(product);
-    return acc;
-  }, {} as Record<string, Product[]>);
-
-  // Shuffle products within each category first
-  Object.keys(categories).forEach((key) => {
-    categories[key] = shuffleArray(categories[key]);
-  });
-
-  // Distribute products evenly across categories
-  const shuffled: Product[] = [];
-  let categoryKeys = Object.keys(categories);
-  
-  while (categoryKeys.length > 0) {
-    // Shuffle category order for more randomness
-    const shuffledKeys = shuffleArray(categoryKeys);
-    
-    shuffledKeys.forEach((key) => {
-      if (categories[key].length > 0) {
-        shuffled.push(categories[key].shift()!);
-      }
-    });
-    
-    // Remove empty categories by filtering
-    categoryKeys = categoryKeys.filter(key => categories[key].length > 0);
-  }
-  
-  return shuffled;
-}
-
-/**
- * Get shuffled products with localStorage persistence
- * Maintains the same order across page navigation and infinite scroll
+ * Get products with localStorage persistence for order continuity
+ * 
+ * Since backend shuffle provides global randomization, this function
+ * primarily manages localStorage persistence so users see consistent
+ * order when navigating back to the catalog.
  * 
  * Key behaviors:
  * 1. If products haven't changed (same IDs), use stored order
- * 2. If new products appear (longer list), add them to existing order without reshuffling
- * 3. If products are completely different, regenerate order
+ * 2. If new products appear (longer list from infinite scroll), append them
+ * 3. If products are completely different (filters/search), use new order
  */
-function getShuffledProducts(products: Product[]): Product[] {
-  // Only use localStorage in browser environment
+function getOrderedProducts(products: Product[]): Product[] {
+  // Skip localStorage in server-side rendering
   if (typeof window === 'undefined') {
-    return shuffleWithBalance(products);
+    return products;
   }
 
   try {
     const storedOrder = localStorage.getItem('productOrder');
     const productMap = new Map(products.map((p) => [p.id, p]));
-    const currentProductIds = new Set(products.map(p => p.id));
     
     if (storedOrder) {
       const storedProductIds = storedOrder.split(',').map((id) => parseInt(id, 10));
@@ -110,8 +58,7 @@ function getShuffledProducts(products: Product[]): Product[] {
         .map(p => p.id)
         .filter(id => !storedProductIds.includes(id));
       
-      // Case 1: All current products are in stored order and no new products
-      // This happens when navigating back or re-rendering with same products
+      // Case 1: All current products are in stored order - maintain order
       if (newProductIds.length === 0 && validStoredIds.length === products.length) {
         const orderedProducts = validStoredIds
           .map((id) => productMap.get(id)!)
@@ -119,16 +66,14 @@ function getShuffledProducts(products: Product[]): Product[] {
         return orderedProducts;
       }
       
-      // Case 2: Some new products - append them to stored order with balanced shuffle
-      // This happens during infinite scroll or when products are added to catalog
+      // Case 2: Some new products from infinite scroll - append them
       if (validStoredIds.length > 0 && newProductIds.length > 0) {
         const newProducts = newProductIds
           .map(id => productMap.get(id))
           .filter((p): p is Product => p !== undefined);
-        const newProductsShuffled = shuffleWithBalance(newProducts);
         
-        // Combine: existing order (only valid IDs) + new shuffled products
-        const combinedOrder = [...validStoredIds, ...newProductsShuffled.map(p => p.id)];
+        // Combine: existing order + new products (already shuffled by backend)
+        const combinedOrder = [...validStoredIds, ...newProducts.map(p => p.id)];
         localStorage.setItem('productOrder', combinedOrder.join(','));
         
         const orderedProducts = combinedOrder
@@ -138,15 +83,14 @@ function getShuffledProducts(products: Product[]): Product[] {
       }
     }
     
-    // Case 3: No stored order or completely different products - generate new shuffled order
-    // This happens on first load or when filters/search changes the product set
-    const shuffled = shuffleWithBalance(products);
-    localStorage.setItem('productOrder', shuffled.map((p) => p.id).join(','));
-    return shuffled;
+    // Case 3: No stored order or completely different products
+    // Store the new order (already shuffled by backend)
+    localStorage.setItem('productOrder', products.map((p) => p.id).join(','));
+    return products;
   } catch (error) {
-    // If localStorage is not available or fails, fall back to regular shuffle
-    console.warn('localStorage not available, using regular shuffle:', error);
-    return shuffleWithBalance(products);
+    // If localStorage is not available, just return products as-is
+    console.warn('localStorage not available:', error);
+    return products;
   }
 }
 
@@ -156,9 +100,9 @@ function ProductGridComponent({
   error = null,
   onRetry,
 }: ProductGridProps) {
-  // Get shuffled products with persistent order from localStorage
-  // useMemo ensures the shuffle happens only when products array changes, not on every render
-  const shuffledProducts = useMemo(() => getShuffledProducts(products), [products]);
+  // Get ordered products with persistent order from localStorage
+  // useMemo ensures the ordering happens only when products array changes
+  const orderedProducts = useMemo(() => getOrderedProducts(products), [products]);
 
   // Loading state
   if (isLoading) {
@@ -200,7 +144,7 @@ function ProductGridComponent({
   }
 
   // Empty state
-  if (shuffledProducts.length === 0) {
+  if (orderedProducts.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="max-w-md mx-auto">
@@ -231,7 +175,7 @@ function ProductGridComponent({
   // Products grid
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      {shuffledProducts.map((product, index) => (
+      {orderedProducts.map((product, index) => (
         <ProductCard key={product.id} product={product} index={index} />
       ))}
     </div>
