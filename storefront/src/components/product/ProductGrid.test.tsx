@@ -1,8 +1,9 @@
 /**
  * Tests for ProductGrid Component
  * 
- * Validates that products are displayed in random order while maintaining
- * all products in the grid without omission.
+ * Validates product display and localStorage persistence.
+ * Note: Backend shuffle (via shuffle=true parameter) provides global randomization.
+ * Frontend maintains order persistence via localStorage for navigation continuity.
  */
 
 import React from 'react';
@@ -52,7 +53,7 @@ describe('ProductGrid', () => {
     localStorage.clear();
   });
 
-  it('renders all products without omission', () => {
+  it('accepts products in order provided by backend', () => {
     const products = Array.from({ length: 10 }, (_, i) => createMockProduct(i + 1));
     
     render(<ProductGrid products={products} />);
@@ -63,13 +64,14 @@ describe('ProductGrid', () => {
     });
   });
 
-  it('shuffles products on different renders', () => {
+  it('stores order in localStorage (backend provides shuffled order)', () => {
+    // Backend provides pre-shuffled products
     const products = Array.from({ length: 20 }, (_, i) => createMockProduct(i + 1));
     
     // Render multiple times and collect orders
     const orders: number[][] = [];
     for (let i = 0; i < 5; i++) {
-      localStorage.clear(); // Clear localStorage to get fresh shuffle each time
+      localStorage.clear(); // Clear localStorage to simulate new fetch
       const { unmount } = render(<ProductGrid products={products} />);
       
       const renderedProducts = screen.getAllByTestId(/product-\d+/);
@@ -82,14 +84,14 @@ describe('ProductGrid', () => {
       unmount();
     }
     
-    // Check that at least some renders have different orders
-    // (with 20 products, the probability of getting the same order twice is astronomically small)
+    // All renders should show products in same order when given same input
+    // (Backend shuffle happens once per request, frontend maintains that order)
     const firstOrder = JSON.stringify(orders[0]);
-    const hasDifferentOrder = orders.some(
-      (order) => JSON.stringify(order) !== firstOrder
+    const allSameOrder = orders.every(
+      (order) => JSON.stringify(order) === firstOrder
     );
     
-    expect(hasDifferentOrder).toBe(true);
+    expect(allSameOrder).toBe(true);
   });
 
   it('persists order in localStorage', () => {
@@ -263,15 +265,23 @@ describe('ProductGrid', () => {
     expect(order3).toHaveLength(15);
   });
 
-  it('balances categories in shuffle', () => {
-    // Create products with multiple categories
+  it('displays products in the order received from backend', () => {
+    // Backend provides shuffled products with balanced categories
+    // Frontend should display them in the order received
     const products = [
-      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 1, 'Anillos')),
-      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 11, 'Collares')),
-      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 21, 'Aretes')),
+      createMockProduct(1, 'Anillos'),
+      createMockProduct(11, 'Collares'),
+      createMockProduct(21, 'Aretes'),
+      createMockProduct(2, 'Anillos'),
+      createMockProduct(12, 'Collares'),
+      createMockProduct(22, 'Aretes'),
+      createMockProduct(3, 'Anillos'),
+      createMockProduct(13, 'Collares'),
+      createMockProduct(23, 'Aretes'),
+      createMockProduct(4, 'Anillos'),
     ];
     
-    localStorage.clear(); // Ensure fresh shuffle
+    localStorage.clear();
     render(<ProductGrid products={products} />);
     
     const renderedProducts = screen.getAllByTestId(/product-\d+/);
@@ -281,22 +291,8 @@ describe('ProductGrid', () => {
       return products.find(p => p.id === id)!;
     });
     
-    // Check that there are no long consecutive runs of the same category
-    let maxConsecutive = 1;
-    let currentConsecutive = 1;
-    
-    for (let i = 1; i < renderedOrder.length; i++) {
-      if (renderedOrder[i].categoria === renderedOrder[i - 1].categoria) {
-        currentConsecutive++;
-        maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
-      } else {
-        currentConsecutive = 1;
-      }
-    }
-    
-    // With balanced distribution, we should not have more than 3 consecutive items
-    // of the same category (allowing for some variance due to randomness)
-    expect(maxConsecutive).toBeLessThanOrEqual(5);
+    // Verify order is maintained as received from backend
+    expect(renderedOrder.map(p => p.id)).toEqual(products.map(p => p.id));
   });
 
   it('displays loading state', () => {
