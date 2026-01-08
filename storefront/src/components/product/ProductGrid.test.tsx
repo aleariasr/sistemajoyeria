@@ -121,6 +121,44 @@ describe('ProductGrid', () => {
     expect(secondOrder).toEqual(firstOrder);
   });
 
+  it('maintains order when new products are added (infinite scroll)', () => {
+    // Simulate initial load
+    const initialProducts = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
+    
+    const { unmount, rerender } = render(<ProductGrid products={initialProducts} />);
+    const initialRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const initialOrder = initialRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Simulate loading more products (infinite scroll)
+    const moreProducts = [
+      ...initialProducts,
+      ...Array.from({ length: 3 }, (_, i) => createMockProduct(i + 6))
+    ];
+    
+    rerender(<ProductGrid products={moreProducts} />);
+    const afterScrollRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const afterScrollOrder = afterScrollRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // The first 5 products should maintain their original order
+    const firstFiveAfterScroll = afterScrollOrder.slice(0, 5);
+    expect(firstFiveAfterScroll).toEqual(initialOrder);
+    
+    // Total should be 8 products now
+    expect(afterScrollOrder).toHaveLength(8);
+    
+    // New products (6, 7, 8) should be appended
+    const newProductsInOrder = afterScrollOrder.slice(5);
+    expect(newProductsInOrder).toContain(6);
+    expect(newProductsInOrder).toContain(7);
+    expect(newProductsInOrder).toContain(8);
+  });
+
   it('regenerates order when product list changes', () => {
     const products1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
     const products2 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6));

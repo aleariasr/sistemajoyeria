@@ -3,6 +3,11 @@
  * 
  * Responsive grid layout for displaying products with loading and empty states.
  * Optimized with React.memo to prevent unnecessary re-renders.
+ * 
+ * Randomization Strategy:
+ * - Maintains a persistent shuffled order in localStorage across navigation
+ * - When new products load (infinite scroll), appends them without reshuffling existing order
+ * - Ensures balanced category distribution to avoid consecutive grouping
  */
 
 'use client';
@@ -76,7 +81,12 @@ function shuffleWithBalance(products: Product[]): Product[] {
 
 /**
  * Get shuffled products with localStorage persistence
- * Maintains the same order across page navigation until browser reload
+ * Maintains the same order across page navigation and infinite scroll
+ * 
+ * Key behaviors:
+ * 1. If products haven't changed (same IDs), use stored order
+ * 2. If new products appear (longer list), add them to existing order without reshuffling
+ * 3. If products are completely different, regenerate order
  */
 function getShuffledProducts(products: Product[]): Product[] {
   // Only use localStorage in browser environment
@@ -86,25 +96,44 @@ function getShuffledProducts(products: Product[]): Product[] {
 
   try {
     const storedOrder = localStorage.getItem('productOrder');
+    const productMap = new Map(products.map((p) => [p.id, p]));
+    const currentProductIds = products.map(p => p.id);
     
     if (storedOrder) {
-      const productIds = storedOrder.split(',').map((id) => parseInt(id, 10));
-      const productMap = new Map(products.map((p) => [p.id, p]));
+      const storedProductIds = storedOrder.split(',').map((id) => parseInt(id, 10));
       
-      // Reconstruct the order from stored IDs
-      const orderedProducts = productIds
-        .map((id) => productMap.get(id))
-        .filter((p): p is Product => p !== undefined);
+      // Check if all stored IDs exist in current products (subset check)
+      const storedIdsInCurrent = storedProductIds.filter(id => productMap.has(id));
       
-      // Verify that all current products are in the stored order and counts match
-      // This handles cases where products were added/removed/changed
-      if (orderedProducts.length === products.length && 
-          products.every(p => orderedProducts.some(op => op.id === p.id))) {
+      // Find new products not in stored order
+      const newProductIds = currentProductIds.filter(id => !storedProductIds.includes(id));
+      
+      // Case 1: All current products are in stored order - use stored order as-is
+      if (newProductIds.length === 0) {
+        const orderedProducts = storedProductIds
+          .map((id) => productMap.get(id))
+          .filter((p): p is Product => p !== undefined);
+        return orderedProducts;
+      }
+      
+      // Case 2: Some new products - append them to stored order with balanced shuffle
+      // This happens during infinite scroll
+      if (storedIdsInCurrent.length > 0) {
+        const newProducts = newProductIds.map(id => productMap.get(id)).filter((p): p is Product => p !== undefined);
+        const newProductsShuffled = shuffleWithBalance(newProducts);
+        
+        // Combine: existing order + new shuffled products
+        const combinedOrder = [...storedProductIds, ...newProductsShuffled.map(p => p.id)];
+        localStorage.setItem('productOrder', combinedOrder.join(','));
+        
+        const orderedProducts = combinedOrder
+          .map((id) => productMap.get(id))
+          .filter((p): p is Product => p !== undefined);
         return orderedProducts;
       }
     }
     
-    // Generate new shuffled order
+    // Case 3: No stored order or completely different products - generate new shuffled order
     const shuffled = shuffleWithBalance(products);
     localStorage.setItem('productOrder', shuffled.map((p) => p.id).join(','));
     return shuffled;
