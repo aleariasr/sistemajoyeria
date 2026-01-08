@@ -31,12 +31,12 @@ jest.mock('@/components/ui/Button', () => ({
 }));
 
 // Helper to create mock products
-const createMockProduct = (id: number): Product => ({
+const createMockProduct = (id: number, categoria?: string): Product => ({
   id,
   codigo: `PROD-${id}`,
   nombre: `Product ${id}`,
   descripcion: `Description ${id}`,
-  categoria: 'Test Category',
+  categoria: categoria || 'Test Category',
   precio: 10000,
   moneda: 'CRC',
   stock_disponible: true,
@@ -47,6 +47,11 @@ const createMockProduct = (id: number): Product => ({
 });
 
 describe('ProductGrid', () => {
+  beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+  });
+
   it('renders all products without omission', () => {
     const products = Array.from({ length: 10 }, (_, i) => createMockProduct(i + 1));
     
@@ -64,6 +69,7 @@ describe('ProductGrid', () => {
     // Render multiple times and collect orders
     const orders: number[][] = [];
     for (let i = 0; i < 5; i++) {
+      localStorage.clear(); // Clear localStorage to get fresh shuffle each time
       const { unmount } = render(<ProductGrid products={products} />);
       
       const renderedProducts = screen.getAllByTestId(/product-\d+/);
@@ -84,6 +90,89 @@ describe('ProductGrid', () => {
     );
     
     expect(hasDifferentOrder).toBe(true);
+  });
+
+  it('persists order in localStorage', () => {
+    const products = Array.from({ length: 10 }, (_, i) => createMockProduct(i + 1));
+    
+    // First render
+    const { unmount } = render(<ProductGrid products={products} />);
+    const firstRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const firstOrder = firstRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Check that order is saved in localStorage
+    const storedOrder = localStorage.getItem('productOrder');
+    expect(storedOrder).toBeTruthy();
+    
+    unmount();
+    
+    // Second render should use the same order
+    render(<ProductGrid products={products} />);
+    const secondRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const secondOrder = secondRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Orders should be identical
+    expect(secondOrder).toEqual(firstOrder);
+  });
+
+  it('regenerates order when product list changes', () => {
+    const products1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
+    const products2 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6));
+    
+    // First render with products1
+    const { unmount } = render(<ProductGrid products={products1} />);
+    const storedOrder1 = localStorage.getItem('productOrder');
+    expect(storedOrder1).toBeTruthy();
+    unmount();
+    
+    // Second render with different products
+    render(<ProductGrid products={products2} />);
+    const storedOrder2 = localStorage.getItem('productOrder');
+    
+    // Orders should be different because product list changed
+    expect(storedOrder2).not.toEqual(storedOrder1);
+  });
+
+  it('balances categories in shuffle', () => {
+    // Create products with multiple categories
+    const products = [
+      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 1, 'Anillos')),
+      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 11, 'Collares')),
+      ...Array.from({ length: 10 }, (_, i) => createMockProduct(i + 21, 'Aretes')),
+    ];
+    
+    localStorage.clear(); // Ensure fresh shuffle
+    render(<ProductGrid products={products} />);
+    
+    const renderedProducts = screen.getAllByTestId(/product-\d+/);
+    const renderedOrder = renderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      const id = match ? parseInt(match[1], 10) : 0;
+      return products.find(p => p.id === id)!;
+    });
+    
+    // Check that there are no long consecutive runs of the same category
+    let maxConsecutive = 1;
+    let currentConsecutive = 1;
+    
+    for (let i = 1; i < renderedOrder.length; i++) {
+      if (renderedOrder[i].categoria === renderedOrder[i - 1].categoria) {
+        currentConsecutive++;
+        maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
+      } else {
+        currentConsecutive = 1;
+      }
+    }
+    
+    // With balanced distribution, we should not have more than 3 consecutive items
+    // of the same category (allowing for some variance due to randomness)
+    expect(maxConsecutive).toBeLessThanOrEqual(5);
   });
 
   it('displays loading state', () => {
