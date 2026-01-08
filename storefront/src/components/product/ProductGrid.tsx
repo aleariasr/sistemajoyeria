@@ -39,8 +39,8 @@ function ProductGridComponent({
   error = null,
   onRetry,
 }: ProductGridProps) {
-  // Shuffle products on each render to provide a dynamic experience
-  // useMemo ensures the shuffle happens only when products array changes
+  // Shuffle products when the products array changes to provide a dynamic experience
+  // useMemo ensures the shuffle happens only when products array changes, not on every render
   const shuffledProducts = useMemo(() => shuffleArray(products), [products]);
 
   // Loading state
