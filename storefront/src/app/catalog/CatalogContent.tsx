@@ -42,6 +42,7 @@ export default function CatalogContent() {
     search: debouncedSearch || undefined,
     category: selectedCategory || undefined,
     per_page: 20, // Load 20 products at a time for smoother experience
+    shuffle: true, // Enable backend shuffle for global randomization
   });
 
   // Fetch categories

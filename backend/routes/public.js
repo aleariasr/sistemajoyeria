@@ -70,15 +70,34 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
 }
 
 /**
+ * Fisher-Yates Shuffle Algorithm
+ * Efficiently randomizes an array in-place
+ * @param {Array} array - Array to shuffle
+ * @returns {Array} Shuffled array
+ */
+function shuffleArray(array) {
+  const shuffled = [...array]; // Create a copy to avoid mutating the original
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+/**
  * GET /api/public/products
  * Get all active products with optional filtering for storefront display
  * Only returns products with estado='Activo', stock > 0, and mostrar_en_storefront=true
  * Expands products with variants into individual "virtual products"
+ * 
+ * Query Parameters:
+ * - shuffle: boolean - If 'true', randomizes products before pagination for global shuffle
  */
 router.get('/products', async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina || req.query.page || 1);
     const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 50);
+    const shouldShuffle = req.query.shuffle === 'true';
     
     const filtros = {
       busqueda: req.query.busqueda || req.query.search,
@@ -90,7 +109,8 @@ router.get('/products', async (req, res) => {
       con_stock: true, // Filter by stock > 0 in database query
       mostrar_en_storefront: true, // Only show products marked as visible in storefront
       pagina: pagina,
-      por_pagina: porPagina
+      por_pagina: porPagina,
+      shuffle: shouldShuffle // Pass shuffle flag to model
     };
 
     const resultado = await Joya.obtenerTodas(filtros);

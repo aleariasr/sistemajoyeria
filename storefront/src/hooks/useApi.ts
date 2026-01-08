@@ -35,6 +35,7 @@ export function useProducts(params?: {
   price_max?: number;
   page?: number;
   per_page?: number;
+  shuffle?: boolean;
 }) {
   return useQuery({
     queryKey: queryKeys.products(params),
@@ -53,6 +54,7 @@ export function useInfiniteProducts(params?: {
   price_min?: number;
   price_max?: number;
   per_page?: number;
+  shuffle?: boolean;
 }) {
   return useInfiniteQuery({
     queryKey: ['products', 'infinite', params], // Separate key for infinite queries

@@ -187,6 +187,7 @@ export const api = {
     price_max?: number;
     page?: number;
     per_page?: number;
+    shuffle?: boolean;
   }): Promise<ProductsResponse> {
     return withRetry(async () => {
       const response = await apiClient.get<ProductsResponse>('/public/products', {
@@ -197,6 +198,7 @@ export const api = {
           precio_max: params?.price_max,
           pagina: params?.page,
           por_pagina: params?.per_page,
+          shuffle: params?.shuffle,
         },
       });
       return response.data;
