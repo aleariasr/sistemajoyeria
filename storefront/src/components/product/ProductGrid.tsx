@@ -97,43 +97,49 @@ function getShuffledProducts(products: Product[]): Product[] {
   try {
     const storedOrder = localStorage.getItem('productOrder');
     const productMap = new Map(products.map((p) => [p.id, p]));
-    const currentProductIds = products.map(p => p.id);
+    const currentProductIds = new Set(products.map(p => p.id));
     
     if (storedOrder) {
       const storedProductIds = storedOrder.split(',').map((id) => parseInt(id, 10));
       
-      // Check if all stored IDs exist in current products (subset check)
-      const storedIdsInCurrent = storedProductIds.filter(id => productMap.has(id));
+      // Filter stored IDs to only those that exist in current products
+      const validStoredIds = storedProductIds.filter(id => productMap.has(id));
       
       // Find new products not in stored order
-      const newProductIds = currentProductIds.filter(id => !storedProductIds.includes(id));
+      const newProductIds = products
+        .map(p => p.id)
+        .filter(id => !storedProductIds.includes(id));
       
-      // Case 1: All current products are in stored order - use stored order as-is
-      if (newProductIds.length === 0) {
-        const orderedProducts = storedProductIds
-          .map((id) => productMap.get(id))
+      // Case 1: All current products are in stored order and no new products
+      // This happens when navigating back or re-rendering with same products
+      if (newProductIds.length === 0 && validStoredIds.length === products.length) {
+        const orderedProducts = validStoredIds
+          .map((id) => productMap.get(id)!)
           .filter((p): p is Product => p !== undefined);
         return orderedProducts;
       }
       
       // Case 2: Some new products - append them to stored order with balanced shuffle
-      // This happens during infinite scroll
-      if (storedIdsInCurrent.length > 0) {
-        const newProducts = newProductIds.map(id => productMap.get(id)).filter((p): p is Product => p !== undefined);
+      // This happens during infinite scroll or when products are added to catalog
+      if (validStoredIds.length > 0 && newProductIds.length > 0) {
+        const newProducts = newProductIds
+          .map(id => productMap.get(id))
+          .filter((p): p is Product => p !== undefined);
         const newProductsShuffled = shuffleWithBalance(newProducts);
         
-        // Combine: existing order + new shuffled products
-        const combinedOrder = [...storedProductIds, ...newProductsShuffled.map(p => p.id)];
+        // Combine: existing order (only valid IDs) + new shuffled products
+        const combinedOrder = [...validStoredIds, ...newProductsShuffled.map(p => p.id)];
         localStorage.setItem('productOrder', combinedOrder.join(','));
         
         const orderedProducts = combinedOrder
-          .map((id) => productMap.get(id))
+          .map((id) => productMap.get(id)!)
           .filter((p): p is Product => p !== undefined);
         return orderedProducts;
       }
     }
     
     // Case 3: No stored order or completely different products - generate new shuffled order
+    // This happens on first load or when filters/search changes the product set
     const shuffled = shuffleWithBalance(products);
     localStorage.setItem('productOrder', shuffled.map((p) => p.id).join(','));
     return shuffled;

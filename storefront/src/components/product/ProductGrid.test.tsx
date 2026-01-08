@@ -159,6 +159,47 @@ describe('ProductGrid', () => {
     expect(newProductsInOrder).toContain(8);
   });
 
+  it('regenerates order when filters remove products', () => {
+    // Initial load with 10 products
+    const allProducts = Array.from({ length: 10 }, (_, i) => 
+      createMockProduct(i + 1, i % 2 === 0 ? 'Anillos' : 'Collares')
+    );
+    
+    const { rerender } = render(<ProductGrid products={allProducts} />);
+    const initialOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    expect(initialOrder).toHaveLength(10);
+    
+    // Apply filter that shows only "Anillos" (products 2, 4, 6, 8, 10)
+    // This creates a subset of products, which should maintain their relative order
+    const filteredProducts = allProducts.filter(p => p.categoria === 'Anillos');
+    rerender(<ProductGrid products={filteredProducts} />);
+    
+    const filteredOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Should have exactly 5 products (all with even IDs)
+    expect(filteredOrder).toHaveLength(5);
+    
+    // All products should be "Anillos" (even IDs in this test setup)
+    filteredProducts.forEach(p => {
+      expect(filteredOrder).toContain(p.id);
+    });
+    
+    // The relative order of filtered products should match their order from initial load
+    // Find positions in initial order
+    const initialPositions = filteredOrder.map(id => initialOrder.indexOf(id));
+    
+    // Verify they maintain relative order (should be in ascending position order)
+    for (let i = 1; i < initialPositions.length; i++) {
+      expect(initialPositions[i]).toBeGreaterThan(initialPositions[i - 1]);
+    }
+  });
+
   it('regenerates order when product list changes', () => {
     const products1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
     const products2 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6));
