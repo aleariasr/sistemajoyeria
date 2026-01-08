@@ -121,6 +121,85 @@ describe('ProductGrid', () => {
     expect(secondOrder).toEqual(firstOrder);
   });
 
+  it('maintains order when new products are added (infinite scroll)', () => {
+    // Simulate initial load
+    const initialProducts = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
+    
+    const { unmount, rerender } = render(<ProductGrid products={initialProducts} />);
+    const initialRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const initialOrder = initialRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Simulate loading more products (infinite scroll)
+    const moreProducts = [
+      ...initialProducts,
+      ...Array.from({ length: 3 }, (_, i) => createMockProduct(i + 6))
+    ];
+    
+    rerender(<ProductGrid products={moreProducts} />);
+    const afterScrollRenderedProducts = screen.getAllByTestId(/product-\d+/);
+    const afterScrollOrder = afterScrollRenderedProducts.map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // The first 5 products should maintain their original order
+    const firstFiveAfterScroll = afterScrollOrder.slice(0, 5);
+    expect(firstFiveAfterScroll).toEqual(initialOrder);
+    
+    // Total should be 8 products now
+    expect(afterScrollOrder).toHaveLength(8);
+    
+    // New products (6, 7, 8) should be appended
+    const newProductsInOrder = afterScrollOrder.slice(5);
+    expect(newProductsInOrder).toContain(6);
+    expect(newProductsInOrder).toContain(7);
+    expect(newProductsInOrder).toContain(8);
+  });
+
+  it('regenerates order when filters remove products', () => {
+    // Initial load with 10 products
+    const allProducts = Array.from({ length: 10 }, (_, i) => 
+      createMockProduct(i + 1, i % 2 === 0 ? 'Anillos' : 'Collares')
+    );
+    
+    const { rerender } = render(<ProductGrid products={allProducts} />);
+    const initialOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    expect(initialOrder).toHaveLength(10);
+    
+    // Apply filter that shows only "Anillos" (products 2, 4, 6, 8, 10)
+    // This creates a subset of products, which should maintain their relative order
+    const filteredProducts = allProducts.filter(p => p.categoria === 'Anillos');
+    rerender(<ProductGrid products={filteredProducts} />);
+    
+    const filteredOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Should have exactly 5 products (all with even IDs)
+    expect(filteredOrder).toHaveLength(5);
+    
+    // All products should be "Anillos" (even IDs in this test setup)
+    filteredProducts.forEach(p => {
+      expect(filteredOrder).toContain(p.id);
+    });
+    
+    // The relative order of filtered products should match their order from initial load
+    // Find positions in initial order
+    const initialPositions = filteredOrder.map(id => initialOrder.indexOf(id));
+    
+    // Verify they maintain relative order (should be in ascending position order)
+    for (let i = 1; i < initialPositions.length; i++) {
+      expect(initialPositions[i]).toBeGreaterThan(initialPositions[i - 1]);
+    }
+  });
+
   it('regenerates order when product list changes', () => {
     const products1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
     const products2 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6));
@@ -137,6 +216,51 @@ describe('ProductGrid', () => {
     
     // Orders should be different because product list changed
     expect(storedOrder2).not.toEqual(storedOrder1);
+  });
+
+  it('maintains order across multiple infinite scroll loads', () => {
+    // Simulate initial load
+    const page1 = Array.from({ length: 5 }, (_, i) => createMockProduct(i + 1));
+    
+    const { rerender } = render(<ProductGrid products={page1} />);
+    const order1 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Load page 2
+    const page2 = [
+      ...page1,
+      ...Array.from({ length: 5 }, (_, i) => createMockProduct(i + 6))
+    ];
+    rerender(<ProductGrid products={page2} />);
+    const order2 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // Load page 3
+    const page3 = [
+      ...page2,
+      ...Array.from({ length: 5 }, (_, i) => createMockProduct(i + 11))
+    ];
+    rerender(<ProductGrid products={page3} />);
+    const order3 = screen.getAllByTestId(/product-\d+/).map((el) => {
+      const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+    
+    // First 5 should remain consistent across all loads
+    expect(order2.slice(0, 5)).toEqual(order1);
+    expect(order3.slice(0, 5)).toEqual(order1);
+    
+    // First 10 should remain consistent in page 3
+    expect(order3.slice(0, 10)).toEqual(order2);
+    
+    // Total products should increase
+    expect(order1).toHaveLength(5);
+    expect(order2).toHaveLength(10);
+    expect(order3).toHaveLength(15);
   });
 
   it('balances categories in shuffle', () => {
