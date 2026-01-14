@@ -30,7 +30,8 @@ export default function CatalogContent() {
   );
 
   // Fetch products with infinite scroll
-  // shuffle disabled to maintain stable product order for pagination and back navigation
+  // shuffle=true for randomized product display, but we cache the order in React Query
+  // so returning from product detail shows the same shuffled order
   const {
     data,
     isLoading,
@@ -43,7 +44,7 @@ export default function CatalogContent() {
     search: debouncedSearch || undefined,
     category: selectedCategory || undefined,
     per_page: 20, // Load 20 products at a time for smoother experience
-    shuffle: false,
+    shuffle: true,
   });
 
   // Fetch categories
