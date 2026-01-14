@@ -30,6 +30,7 @@ import DetalleCuentaPorCobrar from './components/DetalleCuentaPorCobrar';
 import IngresosExtras from './components/IngresosExtras';
 import Devoluciones from './components/Devoluciones';
 import PedidosOnline from './components/PedidosOnline';
+import SystemClock from './components/SystemClock';
 
 function Sidebar() {
   const location = useLocation();
@@ -298,6 +299,7 @@ function AppContent() {
   return (
     <div className="app">
       <Sidebar />
+      <SystemClock />
       <div className="main-content">
         <Routes>
           {/* Rutas de ventas - Accesibles para todos */}

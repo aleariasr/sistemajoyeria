@@ -46,6 +46,7 @@ class Joya {
     const {
       busqueda, categoria, precio_min, precio_max,
       stock_bajo, sin_stock, estado, con_stock, mostrar_en_storefront,
+      excluir_sets,
       pagina = 1,
       por_pagina = 20,
       shuffle = false
@@ -106,6 +107,11 @@ class Joya {
     // Filtro por estado
     if (estado) {
       query = query.eq('estado', estado);
+    }
+
+    // Filtro para excluir sets (productos compuestos)
+    if (excluir_sets === true || excluir_sets === 'true') {
+      query = query.eq('es_producto_compuesto', false);
     }
 
     // If shuffle is requested, fetch all results first, shuffle, then paginate

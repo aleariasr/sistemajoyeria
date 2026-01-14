@@ -17,7 +17,12 @@ const requireAuth = (req, res, next) => {
 // GET /api/reportes/inventario - Reporte de inventario actual
 router.get('/inventario', requireAuth, async (req, res) => {
   try {
-    const resultado = await Joya.obtenerTodas({ por_pagina: 10000 });
+    // Excluir sets del reporte de inventario para evitar duplicar valores
+    // Los sets no tienen stock propio, su stock se calcula de componentes
+    const resultado = await Joya.obtenerTodas({ 
+      por_pagina: 10000,
+      excluir_sets: true
+    });
     
     const reporte = resultado.joyas.map(joya => ({
       codigo: joya.codigo,
