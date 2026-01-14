@@ -42,10 +42,11 @@ async function testCategoryFiltering() {
     const categories = [...new Set(allProducts.joyas.map(j => j.categoria).filter(c => c))];
     log(`   Categories: ${categories.join(', ')}`, colors.reset);
 
-    // Test 2: Filter by each category
-    log('\n📝 Test 2: Filter by specific categories', colors.blue);
+    // Test 2: Filter by each category (case-insensitive)
+    log('\n📝 Test 2: Filter by specific categories (case-insensitive)', colors.blue);
     for (const categoria of categories) {
-      const filtered = await Joya.obtenerTodas({
+      // Test with exact case
+      const filteredExact = await Joya.obtenerTodas({
         estado: 'Activo',
         con_stock: true,
         mostrar_en_storefront: true,
@@ -54,10 +55,28 @@ async function testCategoryFiltering() {
         por_pagina: 50
       });
       
-      log(`✅ Category "${categoria}": ${filtered.joyas.length} products`, colors.green);
+      log(`✅ Category "${categoria}" (exact): ${filteredExact.joyas.length} products`, colors.green);
       
-      // Verify all results match the category
-      const wrongCategory = filtered.joyas.find(j => j.categoria !== categoria);
+      // Test with lowercase (as frontend sends)
+      const filteredLower = await Joya.obtenerTodas({
+        estado: 'Activo',
+        con_stock: true,
+        mostrar_en_storefront: true,
+        categoria: categoria.toLowerCase(),
+        pagina: 1,
+        por_pagina: 50
+      });
+      
+      log(`✅ Category "${categoria.toLowerCase()}" (lowercase): ${filteredLower.joyas.length} products`, colors.green);
+      
+      // Verify both return same results
+      if (filteredExact.joyas.length !== filteredLower.joyas.length) {
+        log(`   ❌ ERROR: Case-sensitivity issue! Exact: ${filteredExact.joyas.length}, Lowercase: ${filteredLower.joyas.length}`, colors.red);
+        return false;
+      }
+      
+      // Verify all results match the category (case-insensitive)
+      const wrongCategory = filteredExact.joyas.find(j => j.categoria.toLowerCase() !== categoria.toLowerCase());
       if (wrongCategory) {
         log(`   ❌ ERROR: Found product with wrong category: ${wrongCategory.categoria}`, colors.red);
         return false;

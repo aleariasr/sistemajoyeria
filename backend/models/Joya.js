@@ -66,9 +66,9 @@ class Joya {
       query = query.or(`codigo.ilike.%${sanitizedBusqueda}%,nombre.ilike.%${sanitizedBusqueda}%,descripcion.ilike.%${sanitizedBusqueda}%,categoria.ilike.%${sanitizedBusqueda}%,proveedor.ilike.%${sanitizedBusqueda}%`);
     }
 
-    // Filtro por categoría
+    // Filtro por categoría (case-insensitive para compatibilidad con frontend)
     if (categoria) {
-      query = query.eq('categoria', categoria);
+      query = query.ilike('categoria', categoria);
     }
 
     // Filtro por rango de precios
