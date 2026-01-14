@@ -159,7 +159,7 @@ export function ProductImageGallery({ imagenes, productName, fallbackImageUrl }:
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              className="relative max-w-5xl max-h-[90vh] w-full h-full flex items-center justify-center"
+              className="relative w-full h-full flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
               <Image
@@ -171,8 +171,7 @@ export function ProductImageGallery({ imagenes, productName, fallbackImageUrl }:
                 alt={`${productName} - Ampliada`}
                 width={1600}
                 height={1600}
-                className="object-contain max-w-full max-h-full"
-                style={{ maxWidth: '100%', maxHeight: '90vh' }}
+                className="object-contain max-w-full max-h-[90vh]"
                 onError={() => {
                   handleImageError(selectedIndex);
                   setIsZoomed(false);

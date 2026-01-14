@@ -234,8 +234,8 @@ HAVING COUNT(CASE WHEN ij.es_principal THEN 1 END) != 1;
 - ✅ `backend/tests/test-image-validation.js` - Tests de validación de imágenes
 
 ### NPM Packages Agregados
-- `date-fns@^3.0.0` - Librería de utilidades de fechas
-- `date-fns-tz@^2.0.0` - Extensión para zonas horarias
+- `date-fns@^4.1.0` - Librería de utilidades de fechas
+- `date-fns-tz@^3.2.0` - Extensión para zonas horarias
 
 ---
 
