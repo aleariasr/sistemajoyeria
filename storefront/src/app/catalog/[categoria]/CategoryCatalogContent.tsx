@@ -58,6 +58,8 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
   );
 
   // Fetch products with infinite scroll
+  // shuffle=true for randomized product display, but we cache the order in React Query
+  // so returning from product detail shows the same shuffled order
   const {
     data,
     isLoading,

@@ -66,9 +66,12 @@ class Joya {
       query = query.or(`codigo.ilike.%${sanitizedBusqueda}%,nombre.ilike.%${sanitizedBusqueda}%,descripcion.ilike.%${sanitizedBusqueda}%,categoria.ilike.%${sanitizedBusqueda}%,proveedor.ilike.%${sanitizedBusqueda}%`);
     }
 
-    // Filtro por categoría
+    // Filtro por categoría (case-insensitive para compatibilidad con frontend)
+    // Frontend normaliza categorías a minúsculas (e.g., "anillos")
+    // Base de datos almacena con capitalización (e.g., "Anillos")
+    // ilike sin wildcards hace coincidencia exacta pero case-insensitive
     if (categoria) {
-      query = query.eq('categoria', categoria);
+      query = query.ilike('categoria', categoria);
     }
 
     // Filtro por rango de precios
