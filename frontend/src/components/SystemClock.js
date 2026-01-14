@@ -21,7 +21,9 @@ function SystemClock() {
   const syncWithServer = async () => {
     try {
       const beforeRequest = Date.now();
-      const response = await axios.get(`${API_URL}/api/system/time`);
+      const response = await axios.get(`${API_URL}/api/system/time`, {
+        timeout: 5000 // 5 second timeout
+      });
       const afterRequest = Date.now();
       
       // Calculate network latency and adjust
@@ -46,7 +48,7 @@ function SystemClock() {
         });
       }
     } catch (err) {
-      console.error('Error syncing with server time:', err);
+      console.error('Error syncing with server time:', err.message);
       setError('Error de sincronización');
       setIsLoading(false);
       // Fall back to client time if server sync fails
@@ -56,12 +58,23 @@ function SystemClock() {
 
   // Sync with server on mount and every 30 seconds
   useEffect(() => {
-    syncWithServer();
+    // Track if component is mounted to prevent state updates after unmount
+    let isMounted = true;
+    
+    const syncWithServerSafe = async () => {
+      if (!isMounted) return;
+      await syncWithServer();
+    };
+    
+    syncWithServerSafe();
     
     // Re-sync every 30 seconds to prevent drift
-    const syncInterval = setInterval(syncWithServer, 30000);
+    const syncInterval = setInterval(syncWithServerSafe, 30000);
     
-    return () => clearInterval(syncInterval);
+    return () => {
+      isMounted = false;
+      clearInterval(syncInterval);
+    };
   }, []);
 
   // Update display time every second

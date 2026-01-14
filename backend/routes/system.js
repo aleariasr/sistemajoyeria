@@ -19,7 +19,6 @@ router.get('/time', (req, res) => {
       timestamp: fechaActual.toISOString(),
       formatted: fechaSQL,
       timezone: TIMEZONE,
-      offset: fechaActual.getTimezoneOffset(),
       // Componentes para facilitar el uso en el frontend
       date: {
         year: fechaActual.getFullYear(),

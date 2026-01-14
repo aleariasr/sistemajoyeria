@@ -77,13 +77,13 @@ async function testInventoryReportExclusion() {
     console.log(`   • Sets excluded: ${setsInAll.length === difference ? '✅ YES' : '❌ NO'}`);
     console.log('='.repeat(60));
 
-    // Close connection
-    process.exit(0);
-
   } catch (error) {
     console.error('\n❌ Error during test:', error.message);
     console.error(error);
     process.exit(1);
+  } finally {
+    // Close connection and exit
+    process.exit(0);
   }
 }
 
