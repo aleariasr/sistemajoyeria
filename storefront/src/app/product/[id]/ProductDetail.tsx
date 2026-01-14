@@ -6,8 +6,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useProduct } from '@/hooks/useApi';
 import { useCartStore } from '@/hooks/useCart';
@@ -24,8 +25,20 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
+  const [catalogUrl, setCatalogUrl] = useState('/catalog/todos');
+  const router = useRouter();
   const { data: product, isLoading, error } = useProduct(productId);
   const { addItem, openCart } = useCartStore();
+
+  // Restore catalog URL from session storage to preserve filters
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lastCategory = sessionStorage.getItem('catalog_last_category');
+      if (lastCategory) {
+        setCatalogUrl(`/catalog/${lastCategory}`);
+      }
+    }
+  }, []);
 
   if (isLoading) {
     return <ProductDetailSkeleton />;
@@ -53,7 +66,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         <p className="text-primary-500 mb-6">
           Este producto no está disponible o no existe.
         </p>
-        <Link href="/catalog">
+        <Link href={catalogUrl}>
           <Button variant="outline">Volver al catálogo</Button>
         </Link>
       </div>
@@ -93,7 +106,7 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           <li className="text-primary-300">/</li>
           <li>
             <Link
-              href="/catalog"
+              href={catalogUrl}
               className="text-primary-500 hover:text-primary-900 transition-colors"
             >
               Catálogo
