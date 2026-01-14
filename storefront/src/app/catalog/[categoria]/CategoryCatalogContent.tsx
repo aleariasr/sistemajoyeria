@@ -58,6 +58,7 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
   );
 
   // Fetch products with infinite scroll
+  // shuffle disabled to maintain stable product order for pagination and back navigation
   const {
     data,
     isLoading,
@@ -70,7 +71,7 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
     search: debouncedSearch || undefined,
     category: categoryFilter || undefined,
     per_page: 20,
-    shuffle: true,
+    shuffle: false,
   });
 
   // Fetch categories
