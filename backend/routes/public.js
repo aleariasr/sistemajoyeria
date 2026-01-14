@@ -17,6 +17,7 @@ const Joya = require('../models/Joya');
 const ImagenJoya = require('../models/ImagenJoya');
 const VarianteProducto = require('../models/VarianteProducto');
 const ProductoCompuesto = require('../models/ProductoCompuesto');
+const { ensureProductHasValidImages } = require('../utils/imageValidation');
 
 /**
  * Generate a URL-friendly slug from product code and name
@@ -37,7 +38,7 @@ function generateProductSlug(codigo, nombre) {
  * @returns {Object} Public product object
  */
 function transformToPublicProduct(joya, includeStock = false, varianteInfo = null) {
-  const product = {
+  let product = {
     id: joya.id,
     codigo: joya.codigo,
     nombre: joya.nombre,
@@ -65,6 +66,9 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
   if (includeStock) {
     product.stock = joya.stock_actual;
   }
+
+  // Validar y limpiar imágenes para asegurar consistencia
+  product = ensureProductHasValidImages(product);
 
   return product;
 }
