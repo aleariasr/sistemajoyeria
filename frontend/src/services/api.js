@@ -144,6 +144,8 @@ export const crearMovimiento = (data) => api.post('/movimientos', data);
 // ------- REPORTES -------
 export const obtenerReporteInventario = () => api.get('/reportes/inventario');
 export const obtenerReporteStockBajo = () => api.get('/reportes/stock-bajo');
+export const obtenerReporteVentas = (filtros = {}) => api.get('/reportes/ventas', { params: filtros });
+export const obtenerReporteCierresCaja = (filtros = {}) => api.get('/reportes/cierres-caja', { params: filtros });
 
 // ------- CIERRE DE CAJA -------
 export const obtenerVentasDia = () => api.get('/cierrecaja/ventas-dia');

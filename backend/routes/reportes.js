@@ -4,6 +4,7 @@ const Joya = require('../models/Joya');
 const Venta = require('../models/Venta');
 const Abono = require('../models/Abono');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const CierreCaja = require('../models/CierreCaja');
 
 // Middleware para verificar autenticación
 const requireAuth = (req, res, next) => {
@@ -213,6 +214,85 @@ router.get('/historial-completo', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error al generar historial completo:', error);
     res.status(500).json({ error: 'Error al generar historial completo' });
+  }
+});
+
+// GET /api/reportes/ventas - Reporte de ventas individuales
+router.get('/ventas', requireAuth, async (req, res) => {
+  try {
+    const { fecha_desde, fecha_hasta } = req.query;
+    
+    const resultadoVentas = await Venta.obtenerTodas({ 
+      fecha_desde, 
+      fecha_hasta, 
+      por_pagina: 10000 
+    });
+    
+    const reporte = resultadoVentas.ventas.map(venta => ({
+      id: venta.id,
+      fecha: venta.fecha_venta,
+      tipo_venta: venta.tipo_venta,
+      metodo_pago: venta.metodo_pago,
+      subtotal: venta.subtotal,
+      descuento: venta.descuento,
+      total: venta.total,
+      efectivo_recibido: venta.efectivo_recibido,
+      cambio: venta.cambio,
+      monto_efectivo: venta.monto_efectivo,
+      monto_tarjeta: venta.monto_tarjeta,
+      monto_transferencia: venta.monto_transferencia,
+      usuario: venta.nombre_usuario || venta.usuario,
+      notas: venta.notas
+    }));
+
+    res.json(reporte);
+  } catch (error) {
+    console.error('Error al generar reporte de ventas:', error);
+    res.status(500).json({ error: 'Error al generar reporte' });
+  }
+});
+
+// GET /api/reportes/cierres-caja - Reporte de cierres de caja
+router.get('/cierres-caja', requireAuth, async (req, res) => {
+  try {
+    const { fecha_desde, fecha_hasta, pagina = 1, por_pagina = 1000 } = req.query;
+    
+    const filtros = { pagina, por_pagina };
+    
+    // Si hay filtros de fecha, agregarlos
+    // Para fecha específica, usar la función de CierreCaja con fecha única
+    const resultadoCierres = await CierreCaja.obtenerHistorico(filtros);
+    
+    // Filtrar por rango de fechas si se especifica
+    let cierresFiltrados = resultadoCierres.cierres;
+    if (fecha_desde || fecha_hasta) {
+      cierresFiltrados = resultadoCierres.cierres.filter(cierre => {
+        const fechaCierre = new Date(cierre.fecha_cierre);
+        const cumpleFechaDesde = !fecha_desde || fechaCierre >= new Date(fecha_desde);
+        const cumpleFechaHasta = !fecha_hasta || fechaCierre <= new Date(fecha_hasta);
+        return cumpleFechaDesde && cumpleFechaHasta;
+      });
+    }
+    
+    const reporte = cierresFiltrados.map(cierre => ({
+      id: cierre.id,
+      fecha_cierre: cierre.fecha_cierre,
+      usuario: cierre.usuario,
+      total_ventas: cierre.total_ventas,
+      total_ingresos: cierre.total_ingresos,
+      total_general: cierre.total_general,
+      total_efectivo: cierre.total_efectivo_combinado,
+      total_tarjeta: cierre.total_tarjeta_combinado,
+      total_transferencia: cierre.total_transferencia_combinado,
+      monto_abonos: cierre.monto_total_abonos,
+      monto_ingresos_extras: cierre.monto_total_ingresos_extras,
+      notas: cierre.notas
+    }));
+
+    res.json(reporte);
+  } catch (error) {
+    console.error('Error al generar reporte de cierres de caja:', error);
+    res.status(500).json({ error: 'Error al generar reporte' });
   }
 });
 
