@@ -109,7 +109,7 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
         requestAnimationFrame(() => {
           window.scrollTo({
             top: parseInt(savedPosition, 10),
-            behavior: 'instant' as ScrollBehavior,
+            behavior: 'instant',
           });
           setShouldRestoreScroll(false);
         });
@@ -119,13 +119,15 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
     }
   }, [isLoading, products.length, shouldRestoreScroll, initialCategory]);
 
-  // Clear saved search when leaving the component
+  // Initialize debounced search from search term on mount only
+  // This runs once to sync the debounced state with any restored search term
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Initialize debounced search from search term
     if (searchTerm) {
       setDebouncedSearch(searchTerm);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Empty deps array is intentional - we only want this to run once on mount
+    // to initialize debounced search from any restored sessionStorage value
   }, []);
 
   // Memoize fetchNextPage to prevent unnecessary useEffect re-runs

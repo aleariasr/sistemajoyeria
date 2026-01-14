@@ -21,15 +21,22 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+class IntersectionObserverMock implements IntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+  
   constructor() {}
-  disconnect() {}
-  observe() {}
-  takeRecords() {
+  
+  disconnect(): void {}
+  observe(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
     return [];
   }
-  unobserve() {}
-} as any;
+  unobserve(): void {}
+}
+
+global.IntersectionObserver = IntersectionObserverMock;
 
 // Mock useApi hooks
 const mockFetchNextPage = jest.fn();
