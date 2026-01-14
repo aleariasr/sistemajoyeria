@@ -1,8 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../styles/SystemClock.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+/**
+ * Detectar URL del backend (misma lógica que api.js)
+ */
+function getApiUrl() {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `${protocol}//${hostname}:3001`;
+    }
+    
+    const localIpPattern = /^(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})$/;
+    if (localIpPattern.test(hostname)) {
+      return `${protocol}//${hostname}:3001`;
+    }
+    
+    return `${protocol}//${hostname}:3001`;
+  }
+  
+  return 'http://localhost:3001';
+}
+
+const API_URL = getApiUrl();
 
 /**
  * SystemClock Component
@@ -18,7 +45,11 @@ function SystemClock() {
   const [error, setError] = useState(null);
 
   // Fetch server time and calculate offset
-  const syncWithServer = async () => {
+  // useCallback with empty deps is safe here because:
+  // - API_URL is a constant determined at module load time
+  // - All state setters (setServerOffset, setError, setIsLoading) are stable
+  // - axios.get and Date are external APIs that don't change
+  const syncWithServer = useCallback(async () => {
     try {
       const beforeRequest = Date.now();
       const response = await axios.get(`${API_URL}/api/system/time`, {
@@ -54,7 +85,7 @@ function SystemClock() {
       // Fall back to client time if server sync fails
       setServerOffset(0);
     }
-  };
+  }, []); // Empty deps: API_URL is constant, setters are stable
 
   // Sync with server on mount and every 30 seconds
   useEffect(() => {
@@ -75,7 +106,7 @@ function SystemClock() {
       isMounted = false;
       clearInterval(syncInterval);
     };
-  }, []);
+  }, [syncWithServer]); // Now properly includes syncWithServer in dependencies
 
   // Update display time every second
   useEffect(() => {

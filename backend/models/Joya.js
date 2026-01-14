@@ -110,7 +110,8 @@ class Joya {
     }
 
     // Filtro para excluir sets (productos compuestos)
-    if (excluir_sets === true || excluir_sets === 'true') {
+    // Accepts: true, 'true' (case-insensitive) for backward compatibility
+    if (excluir_sets === true || (typeof excluir_sets === 'string' && excluir_sets.toLowerCase() === 'true')) {
       query = query.eq('es_producto_compuesto', false);
     }
 

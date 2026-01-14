@@ -12,6 +12,8 @@ async function testInventoryReportExclusion() {
   console.log('🧪 Testing Inventory Report Set Exclusion\n');
   console.log('='.repeat(60));
 
+  let testPassed = true;
+
   try {
     // Test 1: Get all products including sets
     console.log('\n📦 Test 1: Fetching ALL products (including sets)...');
@@ -40,6 +42,7 @@ async function testInventoryReportExclusion() {
     } else {
       console.log('   ❌ FAIL: Sets still present in inventory report');
       console.log(`   📝 Unexpected sets: ${setsInInventory.map(s => s.nombre).join(', ')}`);
+      testPassed = false;
     }
 
     // Test 3: Verify difference
@@ -52,6 +55,7 @@ async function testInventoryReportExclusion() {
       console.log('   ✅ PASS: Difference matches number of sets');
     } else {
       console.log('   ⚠️  WARNING: Difference does not match expected value');
+      testPassed = false;
     }
 
     // Test 4: Calculate inventory totals
@@ -75,15 +79,16 @@ async function testInventoryReportExclusion() {
     console.log(`   • Sets: ${setsInAll.length}`);
     console.log(`   • Inventory products: ${inventoryProducts.total}`);
     console.log(`   • Sets excluded: ${setsInAll.length === difference ? '✅ YES' : '❌ NO'}`);
+    console.log(`   • Test result: ${testPassed ? '✅ PASSED' : '❌ FAILED'}`);
     console.log('='.repeat(60));
 
   } catch (error) {
     console.error('\n❌ Error during test:', error.message);
     console.error(error);
-    process.exit(1);
+    testPassed = false;
   } finally {
-    // Close connection and exit
-    process.exit(0);
+    // Exit with appropriate code
+    process.exit(testPassed ? 0 : 1);
   }
 }
 
