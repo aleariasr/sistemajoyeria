@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   obtenerReporteInventario, 
   obtenerReporteStockBajo, 
@@ -13,7 +12,6 @@ import {
 } from '../utils/excelExport';
 
 function Reportes() {
-  const navigate = useNavigate();
   const [reporteActivo, setReporteActivo] = useState('inventario');
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(false);
