@@ -66,11 +66,12 @@ async function testCategoryFiltering() {
 
     // Test 3: Test with a non-existent category
     log('\n📝 Test 3: Filter by non-existent category', colors.blue);
+    const uniqueTestCategory = `TEST_NONEXISTENT_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const nonExistent = await Joya.obtenerTodas({
       estado: 'Activo',
       con_stock: true,
       mostrar_en_storefront: true,
-      categoria: 'NonExistentCategory12345',
+      categoria: uniqueTestCategory,
       pagina: 1,
       por_pagina: 50
     });

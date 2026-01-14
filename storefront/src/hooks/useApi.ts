@@ -65,11 +65,12 @@ export function useInfiniteProducts(params?: {
       // Return next page number if there are more pages, otherwise undefined
       return lastPage.has_more ? lastPage.page + 1 : undefined;
     },
-    // Increase staleTime to Infinity when shuffle is enabled to preserve shuffled order
+    // When shuffle is enabled, cache for 24 hours to preserve shuffled order
     // across navigation. When user navigates back from product detail, they see the
-    // same products in the same shuffled order they left.
-    staleTime: params?.shuffle ? Infinity : 1000 * 60 * 5, // Infinite for shuffle, 5 min otherwise
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes before garbage collection
+    // same products in the same shuffled order they left. Using 24 hours instead of
+    // Infinity to prevent memory leaks and ensure eventual cache invalidation.
+    staleTime: params?.shuffle ? 1000 * 60 * 60 * 24 : 1000 * 60 * 5, // 24h for shuffle, 5 min otherwise
+    gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours before garbage collection
   });
 }
 
