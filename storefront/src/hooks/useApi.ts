@@ -70,7 +70,8 @@ export function useInfiniteProducts(params?: {
     // same products in the same shuffled order they left. Using 24 hours instead of
     // Infinity to prevent memory leaks and ensure eventual cache invalidation.
     staleTime: params?.shuffle ? 1000 * 60 * 60 * 24 : 1000 * 60 * 5, // 24h for shuffle, 5 min otherwise
-    gcTime: 1000 * 60 * 60 * 24, // Keep in cache for 24 hours before garbage collection
+    // Garbage collection time should match staleTime pattern
+    gcTime: params?.shuffle ? 1000 * 60 * 60 * 24 : 1000 * 60 * 10, // 24h for shuffle, 10 min otherwise
   });
 }
 

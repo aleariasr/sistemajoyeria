@@ -67,6 +67,9 @@ class Joya {
     }
 
     // Filtro por categoría (case-insensitive para compatibilidad con frontend)
+    // Frontend normaliza categorías a minúsculas (e.g., "anillos")
+    // Base de datos almacena con capitalización (e.g., "Anillos")
+    // ilike sin wildcards hace coincidencia exacta pero case-insensitive
     if (categoria) {
       query = query.ilike('categoria', categoria);
     }
