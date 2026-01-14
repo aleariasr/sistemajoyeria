@@ -76,7 +76,9 @@ export async function exportToExcel(data, columns, title, options = {}) {
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${title}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  // Use consistent date format YYYY-MM-DD for file names
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.download = `${title}_${dateStr}.xlsx`;
   a.click();
   window.URL.revokeObjectURL(url);
 }
@@ -232,4 +234,22 @@ export async function exportCierresCajaToExcel(datos) {
   };
 
   await exportToExcel(datosFormateados, columns, 'Reporte_Cierres_Caja', { totales });
+}
+
+/**
+ * Exporta reporte de stock bajo a Excel
+ */
+export async function exportStockBajoToExcel(datos) {
+  const columns = [
+    { header: 'Código', key: 'codigo', width: 12 },
+    { header: 'Nombre', key: 'nombre', width: 30 },
+    { header: 'Categoría', key: 'categoria', width: 15 },
+    { header: 'Stock Actual', key: 'stock_actual', width: 12, numFmt: '#,##0' },
+    { header: 'Stock Mínimo', key: 'stock_minimo', width: 12, numFmt: '#,##0' },
+    { header: 'Diferencia', key: 'diferencia', width: 12, numFmt: '#,##0' },
+    { header: 'Precio Venta', key: 'precio_venta', width: 15, numFmt: '₡#,##0.00' },
+    { header: 'Moneda', key: 'moneda', width: 10 }
+  ];
+
+  await exportToExcel(datos, columns, 'Reporte_Stock_Bajo');
 }

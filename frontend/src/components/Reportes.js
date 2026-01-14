@@ -8,7 +8,8 @@ import {
 import { 
   exportInventarioToExcel, 
   exportVentasToExcel, 
-  exportCierresCajaToExcel 
+  exportCierresCajaToExcel,
+  exportStockBajoToExcel 
 } from '../utils/excelExport';
 
 function Reportes() {
@@ -79,52 +80,13 @@ function Reportes() {
         await exportVentasToExcel(datos);
       } else if (reporteActivo === 'cierres-caja') {
         await exportCierresCajaToExcel(datos);
-      } else {
-        // Para stock-bajo, usar exportación CSV existente
-        exportarCSV();
+      } else if (reporteActivo === 'stock-bajo') {
+        await exportStockBajoToExcel(datos);
       }
     } catch (err) {
       console.error('Error al exportar:', err);
       alert('Error al exportar a Excel: ' + err.message);
     }
-  };
-
-  const escaparCSV = (valor) => {
-    if (valor === null || valor === undefined) return '';
-    const str = String(valor);
-    if (str.includes('"') || str.includes(';') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`;
-    }
-    return `"${str}"`;
-  };
-
-  const exportarCSV = () => {
-    if (datos.length === 0) return;
-
-    let csv = '';
-    
-    if (reporteActivo === 'inventario') {
-      csv = 'Código;Nombre;Categoría;Stock;Costo;Precio Venta;Moneda;Valor Total Costo;Valor Total Venta;Estado\n';
-      datos.forEach((item) => {
-        csv += `${escaparCSV(item.codigo)};${escaparCSV(item.nombre)};${escaparCSV(item.categoria)};${item.stock_actual};${item.costo};${item.precio_venta};${escaparCSV(item.moneda)};${item.valor_total_costo};${item.valor_total_venta};${escaparCSV(item.estado)}\n`;
-      });
-    } else {
-      csv = 'Código;Nombre;Categoría;Stock Actual;Stock Mínimo;Diferencia;Precio Venta;Moneda\n';
-      datos.forEach((item) => {
-        csv += `${escaparCSV(item.codigo)};${escaparCSV(item.nombre)};${escaparCSV(item.categoria)};${item.stock_actual};${item.stock_minimo};${item.diferencia};${item.precio_venta};${escaparCSV(item.moneda)}\n`;
-      });
-    }
-
-    const csvConBOM = '\uFEFF' + csv;
-    const blob = new Blob([csvConBOM], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `reporte_${reporteActivo}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const calcularTotales = () => {

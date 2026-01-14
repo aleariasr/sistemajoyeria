@@ -222,10 +222,12 @@ router.get('/ventas', requireAuth, async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta } = req.query;
     
+    // Note: Using high limit for reports. For large datasets (>5000 records),
+    // consider implementing pagination or streaming in the frontend
     const resultadoVentas = await Venta.obtenerTodas({ 
       fecha_desde, 
       fecha_hasta, 
-      por_pagina: 10000 
+      por_pagina: 5000 
     });
     
     const reporte = resultadoVentas.ventas.map(venta => ({
@@ -255,21 +257,30 @@ router.get('/ventas', requireAuth, async (req, res) => {
 // GET /api/reportes/cierres-caja - Reporte de cierres de caja
 router.get('/cierres-caja', requireAuth, async (req, res) => {
   try {
-    const { fecha_desde, fecha_hasta, pagina = 1, por_pagina = 1000 } = req.query;
+    const { fecha_desde, fecha_hasta } = req.query;
     
-    const filtros = { pagina, por_pagina };
+    // Use smaller page size with date filtering at database level
+    const filtros = { 
+      pagina: 1, 
+      por_pagina: 500
+    };
     
-    // Si hay filtros de fecha, agregarlos
-    // Para fecha específica, usar la función de CierreCaja con fecha única
+    // Pass date filters to the model for database-level filtering
+    if (fecha_desde) {
+      // Parse and format date for database query
+      filtros.fecha = fecha_desde; // Will be used by obtenerHistorico
+    }
+    
     const resultadoCierres = await CierreCaja.obtenerHistorico(filtros);
     
-    // Filtrar por rango de fechas si se especifica
+    // Additional filtering in JS only if fecha_hasta is provided
+    // (since CierreCaja.obtenerHistorico doesn't support range queries)
     let cierresFiltrados = resultadoCierres.cierres;
     if (fecha_desde || fecha_hasta) {
       cierresFiltrados = resultadoCierres.cierres.filter(cierre => {
         const fechaCierre = new Date(cierre.fecha_cierre);
         const cumpleFechaDesde = !fecha_desde || fechaCierre >= new Date(fecha_desde);
-        const cumpleFechaHasta = !fecha_hasta || fechaCierre <= new Date(fecha_hasta);
+        const cumpleFechaHasta = !fecha_hasta || fechaCierre <= new Date(fecha_hasta + 'T23:59:59');
         return cumpleFechaDesde && cumpleFechaHasta;
       });
     }
