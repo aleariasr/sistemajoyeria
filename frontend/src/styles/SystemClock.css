@@ -16,6 +16,10 @@
   transition: all 0.3s ease;
 }
 
+.system-clock.loading {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+}
+
 .system-clock:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
@@ -36,6 +40,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.clock-error {
+  font-size: 10px;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
 /* Responsive styles for mobile devices */
 @media screen and (max-width: 768px) {
   .system-clock {
@@ -51,6 +61,10 @@
 
   .clock-time {
     font-size: 16px;
+  }
+
+  .clock-error {
+    font-size: 9px;
   }
 }
 
@@ -68,6 +82,10 @@
   .clock-time {
     font-size: 14px;
     letter-spacing: 0.5px;
+  }
+
+  .clock-error {
+    font-size: 8px;
   }
 }
 

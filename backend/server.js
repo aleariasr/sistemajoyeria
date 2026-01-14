@@ -309,7 +309,8 @@ if (NODE_ENV === 'production') {
                           req.path === '/health' || 
                           req.path === '/' ||
                           req.path.startsWith('/api/auth/login') ||
-                          req.path.startsWith('/api/auth/session');
+                          req.path.startsWith('/api/auth/session') ||
+                          req.path.startsWith('/api/system');
     
     // Only log when there's an issue: missing cookie on protected route
     if (!isPublicRoute && !req.headers.cookie) {
@@ -345,6 +346,8 @@ const pedidosOnlineRoutes = require('./routes/pedidos-online');
 const variantesRoutes = require('./routes/variantes');
 const productosCompuestosRoutes = require('./routes/productos-compuestos');
 const notificationsRoutes = require('./routes/notifications');
+// System routes (time, health check, etc.)
+const systemRoutes = require('./routes/system');
 
 app.use('/api/joyas', joyasRoutes);
 app.use('/api/movimientos', movimientosRoutes);
@@ -365,6 +368,8 @@ app.use('/api', pedidosOnlineRoutes);
 app.use('/api/variantes', variantesRoutes);
 app.use('/api/productos-compuestos', productosCompuestosRoutes);
 app.use('/api/notifications', notificationsRoutes);
+// System API - accessible without authentication
+app.use('/api/system', systemRoutes);
 
 
 /* ============================================================
