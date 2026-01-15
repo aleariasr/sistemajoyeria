@@ -13,7 +13,7 @@ import '../styles/PageHeader.css';
  */
 function PageHeader({ title, subtitle, children }) {
   return (
-    <div className="page-header">
+    <div className="page-header with-actions">
       <div className="page-header-content">
         {title && <h2>{title}</h2>}
         {subtitle && <p>{subtitle}</p>}

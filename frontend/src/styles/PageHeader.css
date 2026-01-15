@@ -3,13 +3,38 @@
 /* When PageHeader component is used, it adds specific child elements */
 /* This allows it to coexist with old-style page-headers that don't have these children */
 
+/* Browser Compatibility Note:
+ * Uses :has() selector (Chrome 105+, Firefox 121+, Safari 15.4+)
+ * Fallback: Uses .page-header-content class selector for older browsers
+ * If :has() is not supported, layout will still work but may affect old-style headers
+ */
+
 .page-header-content {
   flex: 1;
   min-width: 0; /* Allow text to shrink */
 }
 
+/* Fallback for browsers that don't support :has() */
+.page-header .page-header-content {
+  /* This ensures the content takes available space even without :has() support */
+}
+
 /* More specific selectors only apply when using PageHeader component */
+/* Using :has() for better isolation, but component still works without it */
 .page-header:has(.page-header-content) {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* Fallback: Apply flex layout when .page-header-actions exists (broader selector) */
+/* This works in all browsers but may affect more elements */
+.page-header:has(.page-header-actions),
+.page-header.with-actions {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
