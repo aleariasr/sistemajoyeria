@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import api, { buscarClientes } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import TicketPrint, { useThermalPrint } from './TicketPrint';
+import PageHeader from './PageHeader';
 import '../styles/Ventas.css';
 
 function Ventas() {
@@ -402,10 +403,10 @@ function Ventas() {
 
   return (
     <div className="ventas-container">
-      <div className="page-header">
-        <h1>💰 Nueva Venta</h1>
-        <p>Usuario: {user?.full_name}</p>
-      </div>
+      <PageHeader 
+        title="💰 Nueva Venta" 
+        subtitle={`Usuario: ${user?.full_name}`}
+      />
 
       {mensaje.texto && (
         <div className={`mensaje ${mensaje.tipo}`}>

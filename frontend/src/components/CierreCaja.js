@@ -4,6 +4,7 @@ import { useReactToPrint } from 'react-to-print';
 import TicketPrint from './TicketPrint';
 import thermalPrinterService from '../services/thermalPrinterService';
 import { formatearFechaCorta } from '../utils/dateFormatter';
+import PageHeader from './PageHeader';
 
 // Constante para el tiempo de espera antes de imprimir
 // Permite que React actualice el DOM con los nuevos datos del resumen
@@ -146,10 +147,10 @@ function CierreCaja() {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Cierre de Caja</h2>
-        <p>Gestión de ventas del día y cierre de caja (solo ventas de contado)</p>
-      </div>
+      <PageHeader 
+        title="Cierre de Caja"
+        subtitle="Gestión de ventas del día y cierre de caja (solo ventas de contado)"
+      />
 
       {error && <div className="alert alert-error">{error}</div>}
 
