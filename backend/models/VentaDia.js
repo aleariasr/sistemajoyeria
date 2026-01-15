@@ -38,7 +38,7 @@ class VentaDia {
       throw error;
     }
 
-    return { id: data.id };
+    return { id: data.id, fecha_venta: data.fecha_venta };
   }
 
   // Obtener todas las ventas del día
