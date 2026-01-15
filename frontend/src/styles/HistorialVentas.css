@@ -210,3 +210,246 @@
   box-shadow: none;
   transform: none;
 }
+
+/* Responsive Design - Tablets and smaller (1024px and below) */
+@media (max-width: 1024px) {
+  .historial-container {
+    padding: 16px;
+  }
+
+  .filtros-section {
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .filtro-grupo input,
+  .filtro-grupo select {
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .historial-container {
+    padding: 12px;
+  }
+
+  .filtros-section {
+    padding: 16px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtro-grupo {
+    width: 100%;
+  }
+
+  .filtro-grupo label {
+    font-size: 0.9rem;
+  }
+
+  .filtro-grupo input,
+  .filtro-grupo select {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-limpiar {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .tabla-ventas {
+    border-radius: 16px;
+  }
+
+  .tabla-ventas table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabla-ventas th,
+  .tabla-ventas td {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .tabla-ventas th {
+    font-size: 0.85rem;
+  }
+
+  .btn-ver {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .paginacion {
+    padding: 16px;
+    gap: 15px;
+    border-radius: 16px;
+  }
+
+  .btn-paginacion {
+    padding: 8px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .historial-container {
+    padding: 10px;
+  }
+
+  .filtros-section {
+    padding: 14px;
+    border-radius: 14px;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .filtro-grupo {
+    gap: 6px;
+  }
+
+  .filtro-grupo label {
+    font-size: 0.85rem;
+  }
+
+  .filtro-grupo input,
+  .filtro-grupo select {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  .btn-limpiar {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .loading,
+  .no-resultados {
+    padding: 40px 15px;
+    font-size: 0.9rem;
+    border-radius: 14px;
+  }
+
+  .tabla-ventas {
+    border-radius: 14px;
+    position: relative;
+  }
+
+  .tabla-ventas::before {
+    content: '← Deslice →';
+    position: sticky;
+    left: 10px;
+    top: 10px;
+    background: #667eea;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 1;
+    display: inline-block;
+    margin: 8px;
+  }
+
+  .tabla-ventas table {
+    min-width: 600px;
+  }
+
+  .tabla-ventas th {
+    padding: 12px 10px;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+  }
+
+  .tabla-ventas td {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .tabla-ventas .precio {
+    font-size: 0.9rem;
+  }
+
+  .btn-ver {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    min-height: 36px;
+  }
+
+  .paginacion {
+    padding: 12px;
+    gap: 10px;
+    margin-top: 15px;
+    border-radius: 14px;
+    flex-wrap: wrap;
+  }
+
+  .paginacion span {
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+    order: -1;
+  }
+
+  .btn-paginacion {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
+/* Extra small devices (320px and below) */
+@media (max-width: 320px) {
+  .historial-container {
+    padding: 8px;
+  }
+
+  .filtros-section {
+    padding: 12px;
+  }
+
+  .filtro-grupo input,
+  .filtro-grupo select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .btn-limpiar {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .tabla-ventas table {
+    min-width: 500px;
+  }
+
+  .tabla-ventas th,
+  .tabla-ventas td {
+    padding: 8px 6px;
+    font-size: 0.75rem;
+  }
+
+  .btn-ver {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .btn-paginacion {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}

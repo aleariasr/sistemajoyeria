@@ -290,3 +290,280 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Responsive Design - Tablets and smaller (1024px and below) */
+@media (max-width: 1024px) {
+  .variantes-manager {
+    padding: 16px;
+  }
+
+  .variante-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .variantes-manager {
+    padding: 14px;
+    margin-top: 20px;
+  }
+
+  .variantes-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .variantes-header h4 {
+    font-size: 1.1rem;
+  }
+
+  .btn-agregar-variante {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .variante-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .variante-orden {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .variante-orden button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .variante-orden span {
+    padding: 8px 16px;
+  }
+
+  .variante-thumbnail {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+
+  .variante-info {
+    width: 100%;
+  }
+
+  .variante-acciones {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .variante-acciones button {
+    flex: 1;
+    padding: 10px 14px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-content form {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    padding: 16px;
+    margin: 0 -16px -16px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .variantes-manager {
+    padding: 12px;
+    margin-top: 16px;
+    border-radius: 10px;
+  }
+
+  .variantes-header h4 {
+    font-size: 1.05rem;
+  }
+
+  .btn-agregar-variante {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .sin-variantes {
+    padding: 30px 15px;
+    font-size: 0.95rem;
+  }
+
+  .variantes-lista {
+    gap: 12px;
+  }
+
+  .variante-item {
+    padding: 10px;
+    border-radius: 10px;
+    gap: 10px;
+  }
+
+  .variante-orden {
+    gap: 8px;
+  }
+
+  .variante-orden button {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+
+  .variante-orden span {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .variante-thumbnail {
+    height: 120px;
+    border-radius: 8px;
+  }
+
+  .variante-info strong {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+
+  .variante-info p {
+    font-size: 0.8rem;
+    margin: 4px 0;
+  }
+
+  .variante-estado {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    margin-top: 4px;
+  }
+
+  .variante-acciones {
+    gap: 8px;
+  }
+
+  .variante-acciones button {
+    padding: 10px 12px;
+    font-size: 15px;
+    min-height: 44px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+
+  .modal-header {
+    padding: 12px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .modal-close {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modal-content form {
+    padding: 12px;
+  }
+
+  .modal-content .form-group {
+    margin-bottom: 15px;
+  }
+
+  .modal-content label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .modal-content input[type="text"],
+  .modal-content textarea {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .imagen-preview {
+    margin-top: 12px;
+    max-height: 150px;
+  }
+
+  .alert-error {
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .modal-footer {
+    padding: 12px;
+    margin: 0 -12px -12px;
+    gap: 8px;
+  }
+
+  .btn-cancelar,
+  .btn-guardar {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+}
+
+/* Extra small devices (320px and below) */
+@media (max-width: 320px) {
+  .variantes-manager {
+    padding: 10px;
+  }
+
+  .variantes-header h4 {
+    font-size: 1rem;
+  }
+
+  .btn-agregar-variante {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .variante-thumbnail {
+    height: 100px;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .variante-acciones button {
+    font-size: 14px;
+  }
+}
