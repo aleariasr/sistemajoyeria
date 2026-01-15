@@ -4,7 +4,7 @@
 
 This document describes the comprehensive mobile responsiveness optimization implemented for the **Sistema de Joyería POS** frontend application.
 
-**Date**: January 15, 2026  
+**Date**: January 15, 2025  
 **Status**: ✅ COMPLETE  
 **Branch**: `copilot/optimize-mobile-responsiveness`
 
@@ -601,7 +601,7 @@ If issues arise:
 
 ## 📝 Changelog
 
-### v2.0.0 - 2026-01-15
+### v2.0.0 - 2025-01-15
 - ✅ Added responsive CSS to 6 components
 - ✅ Enhanced mobile navigation
 - ✅ Optimized forms for touch
