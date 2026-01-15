@@ -36,7 +36,10 @@ const API_URL = getApiUrl();
  * Displays current system date and time from the server in real-time
  * This is the EXACT same timestamp used in invoices, closures, reports, and all transactions
  * 
- * The clock syncs with the server every 30 seconds to prevent drift
+ * Optimized for minimal backend load:
+ * - Syncs with server ONCE on mount to calculate time offset
+ * - Uses client's clock with the calculated offset for continuous display
+ * - No recurring backend requests (reduces server load and Railway costs)
  */
 function SystemClock() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -44,7 +47,7 @@ function SystemClock() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch server time and calculate offset
+  // Fetch server time and calculate offset (only once on mount)
   // useCallback with empty deps is safe here because:
   // - API_URL is a constant determined at module load time
   // - All state setters (setServerOffset, setError, setIsLoading) are stable
@@ -53,6 +56,7 @@ function SystemClock() {
     try {
       const beforeRequest = Date.now();
       const response = await axios.get(`${API_URL}/api/system/time`, {
+        withCredentials: true, // Include cookies for authenticated requests
         timeout: 5000 // 5 second timeout
       });
       const afterRequest = Date.now();
@@ -70,16 +74,14 @@ function SystemClock() {
       setError(null);
       setIsLoading(false);
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🕐 Server time synced:', {
-          serverTime: response.data.formatted,
-          timezone: response.data.timezone,
-          offset: `${(offset / 1000).toFixed(1)}s`,
-          latency: `${networkLatency.toFixed(0)}ms`
-        });
-      }
+      console.log('🕐 Sincronización exitosa con el servidor:', {
+        serverTime: response.data.formatted,
+        timezone: response.data.timezone,
+        offset: `${(offset / 1000).toFixed(1)}s`,
+        latency: `${networkLatency.toFixed(0)}ms`
+      });
     } catch (err) {
-      console.error('Error syncing with server time:', err.message);
+      console.error('Error al sincronizar con el servidor:', err.message);
       setError('Error de sincronización');
       setIsLoading(false);
       // Fall back to client time if server sync fails
@@ -87,7 +89,7 @@ function SystemClock() {
     }
   }, []); // Empty deps: API_URL is constant, setters are stable
 
-  // Sync with server on mount and every 30 seconds
+  // Sync with server only once on mount
   useEffect(() => {
     // Track if component is mounted to prevent state updates after unmount
     let isMounted = true;
@@ -97,14 +99,12 @@ function SystemClock() {
       await syncWithServer();
     };
     
+    // Perform single sync on mount to calculate offset
     syncWithServerSafe();
     
-    // Re-sync every 30 seconds to prevent drift
-    const syncInterval = setInterval(syncWithServerSafe, 30000);
-    
+    // No recurring sync - clock uses client time + calculated offset
     return () => {
       isMounted = false;
-      clearInterval(syncInterval);
     };
   }, [syncWithServer]); // Now properly includes syncWithServer in dependencies
 
