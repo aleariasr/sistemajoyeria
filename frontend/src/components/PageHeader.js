@@ -13,12 +13,12 @@ import '../styles/PageHeader.css';
  */
 function PageHeader({ title, subtitle, children }) {
   return (
-    <div className="page-header-with-clock">
-      <div className="page-header">
+    <div className="page-header">
+      <div className="page-header-content">
         {title && <h2>{title}</h2>}
         {subtitle && <p>{subtitle}</p>}
       </div>
-      <div className="page-header-right">
+      <div className="page-header-actions">
         {children}
         <SystemClock />
       </div>
