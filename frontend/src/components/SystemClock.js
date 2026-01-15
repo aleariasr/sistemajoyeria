@@ -74,14 +74,16 @@ function SystemClock() {
       setError(null);
       setIsLoading(false);
       
-      console.log('🕐 Sincronización exitosa con el servidor:', {
-        serverTime: response.data.formatted,
-        timezone: response.data.timezone,
-        offset: `${(offset / 1000).toFixed(1)}s`,
-        latency: `${networkLatency.toFixed(0)}ms`
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🕐 Server time synced:', {
+          serverTime: response.data.formatted,
+          timezone: response.data.timezone,
+          offset: `${(offset / 1000).toFixed(1)}s`,
+          latency: `${networkLatency.toFixed(0)}ms`
+        });
+      }
     } catch (err) {
-      console.error('Error al sincronizar con el servidor:', err.message);
+      console.error('Error syncing with server time:', err.message);
       setError('Error de sincronización');
       setIsLoading(false);
       // Fall back to client time if server sync fails
