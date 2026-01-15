@@ -345,7 +345,7 @@ function Ventas() {
       // Preparar datos para el ticket usando la fecha_venta del servidor
       const ventaParaTicket = {
         id: response.data.id,
-        fecha_venta: response.data.fecha_venta, // Usar fecha del servidor
+        fecha_venta: response.data.fecha_venta || new Date(), // Usar fecha del servidor, fallback a fecha local
         tipo_venta: tipoVenta,
         metodo_pago: metodoPago,
         subtotal: calcularSubtotal(),
