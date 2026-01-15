@@ -365,3 +365,297 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Responsive Design - Tablets and smaller (1024px and below) */
+@media (max-width: 1024px) {
+  .productos-compuestos-manager {
+    padding: 16px;
+  }
+
+  .componente-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .productos-compuestos-manager {
+    padding: 14px;
+    margin-top: 20px;
+  }
+
+  .componentes-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .componentes-header h4 {
+    font-size: 1.1rem;
+  }
+
+  .btn-agregar-componente {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .stock-set-indicator {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .stock-set-indicator strong {
+    font-size: 15px;
+  }
+
+  .stock-badge {
+    font-size: 16px;
+    padding: 5px 14px;
+  }
+
+  .componente-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .componente-thumbnail {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+
+  .componente-info {
+    width: 100%;
+  }
+
+  .componente-detalles {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .componente-stock {
+    gap: 10px;
+  }
+
+  .btn-eliminar-componente {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    padding: 16px;
+    margin: 0 -16px -16px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  .productos-dropdown {
+    width: calc(100% - 32px);
+    max-height: 250px;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .productos-compuestos-manager {
+    padding: 12px;
+    margin-top: 16px;
+    border-radius: 10px;
+  }
+
+  .componentes-header h4 {
+    font-size: 1.05rem;
+  }
+
+  .btn-agregar-componente {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .stock-set-indicator {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+
+  .stock-set-indicator strong {
+    font-size: 14px;
+  }
+
+  .stock-badge {
+    font-size: 15px;
+    padding: 4px 12px;
+  }
+
+  .stock-set-indicator small {
+    font-size: 12px;
+  }
+
+  .sin-componentes {
+    padding: 30px 15px;
+    font-size: 0.95rem;
+  }
+
+  .componentes-lista {
+    gap: 12px;
+  }
+
+  .componente-item {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .componente-thumbnail {
+    height: 120px;
+    border-radius: 8px;
+  }
+
+  .componente-info strong {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  .componente-detalles span {
+    font-size: 0.8rem;
+  }
+
+  .componente-stock span {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+  }
+
+  .btn-eliminar-componente {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+
+  .modal-header {
+    padding: 12px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .modal-close {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .modal-body {
+    padding: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .form-group small {
+    font-size: 0.8rem;
+  }
+
+  .productos-dropdown {
+    max-height: 200px;
+    border-radius: 8px;
+  }
+
+  .producto-option {
+    padding: 10px;
+  }
+
+  .producto-option strong {
+    font-size: 0.95rem;
+  }
+
+  .producto-seleccionado {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .alert-error {
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .modal-footer {
+    padding: 12px;
+    margin: 0 -12px -12px;
+    gap: 8px;
+  }
+
+  .btn-cancelar,
+  .btn-guardar {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+}
+
+/* Extra small devices (320px and below) */
+@media (max-width: 320px) {
+  .productos-compuestos-manager {
+    padding: 10px;
+  }
+
+  .componentes-header h4 {
+    font-size: 1rem;
+  }
+
+  .btn-agregar-componente {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .componente-thumbnail {
+    height: 100px;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+}

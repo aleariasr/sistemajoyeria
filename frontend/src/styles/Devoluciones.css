@@ -254,3 +254,268 @@
   padding: 40px;
   color: #6c757d;
 }
+
+/* Responsive Design - Tablets and smaller (1024px and below) */
+@media (max-width: 1024px) {
+  .devoluciones-container {
+    padding: 16px;
+  }
+
+  .devoluciones-container .form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablets (768px and below) */
+@media (max-width: 768px) {
+  .devoluciones-container {
+    padding: 12px;
+  }
+
+  .devoluciones-container .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .devoluciones-container .page-header p {
+    font-size: 0.95rem;
+  }
+
+  .devoluciones-container .card-header {
+    padding: 12px 16px;
+  }
+
+  .devoluciones-container .card-header h3 {
+    font-size: 1.15rem;
+  }
+
+  .devoluciones-container .search-venta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .devoluciones-container .search-venta .form-group {
+    margin-bottom: 0;
+  }
+
+  .devoluciones-container .search-venta .btn {
+    width: 100%;
+  }
+
+  .devoluciones-container .venta-info {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+
+  .devoluciones-container .monto-devolucion {
+    font-size: 1.1rem;
+    padding: 12px;
+  }
+
+  .devoluciones-container .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .devoluciones-container .form-actions {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+  }
+
+  .devoluciones-container .form-actions .btn {
+    width: 100%;
+  }
+
+  .devoluciones-container .table-container {
+    border-left: 3px solid #007bff;
+  }
+
+  .devoluciones-container table {
+    min-width: 600px;
+  }
+
+  .devoluciones-container table th,
+  .devoluciones-container table td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .devoluciones-container {
+    padding: 10px;
+  }
+
+  .devoluciones-container .page-header {
+    margin-bottom: 20px;
+  }
+
+  .devoluciones-container .page-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .devoluciones-container .page-header p {
+    font-size: 0.85rem;
+  }
+
+  .devoluciones-container .card {
+    border-radius: 12px;
+  }
+
+  .devoluciones-container .card-header {
+    padding: 10px 12px;
+  }
+
+  .devoluciones-container .card-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .devoluciones-container .search-venta {
+    gap: 10px;
+  }
+
+  .devoluciones-container .venta-info {
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .devoluciones-container .venta-info p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+  }
+
+  .devoluciones-container .monto-devolucion {
+    font-size: 1rem;
+    padding: 10px;
+    margin: 12px 0;
+  }
+
+  .devoluciones-container .form-group {
+    margin-bottom: 12px;
+  }
+
+  .devoluciones-container .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .devoluciones-container .form-group input,
+  .devoluciones-container .form-group select,
+  .devoluciones-container .form-group textarea {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
+  .devoluciones-container .form-group small {
+    font-size: 0.8rem;
+  }
+
+  .devoluciones-container .form-actions {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .devoluciones-container .btn {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    min-height: 44px;
+    border-radius: 8px;
+  }
+
+  .devoluciones-container .btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-height: 36px;
+  }
+
+  .devoluciones-container .table-container {
+    border-left: 4px solid #007bff;
+    position: relative;
+  }
+
+  .devoluciones-container .table-container::after {
+    content: attr(data-scroll-hint);
+    position: sticky;
+    right: 10px;
+    top: 10px;
+    background: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    pointer-events: none;
+    float: right;
+    margin: -8px -8px 0 0;
+    z-index: 1;
+  }
+
+  .devoluciones-container .table-container:not([data-scroll-hint])::after {
+    content: '← Deslice →';
+  }
+
+  .devoluciones-container table {
+    min-width: 500px;
+  }
+
+  .devoluciones-container table th,
+  .devoluciones-container table td {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
+
+  .devoluciones-container .badge {
+    padding: 3px 6px;
+    font-size: 0.75rem;
+  }
+
+  .devoluciones-container .alert {
+    padding: 12px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+  }
+
+  .devoluciones-container .info-box {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .devoluciones-container .loading {
+    padding: 30px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small devices (320px and below) */
+@media (max-width: 320px) {
+  .devoluciones-container {
+    padding: 8px;
+  }
+
+  .devoluciones-container .page-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .devoluciones-container .btn {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .devoluciones-container .monto-devolucion {
+    font-size: 0.95rem;
+  }
+
+  .devoluciones-container table {
+    min-width: 450px;
+  }
+
+  .devoluciones-container table th,
+  .devoluciones-container table td {
+    padding: 6px 4px;
+    font-size: 0.75rem;
+  }
+}
