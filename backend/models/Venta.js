@@ -1,5 +1,5 @@
 const { supabase } = require('../supabase-db');
-const { formatearFechaSQL } = require('../utils/timezone');
+const { formatearFechaSQL, obtenerFechaActualCR } = require('../utils/timezone');
 
 class Venta {
   // Crear nueva venta
@@ -38,7 +38,7 @@ class Venta {
       throw error;
     }
 
-    return { id: data.id };
+    return { id: data.id, fecha_venta: data.fecha_venta };
   }
 
   // Obtener todas las ventas con paginación y filtros
@@ -130,7 +130,7 @@ class Venta {
 
   // Obtener ventas del día
   static async obtenerVentasDelDia(fecha = null) {
-    const fechaConsulta = fecha || new Date().toISOString().split('T')[0];
+    const fechaConsulta = fecha || obtenerFechaActualCR();
     
     const { data, error } = await supabase
       .from('ventas')

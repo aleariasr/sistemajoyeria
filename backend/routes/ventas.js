@@ -177,6 +177,7 @@ router.post('/', requireAuth, async (req, res) => {
     res.status(201).json({
       mensaje: 'Venta creada exitosamente',
       id: idVenta,
+      fecha_venta: resultadoVenta.fecha_venta,
       total,
       cambio,
       tipo_venta: tipo_venta || 'Contado',

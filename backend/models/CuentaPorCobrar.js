@@ -1,5 +1,6 @@
 const { supabase } = require('../supabase-db');
 const MovimientoCuenta = require('./MovimientoCuenta');
+const { formatearFechaSQL } = require('../utils/timezone');
 
 class CuentaPorCobrar {
   // Obtener cuenta activa (pendiente) de un cliente
@@ -38,7 +39,7 @@ class CuentaPorCobrar {
         .update({
           monto_total: nuevoMontoTotal,
           saldo_pendiente: nuevoSaldoPendiente,
-          fecha_ultima_modificacion: new Date().toISOString()
+          fecha_ultima_modificacion: formatearFechaSQL()
         })
         .eq('id', cuentaExistente.id)
         .select()
