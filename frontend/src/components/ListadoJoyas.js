@@ -4,6 +4,7 @@ import { obtenerJoyas, eliminarJoya, obtenerCategorias } from '../services/api';
 import BarcodeModal from './BarcodeModal';
 import NotificacionesPush from './NotificacionesPush';
 import { useSelection } from '../context/SelectionContext';
+import PageHeader from './PageHeader';
 
 // Constantes para thumbnail de imagen
 const THUMBNAIL_SIZE = '50px';
@@ -239,10 +240,10 @@ function ListadoJoyas() {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Inventario de Joyas</h2>
-        <p>Gestiona el inventario completo de tu joyería</p>
-      </div>
+      <PageHeader 
+        title="Inventario de Joyas"
+        subtitle="Gestiona el inventario completo de tu joyería"
+      />
 
       {/* Push Notifications Banner */}
       <NotificacionesPush />
