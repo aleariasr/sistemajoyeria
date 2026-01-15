@@ -434,7 +434,7 @@
   }
 
   .cuentas-table::before {
-    content: '← Deslice →';
+    content: attr(data-scroll-hint);
     position: sticky;
     left: 10px;
     top: 10px;
@@ -442,12 +442,16 @@
     color: white;
     padding: 4px 8px;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     opacity: 0.9;
     pointer-events: none;
     z-index: 1;
     display: inline-block;
     margin: 8px;
+  }
+
+  .cuentas-table:not([data-scroll-hint])::before {
+    content: '← Deslice →';
   }
 
   .cuentas-table table {
