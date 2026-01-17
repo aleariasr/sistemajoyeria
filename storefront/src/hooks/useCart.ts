@@ -39,18 +39,29 @@ export const useCartStore = create<CartState>()(
 
       addItem: (product: Product, quantity = 1) => {
         set((state) => {
-          const existingItem = state.items.find(
-            (item) => item.product.id === product.id
-          );
+          // For products with variants, consider both product.id and variante_id
+          const existingItem = state.items.find((item) => {
+            const sameProduct = item.product.id === product.id;
+            const sameVariant = 
+              product.variante_id 
+                ? item.product.variante_id === product.variante_id
+                : !item.product.variante_id;
+            return sameProduct && sameVariant;
+          });
 
           if (existingItem) {
             // Update quantity if item exists
             return {
-              items: state.items.map((item) =>
-                item.product.id === product.id
+              items: state.items.map((item) => {
+                const sameProduct = item.product.id === product.id;
+                const sameVariant = 
+                  product.variante_id 
+                    ? item.product.variante_id === product.variante_id
+                    : !item.product.variante_id;
+                return sameProduct && sameVariant
                   ? { ...item, quantity: item.quantity + quantity }
-                  : item
-              ),
+                  : item;
+              }),
             };
           }
 

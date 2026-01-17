@@ -120,6 +120,7 @@ export default function CheckoutContent() {
       const orderItems = items.map((item) => ({
         product_id: item.product.id,
         quantity: item.quantity,
+        ...(item.product.variante_id && { variante_id: item.product.variante_id }),
       }));
 
       const result = await createOrder.mutateAsync({

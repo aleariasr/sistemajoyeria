@@ -2,6 +2,7 @@
  * Product Detail Component (Client)
  * 
  * Displays full product information with add to cart functionality.
+ * Supports variant selection for products with multiple designs.
  */
 
 'use client';
@@ -16,8 +17,10 @@ import { Button } from '@/components/ui/Button';
 import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
+import { VariantSelector } from '@/components/product/VariantSelector';
 import { SetComponents } from '@/components/product/SetComponents';
 import { formatPrice } from '@/lib/utils';
+import type { ProductVariant } from '@/lib/types';
 
 interface ProductDetailProps {
   productId: number;
@@ -26,6 +29,7 @@ interface ProductDetailProps {
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [catalogUrl, setCatalogUrl] = useState('/catalog/todos');
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const router = useRouter();
   const { data: product, isLoading, error } = useProduct(productId);
   const { addItem, openCart } = useCartStore();
@@ -39,6 +43,13 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
       }
     }
   }, []);
+
+  // Initialize selected variant when product loads
+  useEffect(() => {
+    if (product?.variantes && product.variantes.length > 0 && !selectedVariant) {
+      setSelectedVariant(product.variantes[0]);
+    }
+  }, [product, selectedVariant]);
 
   if (isLoading) {
     return <ProductDetailSkeleton />;
@@ -74,8 +85,23 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
-    toast.success(`${product.nombre} agregado al carrito`, {
+    // If product has variants and one is selected, include variant info
+    const productToAdd = selectedVariant
+      ? { 
+          ...product, 
+          variante_id: selectedVariant.id,
+          nombre: `${product.nombre} - ${selectedVariant.nombre}`,
+          imagen_url: selectedVariant.imagen_url
+        }
+      : product;
+    
+    addItem(productToAdd, quantity);
+    
+    const displayName = selectedVariant 
+      ? `${product.nombre} - ${selectedVariant.nombre}`
+      : product.nombre;
+    
+    toast.success(`${displayName} agregado al carrito`, {
       action: {
         label: 'Ver carrito',
         onClick: openCart,
@@ -126,9 +152,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           className="relative"
         >
           <ProductImageGallery 
-            imagenes={product.imagenes || []}
-            productName={product.nombre}
-            fallbackImageUrl={product.imagen_url}
+            imagenes={selectedVariant ? [{ id: 0, url: selectedVariant.imagen_url, orden: 0, es_principal: true }] : product.imagenes || []}
+            productName={selectedVariant ? selectedVariant.nombre : product.nombre}
+            fallbackImageUrl={selectedVariant ? selectedVariant.imagen_url : product.imagen_url}
           />
           {product.categoria && (
             <span className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm text-primary-700 text-sm font-medium rounded-full shadow-sm pointer-events-none z-10">
@@ -169,6 +195,15 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
                 {product.descripcion}
               </p>
             </div>
+          )}
+
+          {/* Variant Selector - Show if product has variants */}
+          {product.variantes && product.variantes.length > 0 && (
+            <VariantSelector
+              variants={product.variantes}
+              currentVariantId={selectedVariant?.id}
+              onVariantSelect={setSelectedVariant}
+            />
           )}
 
           {/* Set Information Badge */}
