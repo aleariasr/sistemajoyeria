@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ProductVariant } from '@/lib/types';
 import { motion } from 'framer-motion';
@@ -25,6 +25,15 @@ export function VariantSelector({
 }: VariantSelectorProps) {
   const [selectedId, setSelectedId] = useState(currentVariantId || variants[0]?.id);
 
+  // Update selectedId if variants change or currentVariantId is provided
+  useEffect(() => {
+    if (currentVariantId) {
+      setSelectedId(currentVariantId);
+    } else if (variants.length > 0 && !selectedId) {
+      setSelectedId(variants[0].id);
+    }
+  }, [currentVariantId, variants, selectedId]);
+
   if (!variants || variants.length === 0) {
     return null;
   }
@@ -33,6 +42,9 @@ export function VariantSelector({
     setSelectedId(variant.id);
     onVariantSelect(variant);
   };
+
+  // Get selected variant once to avoid repeated find() calls
+  const selectedVariant = variants.find(v => v.id === selectedId);
 
   return (
     <div className="mb-8">
@@ -106,7 +118,7 @@ export function VariantSelector({
       </div>
 
       {/* Selected Variant Name */}
-      {selectedId && (
+      {selectedVariant && (
         <motion.div
           key={selectedId}
           initial={{ opacity: 0, y: -10 }}
@@ -115,11 +127,11 @@ export function VariantSelector({
         >
           <p className="text-sm text-primary-700">
             <span className="font-semibold">Diseño seleccionado:</span>{' '}
-            {variants.find(v => v.id === selectedId)?.nombre}
+            {selectedVariant.nombre}
           </p>
-          {variants.find(v => v.id === selectedId)?.descripcion && (
+          {selectedVariant.descripcion && (
             <p className="text-xs text-primary-600 mt-1">
-              {variants.find(v => v.id === selectedId)?.descripcion}
+              {selectedVariant.descripcion}
             </p>
           )}
         </motion.div>
