@@ -14,6 +14,16 @@ export interface ProductImage {
 }
 
 /**
+ * Product variant information
+ */
+export interface ProductVariant {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  imagen_url: string;
+}
+
+/**
  * Product type as returned by the public API
  */
 export interface Product {
@@ -34,6 +44,7 @@ export interface Product {
   es_variante?: boolean; // This is a variant of another product
   variante_id?: number; // Variant ID if this is a variant
   variante_nombre?: string; // Variant name if this is a variant
+  variantes?: ProductVariant[]; // Available variants if this product has them
   componentes?: ProductComponent[]; // Components if this is a set
 }
 
@@ -89,6 +100,7 @@ export interface Customer {
 export interface OrderItem {
   product_id: number;
   quantity: number;
+  variante_id?: number; // Optional variant ID for products with variants
 }
 
 /**
