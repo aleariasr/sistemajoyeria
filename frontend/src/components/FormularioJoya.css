@@ -1,0 +1,127 @@
+/* FormularioJoya.css - Specific styles for jewelry form including iPad fixes */
+
+/* Container for the entire form to enable scrolling */
+.formulario-joya-container {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+/* Ensure form sections don't exceed viewport on iPad */
+.formulario-joya-container .card {
+  margin-bottom: 20px;
+}
+
+/* Modal footer should be accessible even when content is long */
+.formulario-joya-container .modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  margin-top: 20px;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* iPad specific adjustments (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .formulario-joya-container {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+
+  /* Ensure image preview doesn't push content too far down */
+  .formulario-joya-container .card {
+    padding: 18px;
+  }
+
+  /* Optimize image preview size for iPad */
+  .formulario-joya-container img {
+    max-width: 250px;
+    max-height: 250px;
+  }
+
+  /* Make buttons more accessible on iPad */
+  .formulario-joya-container .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 16px;
+    margin-top: 20px;
+    border-top: 2px solid #e5e7eb;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .formulario-joya-container .modal-footer button {
+    min-height: 44px; /* Touch-friendly button height */
+    font-size: 15px;
+  }
+
+  /* Ensure form inputs are touch-friendly */
+  .formulario-joya-container input,
+  .formulario-joya-container textarea,
+  .formulario-joya-container select {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Optimize file input for touch */
+  .formulario-joya-container input[type="file"] {
+    padding: 12px;
+    min-height: 44px;
+  }
+
+  /* Optimize checkbox size for touch */
+  .formulario-joya-container input[type="checkbox"] {
+    min-width: 24px;
+    min-height: 24px;
+  }
+}
+
+/* Portrait iPad (768px width) */
+@media (max-width: 768px) and (orientation: portrait) {
+  .formulario-joya-container {
+    max-height: calc(100vh - 120px);
+  }
+
+  .formulario-joya-container .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .formulario-joya-container .modal-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .formulario-joya-container .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* Landscape iPad (1024px width) */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .formulario-joya-container {
+    max-height: calc(100vh - 80px);
+  }
+}
+
+/* Ensure scrollbar is visible on iPad */
+.formulario-joya-container::-webkit-scrollbar {
+  width: 12px;
+  background: transparent;
+}
+
+.formulario-joya-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.formulario-joya-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.formulario-joya-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

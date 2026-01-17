@@ -4,6 +4,7 @@ import { crearJoya, actualizarJoya, obtenerJoya, verificarCodigoJoya } from '../
 import GaleriaImagenesJoya from './GaleriaImagenesJoya';
 import VariantesManager from './VariantesManager';
 import ProductosCompuestosManager from './ProductosCompuestosManager';
+import './FormularioJoya.css';
 
 const CATEGORIAS = ['Anillo', 'Aretes', 'Collar', 'Pulsera', 'Dije', 'Reloj', 'Set', 'Otro'];
 const ESTADOS = ['Activo', 'Descontinuado', 'Agotado'];
@@ -250,7 +251,7 @@ function FormularioJoya() {
   }
 
   return (
-    <div>
+    <div className="formulario-joya-container">
       <div className="page-header">
         <h2>{esEdicion ? 'Editar Joya' : 'Nueva Joya'}</h2>
         <p>{esEdicion ? 'Actualiza la información de la joya' : 'Agrega una nueva joya al inventario'}</p>
