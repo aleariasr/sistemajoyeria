@@ -139,7 +139,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
           setImagenes([]);
         } else {
           // Unexpected response format - log but don't alert (not user's fault)
-          console.warn('⚠️ Respuesta inesperada de la API de imágenes (se esperaba array):', response.data);
+          console.warn('WARNING: Respuesta inesperada de la API de imágenes (se esperaba array):', response.data);
           setImagenes([]);
         }
       }
