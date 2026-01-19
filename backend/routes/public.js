@@ -50,21 +50,20 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     imagen_url: joya.imagen_url,
     imagenes: joya.imagenes || [],
     slug: generateProductSlug(joya.codigo, joya.nombre),
-    es_producto_variante: joya.es_producto_variante || false,
+    // NOTE: We include es_producto_compuesto but NOT es_producto_variante for public API
+    // Each variant is treated as an independent product in the storefront
     es_producto_compuesto: joya.es_producto_compuesto || false
   };
 
-  // If this is a variant expansion, override image and name
+  // If this is a variant, transform it to appear as a completely independent product
   if (varianteInfo) {
-    product.es_variante = true;
-    product.variante_id = varianteInfo.id;
-    product.variante_nombre = varianteInfo.nombre_variante;
+    product.variante_id = varianteInfo.id; // Keep for cart tracking
     product.nombre = `${joya.nombre} - ${varianteInfo.nombre_variante}`;
     product.imagen_url = varianteInfo.imagen_url; // CRITICAL: Use variant's specific image
     product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
     
-    // For variants, the main image should be the variant image
-    // Override imagenes array to show only the variant image as primary
+    // Override imagenes array to show only the variant image
+    // This ensures the detail page displays only this variant's image
     product.imagenes = [
       {
         id: 0,
@@ -73,6 +72,9 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
         es_principal: true
       }
     ];
+    
+    // Update slug to reflect the full variant name
+    product.slug = generateProductSlug(joya.codigo, product.nombre);
   }
 
   if (includeStock) {
@@ -81,6 +83,13 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
 
   // Validar y limpiar imágenes para asegurar consistencia
   product = ensureProductHasValidImages(product);
+
+  // CRITICAL: DO NOT include variants array in the response
+  // Each variant is treated as an individual product
+  // Remove any internal flags that shouldn't be exposed to the client
+  delete product.es_producto_variante;
+  delete product.es_variante;
+  delete product.variantes;
 
   return product;
 }
@@ -249,11 +258,29 @@ router.get('/products/featured', async (req, res) => {
  * GET /api/public/products/:id
  * Get a single product by ID for product detail page
  * Only returns if product is active, has stock, and is visible in storefront
- * Includes variant information if available
+ * 
+ * Query Parameters:
+ * - variante_id: If provided, returns only that specific variant as a standalone product
+ * 
+ * IMPORTANT: Each variant is treated as an independent product in the storefront.
+ * The client should NOT see a selector of variants - each variant appears separately in the catalog.
  */
 router.get('/products/:id', async (req, res) => {
   try {
-    const joya = await Joya.obtenerPorId(req.params.id);
+    const productId = parseInt(req.params.id);
+    const varianteId = req.query.variante_id ? parseInt(req.query.variante_id) : null;
+    
+    // Validate productId is a positive integer
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ error: 'Invalid product ID' });
+    }
+    
+    // Validate varianteId if provided
+    if (req.query.variante_id && (isNaN(varianteId) || varianteId <= 0)) {
+      return res.status(400).json({ error: 'Invalid variant ID' });
+    }
+    
+    const joya = await Joya.obtenerPorId(productId);
 
     if (!joya) {
       return res.status(404).json({ error: 'Product not found' });
@@ -278,19 +305,37 @@ router.get('/products/:id', async (req, res) => {
       es_principal: img.es_principal
     }));
 
-    // Include stock for cart validation
-    const producto = transformToPublicProduct(joya, true);
+    // CRITICAL: If a variante_id is provided in query, return ONLY that variant as individual product
+    // Do NOT include other variants in the response
+    if (varianteId && joya.es_producto_variante) {
+      const variante = await VarianteProducto.obtenerPorId(varianteId);
+      
+      if (!variante || variante.id_producto_padre !== joya.id || !variante.activo) {
+        return res.status(404).json({ error: 'Variant not found or inactive' });
+      }
+      
+      // Return this specific variant as a standalone product
+      // NO incluir lista de variantes hermanas
+      const producto = transformToPublicProduct(joya, true, variante);
+      return res.json(producto);
+    }
 
-    // If product has variants, include them
+    // Si el producto tiene variantes pero NO se especificó variante_id,
+    // devolver la primera variante activa como default
     if (joya.es_producto_variante) {
       const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
-      producto.variantes = variantes.map(v => ({
-        id: v.id,
-        nombre: v.nombre_variante,
-        descripcion: v.descripcion_variante,
-        imagen_url: v.imagen_url
-      }));
+      
+      if (variantes.length === 0) {
+        return res.status(404).json({ error: 'Product has no active variants' });
+      }
+      
+      // Devolver solo la primera variante como producto individual
+      const producto = transformToPublicProduct(joya, true, variantes[0]);
+      return res.json(producto);
     }
+
+    // Include stock for cart validation
+    const producto = transformToPublicProduct(joya, true);
 
     // If product is a set, include component info
     if (joya.es_producto_compuesto) {

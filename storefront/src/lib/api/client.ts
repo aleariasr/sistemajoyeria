@@ -217,10 +217,13 @@ export const api = {
 
   /**
    * Get a single product by ID
+   * @param id - Product ID
+   * @param varianteId - Optional variant ID to fetch specific variant
    */
-  async getProduct(id: number): Promise<Product> {
+  async getProduct(id: number, varianteId?: number): Promise<Product> {
     return withRetry(async () => {
-      const response = await apiClient.get<Product>(`/public/products/${id}`);
+      const params = varianteId ? { variante_id: varianteId } : undefined;
+      const response = await apiClient.get<Product>(`/public/products/${id}`, { params });
       return response.data;
     });
   },

@@ -49,7 +49,13 @@ function ProductCardComponent({ product, index = 0 }: ProductCardProps) {
   }, [product, addItem, openCart]);
 
   // Memoize URLs to prevent recalculation on every render
-  const productUrl = useMemo(() => `/product/${product.id}`, [product.id]);
+  // Include variante_id in URL if this is a variant product
+  const productUrl = useMemo(() => {
+    if (product.variante_id) {
+      return `/product/${product.id}?variante_id=${product.variante_id}`;
+    }
+    return `/product/${product.id}`;
+  }, [product.id, product.variante_id]);
   
   const imageUrl = useMemo(() => {
     // Find the primary image (sorted once and memoized)
