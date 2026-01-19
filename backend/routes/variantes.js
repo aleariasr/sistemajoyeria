@@ -10,43 +10,95 @@ const router = express.Router();
 const VarianteProducto = require('../models/VarianteProducto');
 const Joya = require('../models/Joya');
 const { requireAuth } = require('../middleware/auth');
+const { uploadMiddleware, cleanupTempFile } = require('../middleware/upload');
+const { uploadImage, deleteImage, extractPublicId } = require('../cloudinary-config');
 
 // All routes require authentication
 router.use(requireAuth);
 
 /**
+ * Helper function to cleanup resources on error
+ * @param {Object} options - Cleanup options
+ * @param {string} options.tempFilePath - Path to temp file
+ * @param {string} options.cloudinaryPublicId - Public ID of uploaded image
+ */
+const cleanupResources = async ({ tempFilePath, cloudinaryPublicId }) => {
+  // Cleanup temp file
+  if (tempFilePath) {
+    cleanupTempFile(tempFilePath);
+  }
+  
+  // Cleanup uploaded image from Cloudinary
+  if (cloudinaryPublicId) {
+    try {
+      await deleteImage(cloudinaryPublicId);
+    } catch (cleanupError) {
+      console.error('Error cleaning up uploaded image:', cleanupError);
+    }
+  }
+};
+
+/**
  * POST /api/variantes
  * Create a new product variant
  */
-router.post('/', async (req, res) => {
+router.post('/', uploadMiddleware, async (req, res) => {
+  let uploadedImagePublicId = null;
+  let tempFilePath = null;
+  
   try {
     const {
       id_producto_padre,
       nombre_variante,
       descripcion_variante,
-      imagen_url,
       orden_display,
       activo
     } = req.body;
 
+    tempFilePath = req.file?.path;
+
     // Validate required fields
-    if (!id_producto_padre || !nombre_variante || !imagen_url) {
+    if (!id_producto_padre || !nombre_variante) {
+      cleanupTempFile(tempFilePath);
       return res.status(400).json({
-        error: 'Missing required fields: id_producto_padre, nombre_variante, imagen_url'
+        error: 'Missing required fields: id_producto_padre, nombre_variante'
+      });
+    }
+
+    // Validate image file is provided
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'Image file is required'
       });
     }
 
     // Verify parent product exists
     const producto = await Joya.obtenerPorId(id_producto_padre);
     if (!producto) {
+      cleanupTempFile(tempFilePath);
       return res.status(404).json({ error: 'Parent product not found' });
     }
 
     // Check variant limit (max 100)
     const dentroDelLimite = await VarianteProducto.validarLimite(id_producto_padre);
     if (!dentroDelLimite) {
+      cleanupTempFile(tempFilePath);
       return res.status(400).json({
         error: 'Maximum variant limit reached (100 per product)'
+      });
+    }
+
+    // Upload image to Cloudinary
+    let imagen_url;
+    try {
+      const resultadoImagen = await uploadImage(tempFilePath, 'variantes');
+      imagen_url = resultadoImagen.url;
+      uploadedImagePublicId = resultadoImagen.publicId;
+    } catch (error) {
+      console.error('Error uploading image to Cloudinary:', error);
+      cleanupTempFile(tempFilePath);
+      return res.status(500).json({ 
+        error: 'Failed to upload image: ' + (error.message || 'Unknown error')
       });
     }
 
@@ -62,8 +114,16 @@ router.post('/', async (req, res) => {
 
     // If this is the first variant, mark parent as variant product
     if (!producto.es_producto_variante) {
-      await Joya.actualizar(id_producto_padre, { es_producto_variante: true });
+      try {
+        await Joya.actualizar(id_producto_padre, { es_producto_variante: true });
+      } catch (updateError) {
+        // Log but don't fail - variant was created successfully
+        console.error('Warning: Failed to mark parent as variant product:', updateError);
+      }
     }
+
+    // Cleanup temp file only after all operations complete successfully
+    cleanupTempFile(tempFilePath);
 
     res.json({
       success: true,
@@ -72,6 +132,13 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating variant:', error);
+    
+    // Cleanup all resources on error
+    await cleanupResources({ 
+      tempFilePath, 
+      cloudinaryPublicId: uploadedImagePublicId 
+    });
+    
     res.status(500).json({ error: error.message || 'Error creating variant' });
   }
 });
@@ -126,31 +193,87 @@ router.get('/producto/:id', async (req, res) => {
  * PUT /api/variantes/:id
  * Update a variant
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', uploadMiddleware, async (req, res) => {
+  let uploadedImagePublicId = null;
+  let tempFilePath = null;
+  
   try {
     const { id } = req.params;
     const {
       nombre_variante,
       descripcion_variante,
-      imagen_url,
       orden_display,
       activo
     } = req.body;
 
+    tempFilePath = req.file?.path;
+
     // Verify variant exists
     const varianteExistente = await VarianteProducto.obtenerPorId(id);
     if (!varianteExistente) {
+      cleanupTempFile(tempFilePath);
       return res.status(404).json({ error: 'Variant not found' });
     }
 
-    // Update variant
-    const varianteActualizada = await VarianteProducto.actualizar(id, {
+    // Prepare update data
+    const updateData = {
       nombre_variante,
       descripcion_variante,
-      imagen_url,
       orden_display,
       activo
-    });
+    };
+
+    // Handle image upload if new image provided
+    if (req.file) {
+      try {
+        const resultadoImagen = await uploadImage(tempFilePath, 'variantes');
+        updateData.imagen_url = resultadoImagen.url;
+        uploadedImagePublicId = resultadoImagen.publicId;
+        
+        // Store old image URL for cleanup after successful update
+        const oldImageUrl = varianteExistente.imagen_url;
+        
+        // Update variant first (before cleaning temp file)
+        const varianteActualizada = await VarianteProducto.actualizar(id, updateData);
+        
+        // Delete old image from Cloudinary after successful update
+        if (oldImageUrl) {
+          try {
+            const oldPublicId = extractPublicId(oldImageUrl);
+            if (oldPublicId) {
+              await deleteImage(oldPublicId);
+            }
+          } catch (err) {
+            console.error('Error deleting old image:', err);
+            // Continue even if old image deletion fails
+          }
+        }
+
+        // Cleanup temp file after all operations complete
+        cleanupTempFile(tempFilePath);
+
+        return res.json({
+          success: true,
+          data: varianteActualizada,
+          message: 'Variant updated successfully'
+        });
+      } catch (error) {
+        console.error('Error uploading new image:', error);
+        
+        // Cleanup all resources on error
+        await cleanupResources({ 
+          tempFilePath, 
+          cloudinaryPublicId: uploadedImagePublicId 
+        });
+        
+        return res.status(500).json({ 
+          error: 'Failed to upload new image: ' + (error.message || 'Unknown error')
+        });
+      }
+    }
+
+    // Update variant without image change
+    const varianteActualizada = await VarianteProducto.actualizar(id, updateData);
 
     res.json({
       success: true,
@@ -159,6 +282,13 @@ router.put('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating variant:', error);
+    
+    // Cleanup all resources on error
+    await cleanupResources({ 
+      tempFilePath, 
+      cloudinaryPublicId: uploadedImagePublicId 
+    });
+    
     res.status(500).json({ error: error.message || 'Error updating variant' });
   }
 });

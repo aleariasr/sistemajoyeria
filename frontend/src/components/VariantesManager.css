@@ -170,7 +170,8 @@
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
 }
 
@@ -180,6 +181,7 @@
   align-items: center;
   padding: 20px;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -205,6 +207,9 @@
 
 .modal-content form {
   padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .modal-content .form-group {
@@ -255,6 +260,7 @@
   padding: 20px;
   border-top: 1px solid #e0e0e0;
   margin: 0 -20px -20px;
+  flex-shrink: 0;
 }
 
 .btn-cancelar {
@@ -379,6 +385,7 @@
 
   .modal-content form {
     padding: 16px;
+    overflow-y: auto;
   }
 
   .modal-footer {
@@ -497,6 +504,7 @@
 
   .modal-content form {
     padding: 12px;
+    overflow-y: auto;
   }
 
   .modal-content .form-group {
