@@ -112,13 +112,18 @@ router.post('/', uploadMiddleware, async (req, res) => {
       activo
     });
 
-    // Cleanup temp file after successful database operation
-    cleanupTempFile(tempFilePath);
-
     // If this is the first variant, mark parent as variant product
     if (!producto.es_producto_variante) {
-      await Joya.actualizar(id_producto_padre, { es_producto_variante: true });
+      try {
+        await Joya.actualizar(id_producto_padre, { es_producto_variante: true });
+      } catch (updateError) {
+        // Log but don't fail - variant was created successfully
+        console.error('Warning: Failed to mark parent as variant product:', updateError);
+      }
     }
+
+    // Cleanup temp file only after all operations complete successfully
+    cleanupTempFile(tempFilePath);
 
     res.json({
       success: true,
