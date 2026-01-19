@@ -16,9 +16,69 @@ export default function CatalogContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [isRestoringState, setIsRestoringState] = useState(true);
   
   // Ref for infinite scroll observer
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Restore filters and scroll position from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedSearch = sessionStorage.getItem('catalog_search');
+      const savedCategory = sessionStorage.getItem('catalog_category');
+      const savedScrollPosition = sessionStorage.getItem('catalog_scroll');
+      
+      if (savedSearch) {
+        setSearchTerm(savedSearch);
+        setDebouncedSearch(savedSearch);
+      }
+      
+      if (savedCategory && savedCategory !== 'null') {
+        setSelectedCategory(savedCategory);
+      }
+      
+      // Restore scroll position after content loads
+      if (savedScrollPosition) {
+        // Wait for content to render before scrolling
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedScrollPosition, 10));
+          setIsRestoringState(false);
+        }, 100);
+      } else {
+        setIsRestoringState(false);
+      }
+    }
+  }, []);
+
+  // Save current state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isRestoringState) {
+      sessionStorage.setItem('catalog_search', searchTerm);
+      sessionStorage.setItem('catalog_category', selectedCategory || 'null');
+    }
+  }, [searchTerm, selectedCategory, isRestoringState]);
+
+  // Save scroll position periodically
+  useEffect(() => {
+    if (typeof window === 'undefined' || isRestoringState) return;
+
+    const handleScroll = () => {
+      sessionStorage.setItem('catalog_scroll', window.scrollY.toString());
+    };
+
+    // Throttle scroll events
+    let timeoutId: NodeJS.Timeout;
+    const throttledScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 100);
+    };
+
+    window.addEventListener('scroll', throttledScroll);
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+      clearTimeout(timeoutId);
+    };
+  }, [isRestoringState]);
 
   // Debounce search input
   const handleSearchChange = useMemo(
@@ -99,6 +159,12 @@ export default function CatalogContent() {
     setSearchTerm('');
     setDebouncedSearch('');
     setSelectedCategory(null);
+    // Clear saved state
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('catalog_search');
+      sessionStorage.removeItem('catalog_category');
+      sessionStorage.removeItem('catalog_scroll');
+    }
   };
 
   const hasFilters = searchTerm || selectedCategory;

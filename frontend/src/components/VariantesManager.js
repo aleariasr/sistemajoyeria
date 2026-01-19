@@ -23,6 +23,8 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
   const [imagen, setImagen] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
   const [error, setError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(''); // Progress indicator
+  const [saving, setSaving] = useState(false); // Separate saving state from loading
 
   const cargarVariantes = useCallback(async () => {
     try {
@@ -76,6 +78,8 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
     setImagen(null);
     setImagenPreview(null);
     setError(null);
+    setUploadProgress('');
+    setSaving(false);
   };
 
   const handleChange = (e) => {
@@ -108,6 +112,7 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setUploadProgress('');
 
     if (!formData.nombre_variante.trim()) {
       setError('El nombre de la variante es requerido');
@@ -120,7 +125,7 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
 
       const formDataToSend = new FormData();
       formDataToSend.append('id_producto_padre', productoId);
@@ -129,24 +134,47 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
       formDataToSend.append('activo', formData.activo);
 
       if (imagen) {
+        setUploadProgress('📤 Subiendo imagen de alta calidad...');
         formDataToSend.append('imagen', imagen);
       }
 
       if (varianteEditando) {
+        setUploadProgress(imagen ? '📤 Subiendo imagen de alta calidad...' : '💾 Guardando cambios...');
         await actualizarVariante(varianteEditando.id, formDataToSend);
       } else {
+        setUploadProgress('💾 Creando variante...');
         formDataToSend.append('orden_display', variantes.length);
+        
+        // Optimistic UI update: add placeholder immediately
+        const tempVariante = {
+          id: 'temp-' + Date.now(),
+          nombre_variante: formData.nombre_variante,
+          descripcion_variante: formData.descripcion_variante,
+          imagen_url: imagenPreview,
+          activo: formData.activo,
+          orden_display: variantes.length,
+          _isOptimistic: true
+        };
+        setVariantes(prev => [...prev, tempVariante]);
+        
         await crearVariante(formDataToSend);
       }
 
+      setUploadProgress('✅ Recargando lista...');
       await cargarVariantes();
       cerrarModal();
-      alert(varianteEditando ? '✅ Variante actualizada' : '✅ Variante creada');
+      alert(varianteEditando ? '✅ Variante actualizada' : '✅ Variante creada exitosamente');
     } catch (error) {
       console.error('Error guardando variante:', error);
       setError(error.response?.data?.error || 'Error al guardar variante');
+      setUploadProgress('');
+      // Remove optimistic update on error
+      if (!varianteEditando) {
+        setVariantes(prev => prev.filter(v => !v._isOptimistic));
+      }
     } finally {
-      setLoading(false);
+      setSaving(false);
+      setUploadProgress('');
     }
   };
 
@@ -205,7 +233,11 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
       ) : (
         <div className="variantes-lista">
           {variantes.map((variante, index) => (
-            <div key={variante.id} className="variante-item">
+            <div 
+              key={variante.id} 
+              className={`variante-item ${variante._isOptimistic ? 'optimistic' : ''}`}
+              style={variante._isOptimistic ? { opacity: 0.6, pointerEvents: 'none' } : {}}
+            >
               <div className="variante-orden">
                 <button type="button" onClick={() => handleMoverArriba(index)} disabled={index === 0}>
                   ▲
@@ -218,6 +250,7 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
               <img src={variante.imagen_url} alt={variante.nombre_variante} className="variante-thumbnail" />
               <div className="variante-info">
                 <strong>{variante.nombre_variante}</strong>
+                {variante._isOptimistic && <span className="saving-indicator"> (Guardando...)</span>}
                 {variante.descripcion_variante && <p>{variante.descripcion_variante}</p>}
                 <span className={`variante-estado ${variante.activo ? 'activo' : 'inactivo'}`}>
                   {variante.activo ? '✓ Activo' : '✗ Inactivo'}
@@ -241,6 +274,15 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
             </div>
 
             {error && <div className="alert-error">{error}</div>}
+            
+            {uploadProgress && (
+              <div className="upload-progress">
+                <div className="progress-text">{uploadProgress}</div>
+                <div className="progress-bar">
+                  <div className="progress-bar-inner"></div>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -267,13 +309,15 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
               </div>
 
               <div className="form-group">
-                <label>Imagen *</label>
+                <label>Imagen * (Alta calidad, sin compresión)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImagenChange}
                   required={!varianteEditando}
+                  disabled={saving}
                 />
+                <p className="image-hint">💡 Sube imágenes de alta calidad. No se reduce la calidad.</p>
                 {imagenPreview && (
                   <img src={imagenPreview} alt="Preview" className="imagen-preview" />
                 )}
@@ -292,11 +336,11 @@ function VariantesManager({ productoId, nombreProducto, onVariantesChange }) {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={cerrarModal} className="btn-cancelar">
+                <button type="button" onClick={cerrarModal} className="btn-cancelar" disabled={saving}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading} className="btn-guardar">
-                  {loading ? 'Guardando...' : 'Guardar'}
+                <button type="submit" disabled={saving} className="btn-guardar">
+                  {saving ? (uploadProgress || 'Guardando...') : 'Guardar'}
                 </button>
               </div>
             </form>

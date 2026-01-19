@@ -28,21 +28,13 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ productId }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1);
-  const [catalogUrl, setCatalogUrl] = useState('/catalog/todos');
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const router = useRouter();
   const { data: product, isLoading, error } = useProduct(productId);
   const { addItem, openCart } = useCartStore();
 
-  // Restore catalog URL from session storage to preserve filters
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const lastCategory = sessionStorage.getItem('catalog_last_category');
-      if (lastCategory) {
-        setCatalogUrl(`/catalog/${lastCategory}`);
-      }
-    }
-  }, []);
+  // No need to restore catalogUrl anymore - we'll use navigate back
+  // which preserves all state automatically
 
   // Initialize selected variant when product loads
   useEffect(() => {
@@ -77,9 +69,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
         <p className="text-primary-500 mb-6">
           Este producto no está disponible o no existe.
         </p>
-        <Link href={catalogUrl}>
-          <Button variant="outline">Volver al catálogo</Button>
-        </Link>
+        <Button onClick={handleBackToCatalog} variant="outline">
+          Volver al catálogo
+        </Button>
       </div>
     );
   }
@@ -116,6 +108,11 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     }
   };
 
+  const handleBackToCatalog = () => {
+    // Use browser back navigation to preserve filters and scroll position
+    router.back();
+  };
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -131,12 +128,12 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
           </li>
           <li className="text-primary-300">/</li>
           <li>
-            <Link
-              href={catalogUrl}
+            <button
+              onClick={handleBackToCatalog}
               className="text-primary-500 hover:text-primary-900 transition-colors"
             >
               Catálogo
-            </Link>
+            </button>
           </li>
           <li className="text-primary-300">/</li>
           <li className="text-primary-900 font-medium">{product.nombre}</li>
@@ -282,11 +279,9 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
               }
             </Button>
 
-            <Link href="/catalog">
-              <Button variant="ghost" fullWidth>
-                ← Seguir comprando
-              </Button>
-            </Link>
+            <Button variant="ghost" fullWidth onClick={handleBackToCatalog}>
+              ← Seguir comprando
+            </Button>
           </div>
         </motion.div>
       </div>
