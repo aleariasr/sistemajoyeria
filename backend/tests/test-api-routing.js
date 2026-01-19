@@ -6,6 +6,9 @@
  * 1. The catch-all route never serves HTML for API routes
  * 2. API 404s return JSON (not HTML)
  * 3. Non-API routes serve the frontend HTML
+ * 
+ * To run: node backend/tests/test-api-routing.js
+ * Expected: All 6 tests pass with exit code 0
  */
 
 const express = require('express');
@@ -28,6 +31,30 @@ app.get('/api/imagenes-joya/joya/:id', (req, res) => {
 
 // Create a temporary HTML file for testing
 const testHtmlPath = path.join(__dirname, 'test-index.html');
+
+// Cleanup function to ensure temp file is removed
+const cleanup = () => {
+  try {
+    if (fs.existsSync(testHtmlPath)) {
+      fs.unlinkSync(testHtmlPath);
+    }
+  } catch (error) {
+    console.error('Warning: Could not clean up temp file:', error.message);
+  }
+};
+
+// Ensure cleanup happens on exit or error
+process.on('exit', cleanup);
+process.on('SIGINT', () => {
+  cleanup();
+  process.exit(130);
+});
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  cleanup();
+  process.exit(1);
+});
+
 fs.writeFileSync(testHtmlPath, '<!doctype html><html><body>Test</body></html>');
 
 // Simulate the catch-all logic from server.js
@@ -167,7 +194,7 @@ const server = app.listen(0, async () => {
   
   // Cleanup
   server.close();
-  fs.unlinkSync(testHtmlPath);
+  cleanup();
   
   // Results
   console.log('\n' + '='.repeat(60));
