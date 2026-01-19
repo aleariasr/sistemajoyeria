@@ -131,20 +131,40 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       if (Array.isArray(response.data)) {
         setImagenes(response.data);
       } else {
-        console.error('Respuesta inesperada de la API de imágenes:', response.data);
-        setImagenes([]);
+        // Check if it's an HTML response (error page)
+        if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+          console.error('❌ API devolvió HTML en lugar de JSON. Verificar configuración del servidor.');
+          alert('Error de configuración: La API devolvió HTML. Por favor contacte al administrador.');
+          setImagenes([]);
+        } else {
+          console.error('Respuesta inesperada de la API de imágenes:', response.data);
+          setImagenes([]);
+        }
       }
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
       
-      // Proporcionar mensaje específico según el error
-      let errorMsg = 'Error al cargar imágenes';
-      if (error.response?.status === 404) {
-        // No mostrar alerta para 404, es esperado si no hay imágenes
+      // Check for HTML response in error
+      if (error.response?.data && typeof error.response.data === 'string' && 
+          error.response.data.includes('<!doctype html>')) {
+        console.error('❌ API devolvió HTML en lugar de JSON. Ruta /api/imagenes-joya/* no configurada correctamente.');
+        alert('Error de configuración del servidor. Por favor contacte al administrador.');
         setImagenes([]);
         setCargando(false);
         return;
-      } else if (error.response?.status === 500) {
+      }
+      
+      // Only show alerts for actual errors, not for empty arrays (which is normal)
+      if (error.response?.status === 404 || error.response?.status === 200) {
+        // 404 or 200 with no data is normal - product has no images yet
+        setImagenes([]);
+        setCargando(false);
+        return;
+      }
+      
+      // Show alert only for real errors (500, network errors, etc.)
+      let errorMsg = 'Error al cargar imágenes';
+      if (error.response?.status === 500) {
         errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
       } else if (error.message === 'Network Error') {
         errorMsg = 'Error de conexión. Verifique su conexión a internet';

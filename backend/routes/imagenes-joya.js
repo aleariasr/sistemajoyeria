@@ -73,10 +73,16 @@ router.post('/imagenes-joya', requireAuth, async (req, res) => {
 router.get('/imagenes-joya/joya/:id', requireAuth, async (req, res) => {
   try {
     const imagenes = await ImagenJoya.obtenerPorJoya(req.params.id);
-    res.json(imagenes);
+    // Always return JSON array, even if empty
+    // Return 200 OK with empty array when no images exist (this is not an error)
+    res.json(Array.isArray(imagenes) ? imagenes : []);
   } catch (error) {
     console.error('Error al obtener imágenes:', error);
-    res.status(500).json({ error: 'Error al obtener imágenes' });
+    // Always return JSON, never HTML
+    res.status(500).json({ 
+      error: 'Error al obtener imágenes',
+      errorType: 'SERVER_ERROR'
+    });
   }
 });
 
