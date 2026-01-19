@@ -139,15 +139,13 @@ router.get('/products', async (req, res) => {
 
     // Bulk fetch variants for products marked as es_producto_variante to avoid N+1 queries
     const joyasConVariantes = resultado.joyas.filter(j => j.es_producto_variante);
-    const variantesByProducto = {};
+    let variantesByProducto = {};
 
     if (joyasConVariantes.length > 0) {
       const variantesIds = joyasConVariantes.map(j => j.id);
       
-      // Fetch all variants for all parent products in one pass
-      for (const joyaId of variantesIds) {
-        variantesByProducto[joyaId] = await VarianteProducto.obtenerPorProducto(joyaId, true);
-      }
+      // Fetch all variants for all parent products in a single database query
+      variantesByProducto = await VarianteProducto.obtenerPorProductos(variantesIds, true);
     }
 
     const productosExpandidos = [];

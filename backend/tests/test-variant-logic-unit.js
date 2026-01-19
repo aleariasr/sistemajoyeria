@@ -68,7 +68,11 @@ function createMockVariante(id, nombre, imagen_url) {
   };
 }
 
-// Simulate the transformToPublicProduct function
+// Simulate the transformToPublicProduct function (matches backend/routes/public.js)
+function generateProductSlug(codigo, nombre) {
+  return `${codigo.toLowerCase()}-${nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+}
+
 function transformToPublicProduct(joya, includeStock = false, varianteInfo = null) {
   let product = {
     id: joya.id,
@@ -81,6 +85,7 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     stock_disponible: joya.stock_actual > 0,
     imagen_url: joya.imagen_url,
     imagenes: joya.imagenes || [],
+    slug: generateProductSlug(joya.codigo, joya.nombre),
     es_producto_variante: joya.es_producto_variante || false,
     es_producto_compuesto: joya.es_producto_compuesto || false
   };

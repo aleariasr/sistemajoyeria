@@ -107,6 +107,46 @@ class VarianteProducto {
   }
 
   /**
+   * Get all variants for multiple parent products (bulk fetch to avoid N+1 queries)
+   * @param {Array<number>} idsProductoPadre - Array of parent product IDs
+   * @param {boolean} soloActivas - Only return active variants
+   * @returns {Promise<Object>} Object with parent IDs as keys and variant arrays as values
+   */
+  static async obtenerPorProductos(idsProductoPadre, soloActivas = false) {
+    if (!idsProductoPadre || idsProductoPadre.length === 0) {
+      return {};
+    }
+
+    let query = supabase
+      .from('variantes_producto')
+      .select('*')
+      .in('id_producto_padre', idsProductoPadre)
+      .order('orden_display', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (soloActivas) {
+      query = query.eq('activo', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    // Group variants by parent product ID
+    const variantesByProducto = {};
+    (data || []).forEach(variante => {
+      if (!variantesByProducto[variante.id_producto_padre]) {
+        variantesByProducto[variante.id_producto_padre] = [];
+      }
+      variantesByProducto[variante.id_producto_padre].push(variante);
+    });
+
+    return variantesByProducto;
+  }
+
+  /**
    * Update a variant
    * @param {number} id - Variant ID
    * @param {Object} varianteData - Updated data
