@@ -43,6 +43,11 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     }
   }, [product, selectedVariant]);
 
+  const handleBackToCatalog = () => {
+    // Use browser back navigation to preserve filters and scroll position
+    router.back();
+  };
+
   if (isLoading) {
     return <ProductDetailSkeleton />;
   }
@@ -106,11 +111,6 @@ export default function ProductDetail({ productId }: ProductDetailProps) {
     if (newQuantity >= 1 && (!product.stock || newQuantity <= product.stock)) {
       setQuantity(newQuantity);
     }
-  };
-
-  const handleBackToCatalog = () => {
-    // Use browser back navigation to preserve filters and scroll position
-    router.back();
   };
 
   return (

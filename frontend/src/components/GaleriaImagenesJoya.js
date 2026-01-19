@@ -121,7 +121,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       
       // Validar que la respuesta sea válida
       if (!response.data) {
-        console.warn('Respuesta vacía de la API de imágenes');
+        // Empty response is valid - product has no additional images
         setImagenes([]);
         setCargando(false);
         return;
@@ -129,6 +129,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       
       // Asegurarse que sea un array
       if (Array.isArray(response.data)) {
+        // Valid array response (could be empty or have images)
         setImagenes(response.data);
       } else {
         // Check if it's an HTML response (error page)
@@ -137,13 +138,12 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
           alert('Error de configuración: La API devolvió HTML. Por favor contacte al administrador.');
           setImagenes([]);
         } else {
-          console.error('Respuesta inesperada de la API de imágenes:', response.data);
+          // Unexpected response format - log but don't alert (not user's fault)
+          console.warn('⚠️ Respuesta inesperada de la API de imágenes (se esperaba array):', response.data);
           setImagenes([]);
         }
       }
     } catch (error) {
-      console.error('Error al cargar imágenes:', error);
-      
       // Check for HTML response in error
       if (error.response?.data && typeof error.response.data === 'string' && 
           error.response.data.includes('<!doctype html>')) {
@@ -154,15 +154,16 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
         return;
       }
       
-      // Only show alerts for actual errors, not for empty arrays (which is normal)
+      // 404 or successful status with no data is normal - product has no images yet
       if (error.response?.status === 404 || error.response?.status === 200) {
-        // 404 or 200 with no data is normal - product has no images yet
+        // Not an error - just no images for this product
         setImagenes([]);
         setCargando(false);
         return;
       }
       
       // Show alert only for real errors (500, network errors, etc.)
+      console.error('Error al cargar imágenes:', error);
       let errorMsg = 'Error al cargar imágenes';
       if (error.response?.status === 500) {
         errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
