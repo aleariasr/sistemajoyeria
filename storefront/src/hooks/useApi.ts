@@ -88,11 +88,13 @@ export function useFeaturedProducts() {
 
 /**
  * Fetch a single product by ID
+ * @param id - Product ID
+ * @param varianteId - Optional variant ID to fetch specific variant
  */
-export function useProduct(id: number) {
+export function useProduct(id: number, varianteId?: number) {
   return useQuery({
     queryKey: queryKeys.product(id),
-    queryFn: () => api.getProduct(id),
+    queryFn: () => api.getProduct(id, varianteId),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
