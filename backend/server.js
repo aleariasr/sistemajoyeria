@@ -425,17 +425,36 @@ if (fs.existsSync(frontendBuildPath)) {
   
   // Catch-all handler: serve React's index.html for all non-API routes
   // This enables React Router to handle client-side routing
-  app.get('*', (req, res) => {
-    // Only serve index.html if the request is not for an API route
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(frontendIndexPath);
-    } else {
-      // API route not found - return JSON 404
-      res.status(404).json({
-        error: 'Ruta API no encontrada',
-        path: req.path
-      });
+  app.get('*', (req, res, next) => {
+    // NEVER serve frontend HTML for API routes - let them fall through to 404 handler
+    if (req.path.startsWith('/api/')) {
+      // Let it fall through to the API 404 handler below
+      return next();
     }
+    
+    // Serve React frontend for all other routes
+    res.sendFile(frontendIndexPath);
+  });
+  
+  // 404 handler for API routes (must come after catch-all)
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({
+      error: 'Ruta API no encontrada',
+      path: req.path,
+      availableRoutes: [
+        '/api/joyas',
+        '/api/imagenes-joya',
+        '/api/variantes',
+        '/api/productos-compuestos',
+        '/api/movimientos',
+        '/api/ventas',
+        '/api/clientes',
+        '/api/cuentas-por-cobrar',
+        '/api/auth',
+        '/api/public',
+        '/api/system'
+      ]
+    });
   });
 } else {
   console.log('ℹ️  Frontend build no encontrado, solo sirviendo API');
