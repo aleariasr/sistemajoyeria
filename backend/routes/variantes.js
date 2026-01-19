@@ -11,7 +11,7 @@ const VarianteProducto = require('../models/VarianteProducto');
 const Joya = require('../models/Joya');
 const { requireAuth } = require('../middleware/auth');
 const { uploadMiddleware, cleanupTempFile } = require('../middleware/upload');
-const { uploadImage, deleteImage } = require('../cloudinary-config');
+const { uploadImage, deleteImage, extractPublicId } = require('../cloudinary-config');
 
 // All routes require authentication
 router.use(requireAuth);
@@ -210,26 +210,22 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
         updateData.imagen_url = resultadoImagen.url;
         uploadedImagePublicId = resultadoImagen.publicId;
         
-        // Store old image public_id for cleanup after successful update
+        // Store old image URL for cleanup after successful update
         const oldImageUrl = varianteExistente.imagen_url;
         
-        // Cleanup temp file
-        cleanupTempFile(req.file.path);
-        
-        // Update variant
+        // Update variant first (before cleaning temp file)
         const varianteActualizada = await VarianteProducto.actualizar(id, updateData);
+        
+        // Cleanup temp file after successful database update
+        cleanupTempFile(req.file.path);
         
         // Delete old image from Cloudinary after successful update
         if (oldImageUrl) {
           try {
-            // Extract public_id from URL
-            const urlParts = oldImageUrl.split('/');
-            const fileWithExt = urlParts[urlParts.length - 1];
-            const fileName = fileWithExt.split('.')[0];
-            const folder = urlParts[urlParts.length - 2];
-            const oldPublicId = `${folder}/${fileName}`;
-            
-            await deleteImage(oldPublicId);
+            const oldPublicId = extractPublicId(oldImageUrl);
+            if (oldPublicId) {
+              await deleteImage(oldPublicId);
+            }
           } catch (err) {
             console.error('Error deleting old image:', err);
             // Continue even if old image deletion fails

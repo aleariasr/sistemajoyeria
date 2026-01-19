@@ -93,9 +93,56 @@ const getOptimizedUrl = (publicId, options = {}) => {
   });
 };
 
+/**
+ * Extrae el public_id de una URL de Cloudinary
+ * @param {string} cloudinaryUrl - URL completa de Cloudinary
+ * @returns {string|null} - Public ID o null si no se puede extraer
+ */
+const extractPublicId = (cloudinaryUrl) => {
+  try {
+    if (!cloudinaryUrl || typeof cloudinaryUrl !== 'string') {
+      return null;
+    }
+
+    // Cloudinary URLs have format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/{version}/{public_id}.{format}
+    // We need to extract {public_id} which includes the folder path
+    const url = new URL(cloudinaryUrl);
+    const pathParts = url.pathname.split('/');
+    
+    // Find 'upload' or 'private' in path
+    const uploadIndex = pathParts.findIndex(part => part === 'upload' || part === 'private');
+    if (uploadIndex === -1) {
+      return null;
+    }
+    
+    // Everything after 'upload' is either version/public_id or just public_id
+    const remainingParts = pathParts.slice(uploadIndex + 1);
+    
+    // Skip version if it starts with 'v' followed by digits
+    let startIndex = 0;
+    if (remainingParts[0] && /^v\d+$/.test(remainingParts[0])) {
+      startIndex = 1;
+    }
+    
+    // Join remaining parts and remove file extension
+    const publicIdWithExt = remainingParts.slice(startIndex).join('/');
+    const lastDotIndex = publicIdWithExt.lastIndexOf('.');
+    
+    if (lastDotIndex > 0) {
+      return publicIdWithExt.substring(0, lastDotIndex);
+    }
+    
+    return publicIdWithExt;
+  } catch (error) {
+    console.error('Error extracting public_id from URL:', error);
+    return null;
+  }
+};
+
 module.exports = {
   cloudinary,
   uploadImage,
   deleteImage,
-  getOptimizedUrl
+  getOptimizedUrl,
+  extractPublicId
 };
