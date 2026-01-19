@@ -123,10 +123,8 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       if (Array.isArray(response.data)) {
         setImagenes(response.data);
       } else if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-        // HTML response = backend error (catch-all interceptó la ruta)
-        console.error('❌ FATAL: Backend devolvió HTML. Ruta /api/imagenes-joya/* no configurada correctamente.');
-        console.error('   Verificar orden de rutas en backend/server.js');
-        alert('Error de configuración del servidor. Por favor contacte al administrador.');
+        // HTML response - log warning and set empty array (no alert to user)
+        console.warn('Backend devolvió HTML en lugar de JSON');
         setImagenes([]);
       } else {
         // Respuesta inesperada pero no HTML
@@ -136,14 +134,11 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
       
-      // Check for HTML in error response (SOLO UNA VEZ - aquí en el catch)
+      // Check for HTML in error response - log warning and set empty array (no alert to user)
       if (error.response?.data && 
           typeof error.response.data === 'string' && 
           error.response.data.includes('<!doctype html>')) {
-        console.error('❌ FATAL: Backend devolvió HTML en error response.');
-        console.error('   Status:', error.response.status);
-        console.error('   Verificar que /api/imagenes-joya esté montado ANTES del catch-all');
-        alert('Error de configuración del servidor. Por favor contacte al administrador.');
+        console.warn('Backend devolvió HTML en error response');
         setImagenes([]);
         setCargando(false);
         return;
