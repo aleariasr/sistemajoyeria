@@ -119,61 +119,51 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
     try {
       const response = await axios.get(`/api/imagenes-joya/joya/${idJoya}`);
       
-      // Validar que la respuesta sea válida
-      if (!response.data) {
-        // Empty response is valid - product has no additional images
-        setImagenes([]);
-        setCargando(false);
-        return;
-      }
-      
-      // Asegurarse que sea un array
+      // Verificar que sea un array válido
       if (Array.isArray(response.data)) {
-        // Valid array response (could be empty or have images)
         setImagenes(response.data);
+      } else if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+        // HTML response = backend error (catch-all interceptó la ruta)
+        console.error('❌ FATAL: Backend devolvió HTML. Ruta /api/imagenes-joya/* no configurada correctamente.');
+        console.error('   Verificar orden de rutas en backend/server.js');
+        alert('Error de configuración del servidor. Por favor contacte al administrador.');
+        setImagenes([]);
       } else {
-        // Check if it's an HTML response (error page)
-        if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-          console.error('❌ API devolvió HTML en lugar de JSON. Verificar configuración del servidor.');
-          alert('Error de configuración: La API devolvió HTML. Por favor contacte al administrador.');
-          setImagenes([]);
-        } else {
-          // Unexpected response format - log but don't alert (not user's fault)
-          console.warn('WARNING: Respuesta inesperada de la API de imágenes (se esperaba array):', response.data);
-          setImagenes([]);
-        }
+        // Respuesta inesperada pero no HTML
+        console.warn('Respuesta inesperada de la API:', typeof response.data);
+        setImagenes([]);
       }
     } catch (error) {
-      // Check for HTML response in error
-      if (error.response?.data && typeof error.response.data === 'string' && 
+      console.error('Error al cargar imágenes:', error);
+      
+      // Check for HTML in error response (SOLO UNA VEZ - aquí en el catch)
+      if (error.response?.data && 
+          typeof error.response.data === 'string' && 
           error.response.data.includes('<!doctype html>')) {
-        console.error('❌ API devolvió HTML en lugar de JSON. Ruta /api/imagenes-joya/* no configurada correctamente.');
+        console.error('❌ FATAL: Backend devolvió HTML en error response.');
+        console.error('   Status:', error.response.status);
+        console.error('   Verificar que /api/imagenes-joya esté montado ANTES del catch-all');
         alert('Error de configuración del servidor. Por favor contacte al administrador.');
         setImagenes([]);
         setCargando(false);
         return;
       }
       
-      // 404 or successful status with no data is normal - product has no images yet
-      if (error.response?.status === 404 || error.response?.status === 200) {
-        // Not an error - just no images for this product
+      // Manejar 404 (sin imágenes = estado normal, NO es error)
+      if (error.response?.status === 404) {
         setImagenes([]);
         setCargando(false);
         return;
       }
       
-      // Show alert only for real errors (500, network errors, etc.)
-      console.error('Error al cargar imágenes:', error);
-      let errorMsg = 'Error al cargar imágenes';
+      // Solo mostrar alert para errores reales (500, network, etc.)
       if (error.response?.status === 500) {
-        errorMsg = 'Error del servidor al cargar imágenes. Intente de nuevo';
+        alert('Error del servidor. Intente de nuevo');
       } else if (error.message === 'Network Error') {
-        errorMsg = 'Error de conexión. Verifique su conexión a internet';
-      } else if (!error.response) {
-        errorMsg = 'No se pudo conectar con el servidor. Verifique su conexión';
+        alert('Error de conexión. Verifique su internet');
       }
+      // Para otros errores, solo log (no alert)
       
-      alert(errorMsg);
       setImagenes([]);
     } finally {
       setCargando(false);
