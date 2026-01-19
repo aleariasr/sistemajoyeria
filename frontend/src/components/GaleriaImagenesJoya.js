@@ -123,7 +123,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
       if (Array.isArray(response.data)) {
         setImagenes(response.data);
       } else if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
-        // HTML response - silently handle, just set empty array
+        // HTML response - log warning and set empty array (no alert to user)
         console.warn('Backend devolvió HTML en lugar de JSON');
         setImagenes([]);
       } else {
@@ -134,7 +134,7 @@ export default function GaleriaImagenesJoya({ idJoya, onCambio }) {
     } catch (error) {
       console.error('Error al cargar imágenes:', error);
       
-      // Check for HTML in error response - silently handle
+      // Check for HTML in error response - log warning and set empty array (no alert to user)
       if (error.response?.data && 
           typeof error.response.data === 'string' && 
           error.response.data.includes('<!doctype html>')) {
