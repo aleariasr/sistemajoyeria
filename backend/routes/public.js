@@ -270,6 +270,16 @@ router.get('/products/:id', async (req, res) => {
     const productId = parseInt(req.params.id);
     const varianteId = req.query.variante_id ? parseInt(req.query.variante_id) : null;
     
+    // Validate productId is a positive integer
+    if (isNaN(productId) || productId <= 0) {
+      return res.status(400).json({ error: 'Invalid product ID' });
+    }
+    
+    // Validate varianteId if provided
+    if (req.query.variante_id && (isNaN(varianteId) || varianteId <= 0)) {
+      return res.status(400).json({ error: 'Invalid variant ID' });
+    }
+    
     const joya = await Joya.obtenerPorId(productId);
 
     if (!joya) {

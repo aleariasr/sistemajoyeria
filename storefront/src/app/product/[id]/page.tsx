@@ -7,6 +7,16 @@ interface ProductPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+/**
+ * Parse integer from search parameter value (handles both string and array)
+ */
+function parseIntFromSearchParam(value: string | string[] | undefined): number | undefined {
+  if (!value) return undefined;
+  const strValue = Array.isArray(value) ? value[0] : value;
+  const parsed = parseInt(strValue, 10);
+  return isNaN(parsed) ? undefined : parsed;
+}
+
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
   // For dynamic metadata, we could fetch the product here
@@ -28,9 +38,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   // Get variante_id from searchParams if present
   const searchParamsResolved = await searchParams;
-  const varianteId = searchParamsResolved.variante_id 
-    ? parseInt(Array.isArray(searchParamsResolved.variante_id) ? searchParamsResolved.variante_id[0] : searchParamsResolved.variante_id, 10)
-    : undefined;
+  const varianteId = parseIntFromSearchParam(searchParamsResolved.variante_id);
 
   return (
     <div className="page-transition">

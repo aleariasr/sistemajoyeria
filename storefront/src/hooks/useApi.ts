@@ -20,7 +20,8 @@ import type { CreateOrderRequest } from '@/lib/types';
 export const queryKeys = {
   products: (params?: Record<string, unknown>) => ['products', params] as const,
   featuredProducts: ['products', 'featured'] as const,
-  product: (id: number) => ['product', id] as const,
+  product: (id: number, varianteId?: number) => 
+    varianteId ? ['product', id, 'variant', varianteId] as const : ['product', id] as const,
   categories: ['categories'] as const,
   order: (id: number) => ['order', id] as const,
 };
@@ -93,7 +94,7 @@ export function useFeaturedProducts() {
  */
 export function useProduct(id: number, varianteId?: number) {
   return useQuery({
-    queryKey: queryKeys.product(id),
+    queryKey: queryKeys.product(id, varianteId),
     queryFn: () => api.getProduct(id, varianteId),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
