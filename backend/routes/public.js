@@ -54,13 +54,25 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     es_producto_compuesto: joya.es_producto_compuesto || false
   };
 
+  // If this is a variant expansion, override image and name
   if (varianteInfo) {
     product.es_variante = true;
     product.variante_id = varianteInfo.id;
     product.variante_nombre = varianteInfo.nombre_variante;
     product.nombre = `${joya.nombre} - ${varianteInfo.nombre_variante}`;
-    product.imagen_url = varianteInfo.imagen_url;
+    product.imagen_url = varianteInfo.imagen_url; // CRITICAL: Use variant's specific image
     product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
+    
+    // For variants, the main image should be the variant image
+    // Override imagenes array to show only the variant image as primary
+    product.imagenes = [
+      {
+        id: 0,
+        url: varianteInfo.imagen_url,
+        orden: 0,
+        es_principal: true
+      }
+    ];
   }
 
   if (includeStock) {
@@ -118,30 +130,66 @@ router.get('/products', async (req, res) => {
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
+    
+    console.log(`📦 Procesando ${resultado.joyas.length} productos de la DB`);
+    
     // Bulk fetch images for all products to avoid N+1 queries
-const joyaIds = resultado.joyas.map(j => j.id);
-const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
+    const joyaIds = resultado.joyas.map(j => j.id);
+    const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
 
-const productosExpandidos = [];
+    // Bulk fetch variants for products marked as es_producto_variante to avoid N+1 queries
+    const joyasConVariantes = resultado.joyas.filter(j => j.es_producto_variante);
+    let variantesByProducto = {};
 
-for (const joya of resultado.joyas) {
-  const imagenes = imagesByJoya[joya.id] || [];
-  joya.imagenes = imagenes.map(img => ({
-    id: img.id,
-    url: img.imagen_url,
-    orden: img.orden_display,
-    es_principal: img.es_principal
-  }));
-
-  if (joya.es_producto_variante) {
-    const variantes = await VarianteProducto.obtenerPorProducto(joya.id, true);
-    for (const variante of variantes) {
-      productosExpandidos.push(transformToPublicProduct(joya, false, variante));
+    if (joyasConVariantes.length > 0) {
+      const variantesIds = joyasConVariantes.map(j => j.id);
+      
+      // Fetch all variants for all parent products in a single database query
+      variantesByProducto = await VarianteProducto.obtenerPorProductos(variantesIds, true);
     }
-  } else {
-    productosExpandidos.push(transformToPublicProduct(joya));
-  }
-}
+
+    const productosExpandidos = [];
+    const procesadosIds = new Set(); // Track processed parent products to avoid duplicates
+
+    for (const joya of resultado.joyas) {
+      // Skip if this product was already processed
+      if (procesadosIds.has(joya.id)) {
+        console.warn(`⚠️  Producto duplicado detectado: ${joya.id} - ${joya.codigo}. Saltando...`);
+        continue;
+      }
+      procesadosIds.add(joya.id);
+
+      const imagenes = imagesByJoya[joya.id] || [];
+      
+      // Don't mutate joya directly - create new object for images
+      const joyaConImagenes = {
+        ...joya,
+        imagenes: imagenes.map(img => ({
+          id: img.id,
+          url: img.imagen_url,
+          orden: img.orden_display,
+          es_principal: img.es_principal
+        }))
+      };
+
+      if (joyaConImagenes.es_producto_variante) {
+        const variantes = variantesByProducto[joyaConImagenes.id] || [];
+        
+        if (variantes.length === 0) {
+          console.warn(`⚠️  Producto ${joyaConImagenes.codigo} marcado como variante pero sin variantes activas`);
+          continue; // Don't show parent if it has no active variants
+        }
+        
+        for (const variante of variantes) {
+          productosExpandidos.push(transformToPublicProduct(joyaConImagenes, false, variante));
+        }
+      } else {
+        productosExpandidos.push(transformToPublicProduct(joyaConImagenes));
+      }
+    }
+    
+    console.log(`📦 Productos únicos después de deduplicación: ${procesadosIds.size}`);
+    console.log(`📦 Productos expandidos finales (con variantes): ${productosExpandidos.length}`);
     res.json({
       products: productosExpandidos,
       total: resultado.total, // Total products in database matching filters
