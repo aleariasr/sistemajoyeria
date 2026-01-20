@@ -38,52 +38,54 @@ function generateProductSlug(codigo, nombre) {
  * @returns {Object} Public product object
  */
 function transformToPublicProduct(joya, includeStock = false, varianteInfo = null) {
-  let product = {
-    id: joya.id,
-    codigo: joya.codigo,
-    nombre: joya.nombre,
-    descripcion: joya.descripcion,
-    categoria: joya.categoria,
-    precio: joya.precio_venta,
-    moneda: joya.moneda,
-    stock_disponible: joya.stock_actual > 0,
-    imagen_url: joya.imagen_url,
-    // CRITICAL: Clone imagenes array to avoid mutation issues
-    imagenes: joya.imagenes ? [...joya.imagenes] : [],
-    slug: generateProductSlug(joya.codigo, joya.nombre),
-    // NOTE: We include es_producto_compuesto but NOT es_producto_variante for public API
-    // Each variant is treated as an independent product in the storefront
-    es_producto_compuesto: joya.es_producto_compuesto || false
-  };
-
-  // If this is a variant, transform it to appear as a completely independent product
+  let product;
+  
+  // CRITICAL FIX: For variants, build product ONLY from variant data + parent basics
+  // This prevents object mutation issues where all variants share the same imagenes array
   if (varianteInfo) {
-    product.variante_id = varianteInfo.id; // Keep for cart tracking
-    // NEW REQUIREMENT: Use ONLY the variant name, not "Parent - Variant"
-    product.nombre = varianteInfo.nombre_variante;
-    product.imagen_url = varianteInfo.imagen_url; // CRITICAL: Use variant's specific image
-    product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
-    
-    // Override imagenes array to show only the variant image
-    // This ensures the detail page displays only this variant's image
-    product.imagenes = [
-      {
+    // Build product structure directly from variant data to avoid shared references
+    product = {
+      id: joya.id,
+      codigo: joya.codigo,
+      nombre: varianteInfo.nombre_variante,  // ONLY variant name
+      descripcion: varianteInfo.descripcion_variante || joya.descripcion,
+      categoria: joya.categoria,
+      precio: joya.precio_venta,
+      moneda: joya.moneda,
+      stock_disponible: joya.stock_actual > 0,
+      imagen_url: varianteInfo.imagen_url,  // ONLY variant image
+      // Create NEW array with ONLY variant image, NOT parent's images
+      // This prevents mutation of shared parent imagenes array
+      imagenes: [{
         id: 0,
         url: varianteInfo.imagen_url,
         orden: 0,
         es_principal: true
-      }
-    ];
-    
-    // Update slug to reflect the variant name
-    product.slug = generateProductSlug(joya.codigo, product.nombre);
-    
-    // CRITICAL: Add unique key for deduplication across pages
-    // Format: "productId-variantId" to uniquely identify each variant
-    product._uniqueKey = `${joya.id}-${varianteInfo.id}`;
+      }],
+      slug: generateProductSlug(joya.codigo, varianteInfo.nombre_variante),
+      es_producto_compuesto: false,  // Variants cannot be sets
+      variante_id: varianteInfo.id,  // Keep for cart tracking
+      _uniqueKey: `${joya.id}-${varianteInfo.id}`  // Unique identifier
+    };
   } else {
-    // For non-variant products, use only product ID as unique key
-    product._uniqueKey = `${joya.id}`;
+    // For non-variants, use parent data normally
+    product = {
+      id: joya.id,
+      codigo: joya.codigo,
+      nombre: joya.nombre,
+      descripcion: joya.descripcion,
+      categoria: joya.categoria,
+      precio: joya.precio_venta,
+      moneda: joya.moneda,
+      stock_disponible: joya.stock_actual > 0,
+      imagen_url: joya.imagen_url,
+      // Deep clone imagenes array to prevent mutation
+      // Use JSON parse/stringify for complete deep clone
+      imagenes: joya.imagenes ? JSON.parse(JSON.stringify(joya.imagenes)) : [],
+      slug: generateProductSlug(joya.codigo, joya.nombre),
+      es_producto_compuesto: joya.es_producto_compuesto || false,
+      _uniqueKey: `${joya.id}`
+    };
   }
 
   if (includeStock) {
@@ -214,6 +216,9 @@ router.get('/products', async (req, res) => {
         
         console.log(`📦 [Página ${pagina}] Expandiendo ${joyaConImagenes.codigo}: ${variantes.length} variantes`);
         
+        // CRITICAL: Each variant creates its own independent product object
+        // The transformToPublicProduct function now builds variant products
+        // directly from variant data to prevent object mutation issues
         for (const variante of variantes) {
           productosExpandidos.push(transformToPublicProduct(joyaConImagenes, false, variante));
         }
