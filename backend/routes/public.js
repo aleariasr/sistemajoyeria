@@ -253,20 +253,35 @@ router.get('/products', async (req, res) => {
     console.log(`📦 [Página ${pagina}] Productos únicos después de deduplicación: ${procesadosIds.size}`);
     console.log(`📦 [Página ${pagina}] Productos expandidos (individuales): ${productosExpandidos.length}`);
     
-    // CRITICAL FIX: Since we expand all variants in this page response,
-    // both 'total' and 'total_products' reflect the number of individual products after expansion.
-    // This fixes the "106 de 68" counter bug where total was DB count and total_products was expanded count.
-    // 
-    // NOTE: total_pages and has_more are based on PARENT products from DB pagination
-    // because variants are expanded per-page, not globally. This maintains proper pagination.
+    // CRITICAL FIX: Deduplicate by _uniqueKey to prevent duplicates across pages
+    // This ensures each variant appears only once in the response
+    const productosUnicos = Array.from(
+      new Map(productosExpandidos.map(p => [p._uniqueKey, p])).values()
+    );
+    
+    console.log(`📦 [Página ${pagina}] Después de deduplicar por _uniqueKey: ${productosUnicos.length}`);
+    
+    // CRITICAL FIX: For total count, we need to estimate based on parent products
+    // Since we can't efficiently expand ALL variants on every request, we use a reasonable estimate:
+    // - Total parent products from DB * average expansion ratio
+    // - Or for first page only, calculate the exact ratio and use it
+    let totalGlobalVariantes = resultado.total; // Start with parent product count
+    
+    // Calculate expansion ratio from current page to estimate total
+    if (joyasUnicas.length > 0) {
+      const expansionRatio = productosUnicos.length / joyasUnicas.length;
+      totalGlobalVariantes = Math.ceil(resultado.total * expansionRatio);
+      console.log(`📦 [Página ${pagina}] Ratio de expansión: ${expansionRatio.toFixed(2)}, Total estimado: ${totalGlobalVariantes}`);
+    }
+    
     res.json({
-      products: productosExpandidos,
-      total: productosExpandidos.length, // Total individual products in this page (after variant expansion)
-      total_products: productosExpandidos.length, // Same as total - kept for API compatibility
+      products: productosUnicos,
+      total: totalGlobalVariantes, // FIXED: Estimated global total of all eligible variants
+      total_products: totalGlobalVariantes, // Same as total - kept for API compatibility
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: resultado.total_paginas, // Based on parent product pagination from DB
-      has_more: resultado.pagina < resultado.total_paginas // More parent products to load
+      total_pages: Math.max(1, Math.ceil(totalGlobalVariantes / porPagina)), // Recalculate based on estimated variants
+      has_more: resultado.pagina < Math.ceil(totalGlobalVariantes / porPagina) // More variants to load
     });
   } catch (error) {
     console.error('Error fetching public products:', error);

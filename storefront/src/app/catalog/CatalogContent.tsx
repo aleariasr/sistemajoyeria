@@ -119,7 +119,7 @@ export default function CatalogContent() {
     // Deduplicate by _uniqueKey (provided by backend as product_id-variante_id or product_id)
     // This prevents the same product-variant combination from appearing multiple times
     const uniqueProducts = Array.from(
-      new Map(allProducts.map(p => [p._uniqueKey, p])).values()
+      new Map(allProducts.map(p => [p._uniqueKey || `${p.id}-${p.variante_id || 0}`, p])).values()
     );
     
     console.log(`📦 [Frontend] Total productos de ${data.pages.length} páginas: ${allProducts.length}`);
@@ -128,8 +128,9 @@ export default function CatalogContent() {
     return uniqueProducts;
   }, [data]);
 
-  // Total count from first page
-  const totalCount = data?.pages[0]?.total || 0;
+  // Total count: Use the total from the latest page (most accurate estimate)
+  // or fall back to first page total
+  const totalCount = data?.pages?.[data.pages.length - 1]?.total || data?.pages[0]?.total || 0;
 
   // Memoize fetchNextPage to prevent unnecessary useEffect re-runs
   const handleFetchNextPage = useCallback(() => {
