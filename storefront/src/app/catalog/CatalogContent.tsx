@@ -116,13 +116,10 @@ export default function CatalogContent() {
     
     const allProducts = data.pages.flatMap(page => page.products);
     
-    // Deduplicate by _uniqueKey (product_id-variante_id or product_id for non-variants)
+    // Deduplicate by _uniqueKey (provided by backend as product_id-variante_id or product_id)
     // This prevents the same product-variant combination from appearing multiple times
     const uniqueProducts = Array.from(
-      new Map(allProducts.map(p => [
-        p._uniqueKey || `${p.id}-${p.variante_id || 0}`,
-        p
-      ])).values()
+      new Map(allProducts.map(p => [p._uniqueKey, p])).values()
     );
     
     console.log(`📦 [Frontend] Total productos de ${data.pages.length} páginas: ${allProducts.length}`);

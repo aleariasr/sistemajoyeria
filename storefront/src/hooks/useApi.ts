@@ -74,7 +74,6 @@ export function useInfiniteProducts(params?: {
     // Disable refetch on window focus to avoid unnecessary re-fetching
     // Users can manually refresh if needed
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 }
 
