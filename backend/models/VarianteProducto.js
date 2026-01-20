@@ -25,9 +25,14 @@ class VarianteProducto {
       activo
     } = varianteData;
 
-    // Validate required fields
+    // ✅ Validar campos obligatorios
     if (!id_producto_padre || !nombre_variante || !imagen_url) {
       throw new Error('Missing required fields: id_producto_padre, nombre_variante, imagen_url');
+    }
+
+    // ✅ Validar que nombre_variante no esté vacío
+    if (!nombre_variante.trim()) {
+      throw new Error('nombre_variante cannot be empty');
     }
 
     // Validate imagen_url is from Cloudinary (security)

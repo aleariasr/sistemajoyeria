@@ -92,8 +92,11 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     product.stock = joya.stock_actual;
   }
 
-  // Validar y limpiar imágenes para asegurar consistencia
-  product = ensureProductHasValidImages(product);
+  // ✅ CRÍTICO: NO aplicar ensureProductHasValidImages a variantes
+  // Las variantes ya tienen su imagen correcta en el objeto
+  if (!varianteInfo) {
+    product = ensureProductHasValidImages(product);
+  }
 
   // CRITICAL: DO NOT include variants array in the response
   // Each variant is treated as an individual product
@@ -205,30 +208,31 @@ router.get('/products', async (req, res) => {
         
         console.log(`📦 [Página ${pagina}] Expandiendo ${joya.codigo}: ${variantes.length} variantes`);
         
-        // CRITICAL: Create COMPLETELY NEW object for EACH variant using deep clone
-        // This prevents object mutation where all variants share the same references
+        // ✅ SOLUCIÓN: Pasar el objeto joya directamente, transformToPublicProduct lo maneja
+        // NO crear joyaParaVariante clonado con datos del padre
+        // transformToPublicProduct ya construye correctamente el producto desde la variante
         for (const variante of variantes) {
-          // Deep clone COMPLETE joya object for each variant to avoid ANY shared references
-          const joyaParaVariante = JSON.parse(JSON.stringify({
-            id: joya.id,
-            codigo: joya.codigo,
-            nombre: joya.nombre,
-            descripcion: joya.descripcion,
-            categoria: joya.categoria,
-            precio_venta: joya.precio_venta,
-            moneda: joya.moneda,
-            stock_actual: joya.stock_actual,
-            es_producto_compuesto: joya.es_producto_compuesto || false,
+          console.log(`📦 [Página ${pagina}] Expandiendo variante ${variante.id}: ${variante.nombre_variante}`);
+          
+          // ✅ Pasar joya original con imagenes ya cargadas
+          const joyaConImagenes = {
+            ...joya,
             imagenes: imagenes.map(img => ({
               id: img.id,
               url: img.imagen_url,
               orden: img.orden_display,
               es_principal: img.es_principal
             }))
-          }));
+          };
           
-          // Use transformToPublicProduct to ensure consistent transformation
-          productosExpandidos.push(transformToPublicProduct(joyaParaVariante, false, variante));
+          const productoVariante = transformToPublicProduct(joyaConImagenes, false, variante);
+          console.log(`📦 [Página ${pagina}] Variante expandida:`, {
+            id: variante.id,
+            nombre: productoVariante.nombre,
+            imagen: productoVariante.imagen_url,
+            producto_padre: joya.codigo
+          });
+          productosExpandidos.push(productoVariante);
         }
       } else {
         // Normal product (no variants) - use transformToPublicProduct for consistency
