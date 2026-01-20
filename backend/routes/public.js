@@ -276,12 +276,12 @@ router.get('/products', async (req, res) => {
     console.log(`📦 [Página ${pagina}] Productos expandidos (individuales): ${productosExpandidos.length}`);
     
     // CRITICAL FIX: Since we treat each variant as an independent product,
-    // the total should reflect the number of individual products (after expansion),
-    // not the database count. This fixes the "106 de 68" counter bug.
+    // both 'total' and 'total_products' reflect the number of individual products after expansion.
+    // This fixes the "106 de 68" counter bug where total was DB count and total_products was expanded count.
     res.json({
       products: productosExpandidos,
-      total: productosExpandidos.length, // FIXED: Total individual products (after variant expansion)
-      total_products: productosExpandidos.length, // Same as total for consistency
+      total: productosExpandidos.length, // Total individual products in this page (after variant expansion)
+      total_products: productosExpandidos.length, // Same as total - kept for API compatibility
       page: resultado.pagina,
       per_page: resultado.por_pagina,
       // NOTE: total_pages and has_more are based on PARENT products from DB pagination

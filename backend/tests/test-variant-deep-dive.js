@@ -381,9 +381,9 @@ function testMultipleProductsWithVariants() {
 // MAIN
 // ==========================================
 async function main() {
-  log('\n' + '█'.repeat(70), 'magenta');
-  log('█  DEEP DIVE: VARIANT DISPLAY BUG INVESTIGATION', 'magenta');
-  log('█'.repeat(70) + '\n', 'magenta');
+  log('\n' + '='.repeat(70), 'magenta');
+  log('  DEEP DIVE: VARIANT DISPLAY BUG INVESTIGATION', 'magenta');
+  log('='.repeat(70) + '\n', 'magenta');
   
   const test1 = testSimple3Variants();
   const test2 = testMultipleProductsWithVariants();
