@@ -195,48 +195,99 @@ router.get('/products', async (req, res) => {
 
       const imagenes = imagesByJoya[joya.id] || [];
       
-      // Don't mutate joya directly - create new object for images
-      const joyaConImagenes = {
-        ...joya,
-        imagenes: imagenes.map(img => ({
-          id: img.id,
-          url: img.imagen_url,
-          orden: img.orden_display,
-          es_principal: img.es_principal
-        }))
-      };
-
-      if (joyaConImagenes.es_producto_variante) {
-        const variantes = variantesByProducto[joyaConImagenes.id] || [];
+      // Don't mutate joya - keep it as source of truth
+      if (joya.es_producto_variante) {
+        const variantes = variantesByProducto[joya.id] || [];
         
         if (variantes.length === 0) {
-          console.warn(`⚠️  [Página ${pagina}] Producto ${joyaConImagenes.codigo} sin variantes activas`);
+          console.warn(`⚠️  [Página ${pagina}] Producto ${joya.codigo} sin variantes activas`);
           continue; // Don't show parent if it has no active variants
         }
         
-        console.log(`📦 [Página ${pagina}] Expandiendo ${joyaConImagenes.codigo}: ${variantes.length} variantes`);
+        console.log(`📦 [Página ${pagina}] Expandiendo ${joya.codigo}: ${variantes.length} variantes`);
         
-        // CRITICAL: Each variant creates its own independent product object
-        // The transformToPublicProduct function now builds variant products
-        // directly from variant data to prevent object mutation issues
+        // CRITICAL: Create COMPLETELY NEW object for EACH variant
+        // Build product from scratch to avoid any shared references
         for (const variante of variantes) {
-          productosExpandidos.push(transformToPublicProduct(joyaConImagenes, false, variante));
+          // Build product structure directly from variant data
+          let productoVariante = {
+            // Parent data (immutable)
+            id: joya.id,
+            codigo: joya.codigo,
+            categoria: joya.categoria,
+            precio: joya.precio_venta,
+            moneda: joya.moneda,
+            stock_disponible: joya.stock_actual > 0,
+            stock_actual: joya.stock_actual,
+            es_producto_compuesto: false,
+            
+            // Variant-specific data (UNIQUE to this variant)
+            variante_id: variante.id,
+            nombre: variante.nombre_variante,
+            descripcion: variante.descripcion_variante || joya.descripcion,
+            imagen_url: variante.imagen_url,
+            imagenes: [{
+              id: 0,
+              url: variante.imagen_url,
+              orden: 0,
+              es_principal: true
+            }],
+            slug: generateProductSlug(joya.codigo, variante.nombre_variante),
+            _uniqueKey: `${joya.id}-${variante.id}`
+          };
+          
+          // Apply validation AFTER building complete object
+          productoVariante = ensureProductHasValidImages(productoVariante);
+          
+          productosExpandidos.push(productoVariante);
         }
       } else {
-        productosExpandidos.push(transformToPublicProduct(joyaConImagenes));
+        // Normal product (no variants)
+        let productoNormal = {
+          id: joya.id,
+          codigo: joya.codigo,
+          nombre: joya.nombre,
+          descripcion: joya.descripcion,
+          categoria: joya.categoria,
+          precio: joya.precio_venta,
+          moneda: joya.moneda,
+          stock_disponible: joya.stock_actual > 0,
+          stock_actual: joya.stock_actual,
+          imagen_url: joya.imagen_url,
+          imagenes: imagenes.map(img => ({
+            id: img.id,
+            url: img.imagen_url,
+            orden: img.orden_display,
+            es_principal: img.es_principal
+          })),
+          slug: generateProductSlug(joya.codigo, joya.nombre),
+          es_producto_compuesto: joya.es_producto_compuesto || false,
+          _uniqueKey: `${joya.id}`
+        };
+        
+        // Apply validation AFTER building complete object
+        productoNormal = ensureProductHasValidImages(productoNormal);
+        
+        productosExpandidos.push(productoNormal);
       }
     }
     
     console.log(`📦 [Página ${pagina}] Productos únicos después de deduplicación: ${procesadosIds.size}`);
-    console.log(`📦 [Página ${pagina}] Productos expandidos: ${productosExpandidos.length}`);
+    console.log(`📦 [Página ${pagina}] Productos expandidos (individuales): ${productosExpandidos.length}`);
+    
+    // CRITICAL FIX: Since we treat each variant as an independent product,
+    // the total should reflect the number of individual products (after expansion),
+    // not the database count. This fixes the "106 de 68" counter bug.
     res.json({
       products: productosExpandidos,
-      total: resultado.total, // Total products in database matching filters
-      total_products: productosExpandidos.length, // Products returned in this page (after variant expansion)
+      total: productosExpandidos.length, // FIXED: Total individual products (after variant expansion)
+      total_products: productosExpandidos.length, // Same as total for consistency
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: resultado.total_paginas, // Total pages based on database count
-      has_more: resultado.pagina < resultado.total_paginas // Indicates if there are more pages
+      // NOTE: total_pages and has_more are based on PARENT products from DB pagination
+      // This is intentional to maintain proper pagination across pages
+      total_pages: resultado.total_paginas,
+      has_more: resultado.pagina < resultado.total_paginas
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
