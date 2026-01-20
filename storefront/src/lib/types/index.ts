@@ -46,6 +46,7 @@ export interface Product {
   variante_nombre?: string; // Variant name if this is a variant
   variantes?: ProductVariant[]; // Available variants if this product has them
   componentes?: ProductComponent[]; // Components if this is a set
+  _uniqueKey?: string; // Unique key for deduplication (product_id-variant_id)
 }
 
 /**
