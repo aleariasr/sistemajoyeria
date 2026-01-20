@@ -272,12 +272,13 @@ async function testVariantsHaveUniqueNames() {
     } else {
       logSuccess(`Parent ${parentId}: All ${variants.length} variants have unique names`);
       
-      // Verify name format: "Parent - Variant"
-      const correctFormat = variants.every(v => v.nombre.includes(' - '));
-      if (correctFormat) {
-        logSuccess(`  All variant names follow "Parent - Variant" format`);
+      // NEW REQUIREMENT: Verify name format is ONLY variant name (no parent name)
+      // Should NOT contain " - " separator
+      const hasOldFormat = variants.some(v => v.nombre.includes(' - '));
+      if (hasOldFormat) {
+        logWarning(`  Some variant names still use old "Parent - Variant" format (should be variant only)`);
       } else {
-        logWarning(`  Some variant names don't follow expected format`);
+        logSuccess(`  All variant names use independent naming (variant only, no parent name)`);
       }
     }
   });

@@ -48,7 +48,8 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
     moneda: joya.moneda,
     stock_disponible: joya.stock_actual > 0,
     imagen_url: joya.imagen_url,
-    imagenes: joya.imagenes || [],
+    // CRITICAL: Clone imagenes array to avoid mutation issues
+    imagenes: joya.imagenes ? [...joya.imagenes] : [],
     slug: generateProductSlug(joya.codigo, joya.nombre),
     // NOTE: We include es_producto_compuesto but NOT es_producto_variante for public API
     // Each variant is treated as an independent product in the storefront
@@ -58,7 +59,8 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
   // If this is a variant, transform it to appear as a completely independent product
   if (varianteInfo) {
     product.variante_id = varianteInfo.id; // Keep for cart tracking
-    product.nombre = `${joya.nombre} - ${varianteInfo.nombre_variante}`;
+    // NEW REQUIREMENT: Use ONLY the variant name, not "Parent - Variant"
+    product.nombre = varianteInfo.nombre_variante;
     product.imagen_url = varianteInfo.imagen_url; // CRITICAL: Use variant's specific image
     product.descripcion = varianteInfo.descripcion_variante || joya.descripcion;
     
@@ -73,7 +75,7 @@ function transformToPublicProduct(joya, includeStock = false, varianteInfo = nul
       }
     ];
     
-    // Update slug to reflect the full variant name
+    // Update slug to reflect the variant name
     product.slug = generateProductSlug(joya.codigo, product.nombre);
   }
 
@@ -140,27 +142,41 @@ router.get('/products', async (req, res) => {
 
     const resultado = await Joya.obtenerTodas(filtros);
     
-    console.log(`📦 Procesando ${resultado.joyas.length} productos de la DB`);
+    console.log(`📦 Productos de DB: ${resultado.joyas.length}`);
+    
+    // CRITICAL: Deduplicate products by ID in case database query returns duplicates
+    const joyasUnicas = Array.from(
+      new Map(resultado.joyas.map(j => [j.id, j])).values()
+    );
+    
+    console.log(`📦 Después de deduplicar: ${joyasUnicas.length}`);
     
     // Bulk fetch images for all products to avoid N+1 queries
-    const joyaIds = resultado.joyas.map(j => j.id);
+    const joyaIds = joyasUnicas.map(j => j.id);
     const imagesByJoya = await ImagenJoya.obtenerPorJoyas(joyaIds);
 
     // Bulk fetch variants for products marked as es_producto_variante to avoid N+1 queries
-    const joyasConVariantes = resultado.joyas.filter(j => j.es_producto_variante);
+    const joyasConVariantes = joyasUnicas.filter(j => j.es_producto_variante);
     let variantesByProducto = {};
 
     if (joyasConVariantes.length > 0) {
+      console.log(`📦 Productos con variantes: ${joyasConVariantes.length}`);
       const variantesIds = joyasConVariantes.map(j => j.id);
       
       // Fetch all variants for all parent products in a single database query
       variantesByProducto = await VarianteProducto.obtenerPorProductos(variantesIds, true);
+      
+      // Log variant counts for debugging
+      Object.keys(variantesByProducto).forEach(joyaId => {
+        const variantes = variantesByProducto[joyaId];
+        console.log(`📦 Producto ${joyaId}: ${variantes.length} variantes`);
+      });
     }
 
     const productosExpandidos = [];
     const procesadosIds = new Set(); // Track processed parent products to avoid duplicates
 
-    for (const joya of resultado.joyas) {
+    for (const joya of joyasUnicas) {
       // Skip if this product was already processed
       if (procesadosIds.has(joya.id)) {
         console.warn(`⚠️  Producto duplicado detectado: ${joya.id} - ${joya.codigo}. Saltando...`);
@@ -189,6 +205,8 @@ router.get('/products', async (req, res) => {
           continue; // Don't show parent if it has no active variants
         }
         
+        console.log(`📦 Expandiendo ${joyaConImagenes.codigo}: ${variantes.length} variantes`);
+        
         for (const variante of variantes) {
           productosExpandidos.push(transformToPublicProduct(joyaConImagenes, false, variante));
         }
@@ -198,7 +216,7 @@ router.get('/products', async (req, res) => {
     }
     
     console.log(`📦 Productos únicos después de deduplicación: ${procesadosIds.size}`);
-    console.log(`📦 Productos expandidos finales (con variantes): ${productosExpandidos.length}`);
+    console.log(`📦 Productos finales en respuesta: ${productosExpandidos.length}`);
     res.json({
       products: productosExpandidos,
       total: resultado.total, // Total products in database matching filters
