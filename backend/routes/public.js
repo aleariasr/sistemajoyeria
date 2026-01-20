@@ -268,11 +268,15 @@ router.get('/products', async (req, res) => {
     let totalGlobalVariantes = resultado.total; // Start with parent product count
     
     // Calculate expansion ratio from current page to estimate total
-    if (joyasUnicas.length > 0) {
+    // Ensure we don't divide by zero
+    if (joyasUnicas.length > 0 && productosUnicos.length > 0) {
       const expansionRatio = productosUnicos.length / joyasUnicas.length;
       totalGlobalVariantes = Math.ceil(resultado.total * expansionRatio);
       console.log(`📦 [Página ${pagina}] Ratio de expansión: ${expansionRatio.toFixed(2)}, Total estimado: ${totalGlobalVariantes}`);
     }
+    
+    // Calculate total pages based on estimated total variants
+    const totalPagesEstimated = Math.max(1, Math.ceil(totalGlobalVariantes / porPagina));
     
     res.json({
       products: productosUnicos,
@@ -280,8 +284,8 @@ router.get('/products', async (req, res) => {
       total_products: totalGlobalVariantes, // Same as total - kept for API compatibility
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: Math.max(1, Math.ceil(totalGlobalVariantes / porPagina)), // Recalculate based on estimated variants
-      has_more: resultado.pagina < Math.ceil(totalGlobalVariantes / porPagina) // More variants to load
+      total_pages: totalPagesEstimated, // Recalculate based on estimated variants
+      has_more: resultado.pagina < totalPagesEstimated // More variants to load
     });
   } catch (error) {
     console.error('Error fetching public products:', error);
