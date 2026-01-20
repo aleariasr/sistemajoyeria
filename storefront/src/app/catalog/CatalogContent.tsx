@@ -110,9 +110,22 @@ export default function CatalogContent() {
   // Fetch categories
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
 
-  // Flatten all pages into a single products array
+  // Flatten all pages into a single products array AND deduplicate across pages
   const products = useMemo(() => {
-    return data?.pages.flatMap(page => page.products) || [];
+    if (!data?.pages) return [];
+    
+    const allProducts = data.pages.flatMap(page => page.products);
+    
+    // Deduplicate by _uniqueKey (provided by backend as product_id-variante_id or product_id)
+    // This prevents the same product-variant combination from appearing multiple times
+    const uniqueProducts = Array.from(
+      new Map(allProducts.map(p => [p._uniqueKey, p])).values()
+    );
+    
+    console.log(`📦 [Frontend] Total productos de ${data.pages.length} páginas: ${allProducts.length}`);
+    console.log(`📦 [Frontend] Después de deduplicar: ${uniqueProducts.length}`);
+    
+    return uniqueProducts;
   }, [data]);
 
   // Total count from first page
