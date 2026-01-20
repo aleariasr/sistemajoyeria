@@ -176,7 +176,11 @@ function ProductGridComponent({
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
       {orderedProducts.map((product, index) => (
-        <ProductCard key={product.id} product={product} index={index} />
+        <ProductCard 
+          key={product._uniqueKey || `product-${product.id}-${product.variante_id || 0}`} 
+          product={product} 
+          index={index} 
+        />
       ))}
     </div>
   );
