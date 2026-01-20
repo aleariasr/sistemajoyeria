@@ -177,7 +177,7 @@ function ProductGridComponent({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
       {orderedProducts.map((product, index) => (
         <ProductCard 
-          key={product._uniqueKey || `product-${product.id}-${product.variante_id || 0}`} 
+          key={product._uniqueKey || `fallback-${product.id}-${product.variante_id || 0}-${index}`} 
           product={product} 
           index={index} 
         />

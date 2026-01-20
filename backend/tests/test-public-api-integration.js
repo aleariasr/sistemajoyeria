@@ -368,6 +368,82 @@ function testFullEndpointFlow() {
   return true;
 }
 
+function testDeduplication() {
+  logInfo('\n=== Test 4: Deduplication by _uniqueKey ===\n');
+  
+  const { joyasFromDB, imagesByJoya, variantesByProducto } = createRealisticProductData();
+  
+  // Simulate getting products
+  const productos = simulateGetProductsEndpoint(joyasFromDB, imagesByJoya, variantesByProducto);
+  
+  // Add duplicate products
+  const productosConDuplicados = [...productos, ...productos];
+  
+  logData(`Products with duplicates: ${productosConDuplicados.length}`);
+  
+  // Deduplicate by _uniqueKey (simulating backend fix)
+  const productosUnicos = Array.from(
+    new Map(productosConDuplicados.map(p => [p._uniqueKey, p])).values()
+  );
+  
+  logData(`After deduplication: ${productosUnicos.length}`);
+  
+  if (productosUnicos.length !== productos.length) {
+    logError(`FAILED: Deduplication didn't work correctly`);
+    logError(`Expected ${productos.length}, got ${productosUnicos.length}`);
+    return false;
+  }
+  
+  // Validate all _uniqueKeys are unique
+  const uniqueKeys = productosUnicos.map(p => p._uniqueKey);
+  const uniqueKeysSet = new Set(uniqueKeys);
+  
+  if (uniqueKeys.length !== uniqueKeysSet.size) {
+    logError(`FAILED: Some products have duplicate _uniqueKeys`);
+    return false;
+  }
+  
+  logSuccess('Test 4 PASSED: Deduplication by _uniqueKey works correctly');
+  return true;
+}
+
+function testUniqueKeyFormat() {
+  logInfo('\n=== Test 5: _uniqueKey Format Validation ===\n');
+  
+  const { joyasFromDB, imagesByJoya, variantesByProducto } = createRealisticProductData();
+  const productos = simulateGetProductsEndpoint(joyasFromDB, imagesByJoya, variantesByProducto);
+  
+  // Validate all products have _uniqueKey
+  for (const producto of productos) {
+    if (!producto._uniqueKey) {
+      logError(`FAILED: Product ${producto.codigo} missing _uniqueKey`);
+      return false;
+    }
+    
+    // Validate format
+    if (producto.variante_id) {
+      // Variant should have format: "productId-variantId"
+      const expectedKey = `${producto.id}-${producto.variante_id}`;
+      if (producto._uniqueKey !== expectedKey) {
+        logError(`FAILED: Variant ${producto.codigo} has wrong _uniqueKey format`);
+        logError(`Expected: ${expectedKey}, Got: ${producto._uniqueKey}`);
+        return false;
+      }
+    } else {
+      // Regular product should have format: "productId"
+      const expectedKey = `${producto.id}`;
+      if (producto._uniqueKey !== expectedKey) {
+        logError(`FAILED: Product ${producto.codigo} has wrong _uniqueKey format`);
+        logError(`Expected: ${expectedKey}, Got: ${producto._uniqueKey}`);
+        return false;
+      }
+    }
+  }
+  
+  logSuccess('Test 5 PASSED: All _uniqueKeys have correct format');
+  return true;
+}
+
 function testApiResponseFormat() {
   logInfo('\n=== Test 2: API Response Format Validation ===\n');
   
@@ -465,7 +541,9 @@ async function runAllTests() {
   const tests = [
     { name: 'Full Endpoint Flow with Realistic Data', fn: testFullEndpointFlow },
     { name: 'API Response Format Validation', fn: testApiResponseFormat },
-    { name: 'Verify Original Bug is Fixed', fn: testNoRegressionWithOriginalBug }
+    { name: 'Verify Original Bug is Fixed', fn: testNoRegressionWithOriginalBug },
+    { name: 'Deduplication by _uniqueKey', fn: testDeduplication },
+    { name: '_uniqueKey Format Validation', fn: testUniqueKeyFormat }
   ];
 
   const results = [];
@@ -521,5 +599,7 @@ if (require.main === module) {
 module.exports = {
   testFullEndpointFlow,
   testApiResponseFormat,
-  testNoRegressionWithOriginalBug
+  testNoRegressionWithOriginalBug,
+  testDeduplication,
+  testUniqueKeyFormat
 };
