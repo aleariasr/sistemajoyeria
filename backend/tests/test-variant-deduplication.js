@@ -100,7 +100,8 @@ async function testNoProductDuplication() {
   const variantIds = new Set();
   
   products.forEach(product => {
-    if (product.es_variante) {
+    // Products with variante_id are expanded variants
+    if (product.variante_id) {
       variantIds.add(product.variante_id);
       // Track how many times each parent product appears as a variant
       parentIds.set(product.id, (parentIds.get(product.id) || 0) + 1);
@@ -117,7 +118,7 @@ async function testNoProductDuplication() {
       const sameParentProducts = products.filter(p => p.id === parentId);
       
       // Check if they have different variant names
-      const variantNames = new Set(sameParentProducts.map(p => p.variante_nombre));
+      const variantNames = new Set(sameParentProducts.map(p => p.nombre));
       
       if (variantNames.size !== sameParentProducts.length) {
         logError(`DUPLICATE DETECTED: Parent ${parentId} has ${sameParentProducts.length} entries but only ${variantNames.size} unique variants!`);
@@ -153,7 +154,7 @@ async function testVariantsHaveUniqueImages() {
   // Group variants by parent product
   const variantsByParent = {};
   products.forEach(product => {
-    if (product.es_variante) {
+    if (product.variante_id) {
       if (!variantsByParent[product.id]) {
         variantsByParent[product.id] = [];
       }
@@ -185,7 +186,7 @@ async function testVariantsHaveUniqueImages() {
         if (!imageMap[v.imagen_url]) {
           imageMap[v.imagen_url] = [];
         }
-        imageMap[v.imagen_url].push(v.variante_nombre);
+        imageMap[v.imagen_url].push(v.nombre);
       });
       
       Object.keys(imageMap).forEach(url => {
@@ -230,7 +231,7 @@ async function testVariantsHaveUniqueNames() {
   // Group variants by parent product
   const variantsByParent = {};
   products.forEach(product => {
-    if (product.es_variante) {
+    if (product.variante_id) {
       if (!variantsByParent[product.id]) {
         variantsByParent[product.id] = [];
       }
@@ -272,12 +273,13 @@ async function testVariantsHaveUniqueNames() {
     } else {
       logSuccess(`Parent ${parentId}: All ${variants.length} variants have unique names`);
       
-      // Verify name format: "Parent - Variant"
-      const correctFormat = variants.every(v => v.nombre.includes(' - '));
-      if (correctFormat) {
-        logSuccess(`  All variant names follow "Parent - Variant" format`);
+      // NEW REQUIREMENT: Verify name format is ONLY variant name (no parent name)
+      // Should NOT contain " - " separator
+      const hasOldFormat = variants.some(v => v.nombre.includes(' - '));
+      if (hasOldFormat) {
+        logWarning(`  Some variant names still use old "Parent - Variant" format (should be variant only)`);
       } else {
-        logWarning(`  Some variant names don't follow expected format`);
+        logSuccess(`  All variant names use independent naming (variant only, no parent name)`);
       }
     }
   });
