@@ -224,7 +224,7 @@ function testVariantsHaveUniqueImageObjects() {
  * This proves there's no shared reference
  */
 function testModifyingOneVariantDoesntAffectOthers() {
-  logInfo('\n=== Test 2: Modifying One Variant Doesn\'t Affect Others ===');
+  logInfo('\n=== Test 2: Modifying One Variant Does Not Affect Others ===');
   
   const joya = createMockJoya(1, 'PULSERA-001');
   
@@ -421,7 +421,7 @@ async function runAllTests() {
 
   const tests = [
     { name: 'Variants Have Unique Image Objects', fn: testVariantsHaveUniqueImageObjects },
-    { name: 'Modifying One Variant Doesn\'t Affect Others', fn: testModifyingOneVariantDoesntAffectOthers },
+    { name: 'Modifying One Variant Does Not Affect Others', fn: testModifyingOneVariantDoesntAffectOthers },
     { name: 'Variant Imagenes Array Structure', fn: testVariantImagenesArrayStructure },
     { name: 'Unique Keys Are Correct', fn: testUniqueKeysAreCorrect },
     { name: 'Exact Bug Scenario (3 Variants)', fn: testExactBugScenario }
