@@ -13,6 +13,8 @@ class MockSupabaseClient {
       movimientos_inventario: fixtures.movimientos_inventario || [],
       ventas: fixtures.ventas || [],
       items_venta: fixtures.items_venta || [],
+      ventas_dia: fixtures.ventas_dia || [],
+      items_venta_dia: fixtures.items_venta_dia || [],
       clientes: fixtures.clientes || [],
       cuentas_por_cobrar: fixtures.cuentas_por_cobrar || [],
       abonos: fixtures.abonos || []

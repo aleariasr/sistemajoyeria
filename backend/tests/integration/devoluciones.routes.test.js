@@ -444,11 +444,15 @@ describe('Devoluciones Routes Integration Tests', () => {
 
       const saleResponse = await adminAgent
         .post('/api/ventas')
-        
         .send(saleData);
 
-      const saleId = saleResponse.body.venta.id;
-      const itemVentaId = saleResponse.body.items[0].id;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get items
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const itemVentaId = saleDetails.body.items[0].id;
 
       const returnData = {
         id_venta: saleId,

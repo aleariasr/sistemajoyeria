@@ -186,11 +186,17 @@ const fixtures = {
   // Inventory movements
   movimientos_inventario: [],
 
-  // Sales
+  // Sales (main DB - for credit sales and historical)
   ventas: [],
 
-  // Sale items
+  // Sale items (main DB)
   items_venta: [],
+
+  // Daily sales (for cash sales before closure)
+  ventas_dia: [],
+
+  // Daily sale items
+  items_venta_dia: [],
 
   // Clients
   clientes: [
