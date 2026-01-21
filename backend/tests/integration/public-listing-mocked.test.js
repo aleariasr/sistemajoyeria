@@ -482,12 +482,13 @@ describe('Public Products Listing - Comprehensive Mocked Tests', () => {
         .get('/api/public/categories')
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body).toHaveProperty('categories');
+      expect(Array.isArray(response.body.categories)).toBe(true);
+      expect(response.body.categories.length).toBeGreaterThan(0);
       
       // Check uniqueness
-      const uniqueCategories = [...new Set(response.body)];
-      expect(response.body.length).toBe(uniqueCategories.length);
+      const uniqueCategories = [...new Set(response.body.categories)];
+      expect(response.body.categories.length).toBe(uniqueCategories.length);
     });
   });
 });
