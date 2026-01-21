@@ -203,7 +203,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
     });
 
     test('should reject unauthenticated requests', async () => {
-      const response = await adminAgent
+      const response = await request(app)
         .get('/api/cuentas-por-cobrar');
 
       expect(response.status).toBe(401);
@@ -586,7 +586,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         notas: 'Test'
       };
 
-      const response = await adminAgent
+      const response = await request(app)
         .post('/api/cuentas-por-cobrar/1/abonos')
         .send(abonoData);
 

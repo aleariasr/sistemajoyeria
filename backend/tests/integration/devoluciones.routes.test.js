@@ -387,7 +387,7 @@ describe('Devoluciones Routes Integration Tests', () => {
         metodo_reembolso: 'Efectivo'
       };
 
-      const response = await adminAgent
+      const response = await request(app)
         .post('/api/devoluciones')
         .send(returnData);
 
@@ -460,7 +460,7 @@ describe('Devoluciones Routes Integration Tests', () => {
     });
 
     test('should reject unauthenticated requests', async () => {
-      const response = await adminAgent
+      const response = await request(app)
         .get('/api/devoluciones');
 
       expect(response.status).toBe(401);

@@ -540,7 +540,7 @@ describe('Ventas Routes Integration Tests', () => {
           descuento: 0
         };
 
-        const response = await adminAgent
+        const response = await request(app)
           .post('/api/ventas')
           .send(saleData);
 
@@ -632,7 +632,7 @@ describe('Ventas Routes Integration Tests', () => {
     });
 
     test('should reject unauthenticated requests', async () => {
-      const response = await adminAgent
+      const response = await request(app)
         .get('/api/ventas/1');
 
       expect(response.status).toBe(401);

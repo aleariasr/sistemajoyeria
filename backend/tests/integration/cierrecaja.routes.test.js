@@ -259,7 +259,7 @@ describe('CierreCaja Routes Integration Tests', () => {
     });
 
     test('should reject unauthenticated requests', async () => {
-      const response = await adminAgent
+      const response = await request(app)
         .get('/api/cierrecaja/resumen-dia');
 
       expect(response.status).toBe(401);
@@ -455,7 +455,7 @@ describe('CierreCaja Routes Integration Tests', () => {
         notas: 'Test'
       };
 
-      const response = await adminAgent
+      const response = await dependienteAgent
         .post('/api/cierrecaja/cerrar-caja')
         
         .send(closureData);
@@ -470,7 +470,7 @@ describe('CierreCaja Routes Integration Tests', () => {
         notas: 'Test'
       };
 
-      const response = await adminAgent
+      const response = await request(app)
         .post('/api/cierrecaja/cerrar-caja')
         .send(closureData);
 
@@ -553,7 +553,7 @@ describe('CierreCaja Routes Integration Tests', () => {
         notas: 'Test'
       };
 
-      const response = await adminAgent
+      const response = await dependienteAgent
         .post('/api/cierrecaja/cerrar-caja')
         
         .send(closureData);
