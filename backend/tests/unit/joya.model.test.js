@@ -199,8 +199,18 @@ describe('Joya Model - Unit Tests', () => {
   describe('actualizar()', () => {
     test('should update joya fields', async () => {
       const updateData = {
+        codigo: 'ANILLO-001',  // Include all required fields
         nombre: 'Updated Name',
-        precio_venta: 99000
+        descripcion: 'Hermoso anillo de oro 18K con diamante',
+        categoria: 'Anillos',
+        proveedor: 'Proveedor A',
+        costo: 50000,
+        precio_venta: 99000,
+        moneda: 'CRC',
+        stock_actual: 10,
+        stock_minimo: 2,
+        ubicacion: 'Vitrina A',
+        estado: 'Activo'
       };
 
       const result = await Joya.actualizar(1, updateData);
@@ -213,7 +223,20 @@ describe('Joya Model - Unit Tests', () => {
 
     test('should preserve unchanged fields', async () => {
       const original = await Joya.obtenerPorId(1);
-      const updateData = { nombre: 'New Name' };
+      const updateData = { 
+        codigo: original.codigo,
+        nombre: 'New Name',
+        descripcion: original.descripcion,
+        categoria: original.categoria,
+        proveedor: original.proveedor,
+        costo: original.costo,
+        precio_venta: original.precio_venta,
+        moneda: original.moneda,
+        stock_actual: original.stock_actual,
+        stock_minimo: original.stock_minimo,
+        ubicacion: original.ubicacion,
+        estado: original.estado
+      };
 
       await Joya.actualizar(1, updateData);
       const updated = await Joya.obtenerPorId(1);

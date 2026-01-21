@@ -279,7 +279,11 @@ class MockQueryBuilder {
         }
         if (filter.type === 'filter') {
           const itemValue = item[filter.column];
-          const filterValue = filter.value;
+          // Check if filterValue is a column name (string) or actual value
+          const filterValue = typeof filter.value === 'string' && item[filter.value] !== undefined 
+            ? item[filter.value]  // It's a column name, use its value
+            : filter.value;       // It's an actual value
+          
           switch (filter.operator) {
             case 'lte':
               return itemValue <= filterValue;
