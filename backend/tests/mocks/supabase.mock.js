@@ -21,7 +21,8 @@ class MockSupabaseClient {
       devoluciones: fixtures.devoluciones || [],
       movimientos_cuenta: fixtures.movimientos_cuenta || [],
       ingresos_extras: fixtures.ingresos_extras || [],
-      cierres_caja: fixtures.cierres_caja || []
+      cierres_caja: fixtures.cierres_caja || [],
+      imagenes_joya: fixtures.imagenes_joya || []
     };
     this.autoIncrementIds = {};
     this.queryBuilder = null;
@@ -95,6 +96,8 @@ class MockQueryBuilder {
     this.updateData = null;
     this.isSingle = false;
     this.joins = [];
+    this.isDelete = false;
+    this.shouldSelectAfterDelete = false;
   }
 
   /**
@@ -105,6 +108,11 @@ class MockQueryBuilder {
     if (options.count) {
       this.countOption = options.count;
     }
+    // If this is a delete operation followed by select(), return the deleted rows
+    // This matches Supabase's actual behavior where .delete().select() returns deleted data
+    if (this.isDelete) {
+      this.shouldSelectAfterDelete = true;
+    }
     // Parse foreign key relationships from select string
     this.parseJoins(columns);
     return this;
@@ -113,6 +121,7 @@ class MockQueryBuilder {
   /**
    * Parse foreign key joins from select string
    * Example: "*, clientes!cuentas_por_cobrar_id_cliente_fkey (nombre, telefono)"
+   * Or: "id, joyas:id_producto_componente (nombre, precio_venta)"
    */
   parseJoins(selectStr) {
     if (typeof selectStr !== 'string') {
@@ -121,14 +130,22 @@ class MockQueryBuilder {
     }
 
     const joins = [];
-    // Match patterns like: table!foreign_key_name (columns)
-    const joinPattern = /(\w+)![\w_]+\s*\(([^)]+)\)/g;
+    // Match patterns like: table!foreign_key_name (columns) or table:foreign_key_column (columns)
+    const joinPattern = /(\w+)([\!:])(\w+)\s*\(([^)]+)\)/g;
     let match;
     
     while ((match = joinPattern.exec(selectStr)) !== null) {
       const foreignTable = match[1];
-      const foreignColumns = match[2].split(',').map(c => c.trim());
-      joins.push({ foreignTable, foreignColumns });
+      const separator = match[2];
+      const foreignKeyOrName = match[3];
+      const foreignColumns = match[4].split(',').map(c => c.trim());
+      
+      joins.push({ 
+        foreignTable, 
+        foreignColumns,
+        separator,
+        foreignKeyOrName // For ':' separator, this is the actual foreign key field name
+      });
     }
     
     this.joins = joins;
@@ -146,12 +163,19 @@ class MockQueryBuilder {
       const result = { ...item };
       
       for (const join of this.joins) {
-        const { foreignTable, foreignColumns } = join;
+        const { foreignTable, foreignColumns, separator, foreignKeyOrName } = join;
         const foreignData = this.client.getFixtures(foreignTable);
         
-        // Find foreign record by matching ID
-        // Common patterns: id_cliente -> clientes.id, id_venta -> ventas.id
-        const foreignKeyField = `id_${foreignTable.replace(/s$/, '')}`;
+        // Determine the foreign key field based on separator
+        let foreignKeyField;
+        if (separator === ':') {
+          // For ':' syntax, foreignKeyOrName is the actual field name
+          foreignKeyField = foreignKeyOrName;
+        } else {
+          // For '!' syntax, derive from table name: id_cliente -> clientes.id
+          foreignKeyField = `id_${foreignTable.replace(/s$/, '')}`;
+        }
+        
         const foreignId = item[foreignKeyField];
         
         if (foreignId) {
@@ -261,6 +285,23 @@ class MockQueryBuilder {
   }
 
   /**
+   * not() - NOT filter
+   * Usage: .not('categoria', 'is', null)
+   */
+  not(column, operator, value) {
+    this.filters.push({ type: 'not', column, operator, value });
+    return this;
+  }
+
+  /**
+   * in() - IN filter (check if column value is in array)
+   */
+  in(column, values) {
+    this.filters.push({ type: 'in', column, values: Array.isArray(values) ? values : [values] });
+    return this;
+  }
+
+  /**
    * filter() - Custom filter
    */
   filter(column, operator, value) {
@@ -358,6 +399,20 @@ class MockQueryBuilder {
             return false;
           });
         }
+        if (filter.type === 'not') {
+          const { column, operator, value } = filter;
+          if (operator === 'is') {
+            if (value === 'null' || value === null) {
+              // NOT null means value must NOT be null/undefined
+              return item[column] !== null && item[column] !== undefined;
+            }
+          }
+          // Add more NOT operators as needed
+          return true;
+        }
+        if (filter.type === 'in') {
+          return filter.values.includes(item[filter.column]);
+        }
         if (filter.type === 'filter') {
           const itemValue = item[filter.column];
           // Check if filterValue is a column name (string) or actual value
@@ -432,6 +487,10 @@ class MockQueryBuilder {
       const remaining = fixtures.filter(item => !deletedIds.has(item.id));
       this.client.setFixtures(this.table, remaining);
 
+      // If .select() was called after .delete(), return the deleted rows
+      if (this.shouldSelectAfterDelete) {
+        return { data: filtered, error: null };
+      }
       return { data: null, error: null };
     }
 

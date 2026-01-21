@@ -302,11 +302,16 @@ class Joya {
   }
 
   // Buscar códigos similares (para autocomplete y prevenir duplicados)
-  static async buscarCodigosSimilares(codigoParteial) {
+  static async buscarCodigosSimilares(codigoPartial) {
+    // Extract prefix (letters and hyphens, excluding trailing numbers)
+    // E.g., "ANILLO-999" -> "ANILLO-", "COLLAR" -> "COLLAR", "SET-ABC-123" -> "SET-ABC-"
+    const prefixMatch = codigoPartial.match(/^([A-Za-z]+(?:-[A-Za-z]+)*-?)/);
+    const searchPrefix = prefixMatch ? prefixMatch[1] : codigoPartial;
+    
     const { data, error } = await supabase
       .from('joyas')
       .select('id, codigo, nombre')
-      .ilike('codigo', `%${codigoParteial}%`)
+      .ilike('codigo', `${searchPrefix}%`)
       .order('codigo', { ascending: true })
       .limit(10);
 
@@ -437,6 +442,25 @@ class Joya {
         tipo: 'sets',
         cantidad: sets.length,
         mensaje: `Esta joya es componente de ${sets.length} set(s): ${nombresSets}`
+      });
+    }
+
+    // Verificar si tiene variantes - obtener count directamente
+    const { count: countVariantes, error: errorVariantes } = await supabase
+      .from('variantes_producto')
+      .select('id', { count: 'exact', head: true })
+      .eq('id_producto_padre', id);
+
+    if (errorVariantes) {
+      throw errorVariantes;
+    }
+
+    if (countVariantes && countVariantes > 0) {
+      dependencias.tiene_dependencias = true;
+      dependencias.detalles.push({
+        tipo: 'variantes',
+        cantidad: countVariantes,
+        mensaje: `Esta joya tiene ${countVariantes} variante(s) registrada(s)`
       });
     }
 
