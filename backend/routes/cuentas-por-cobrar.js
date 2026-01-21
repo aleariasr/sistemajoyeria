@@ -117,7 +117,7 @@ router.post('/:id/abonos', requireAuth, async (req, res) => {
       });
     }
 
-    // Crear el abono
+    // Create abono
     const resultadoAbono = await Abono.crear({
       id_cuenta_por_cobrar: id,
       monto,
@@ -129,11 +129,26 @@ router.post('/:id/abonos', requireAuth, async (req, res) => {
     // Actualizar la cuenta por cobrar
     const resultadoActualizacion = await CuentaPorCobrar.actualizarPago(id, monto);
 
+    // Get updated cuenta with full details
+    const cuentaActualizada = await CuentaPorCobrar.obtenerPorId(id);
+
     res.status(201).json({
+      success: true,
       mensaje: 'Abono registrado exitosamente',
-      id_abono: resultadoAbono.id,
-      nuevo_saldo: resultadoActualizacion.saldo_pendiente,
-      estado: resultadoActualizacion.estado
+      abono: {
+        id: resultadoAbono.id,
+        monto: parseFloat(monto),
+        metodo_pago,
+        notas,
+        id_cuenta_por_cobrar: parseInt(id)
+      },
+      cuenta_actualizada: {
+        id: cuentaActualizada.id,
+        monto_total: cuentaActualizada.monto_total,
+        monto_pagado: resultadoActualizacion.monto_pagado,
+        saldo_pendiente: resultadoActualizacion.saldo_pendiente,
+        estado: resultadoActualizacion.estado
+      }
     });
   } catch (error) {
     console.error('Error al registrar abono:', error);

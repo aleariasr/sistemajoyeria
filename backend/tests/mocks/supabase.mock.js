@@ -17,7 +17,11 @@ class MockSupabaseClient {
       items_venta_dia: fixtures.items_venta_dia || [],
       clientes: fixtures.clientes || [],
       cuentas_por_cobrar: fixtures.cuentas_por_cobrar || [],
-      abonos: fixtures.abonos || []
+      abonos: fixtures.abonos || [],
+      devoluciones: fixtures.devoluciones || [],
+      movimientos_cuenta: fixtures.movimientos_cuenta || [],
+      ingresos_extras: fixtures.ingresos_extras || [],
+      cierres_caja: fixtures.cierres_caja || []
     };
     this.autoIncrementIds = {};
     this.queryBuilder = null;
