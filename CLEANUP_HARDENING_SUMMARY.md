@@ -101,6 +101,9 @@ All commands tested and working:
 2. **Fail-Fast Approach**: Configuration errors caught immediately at startup
 3. **No Sensitive Data in Logs**: Logger utility prevents accidental logging of secrets
 4. **Production Log Reduction**: Reduces noise, making security events more visible
+5. **URL Hostname Validation**: Fixed incomplete URL substring sanitization (CodeQL alert)
+   - Changed from `hostname.includes('vercel.app')` to `hostname.endsWith('.vercel.app')`
+   - Prevents subdomain attacks like `evil.com/vercel.app`
 
 ---
 
@@ -116,6 +119,7 @@ All commands tested and working:
 - Infrastructure/tooling improvements
 - Documentation updates
 - Logging improvements
+- Security hardening
 - No changes to API contracts
 - No changes to business logic
 - No changes to database schema
@@ -131,6 +135,8 @@ All commands tested and working:
 4. ✅ `npm run build:frontend` - Successful build
 5. ✅ Environment validation tested with missing variables
 6. ✅ Logger utility tested with different NODE_ENV values
+7. ✅ Code review - No issues found
+8. ✅ CodeQL security scan - 0 alerts (1 URL validation issue fixed)
 
 ---
 
@@ -143,7 +149,7 @@ All commands tested and working:
 ### Modified:
 - `backend/server.js` - Integrated environment validation
 - `backend/package.json` - Added zod dependency
-- `storefront/src/lib/api/client.ts` - Enhanced env validation, fixed logging
+- `storefront/src/lib/api/client.ts` - Enhanced env validation, fixed logging, **fixed URL hostname check (security)**
 - `storefront/src/app/catalog/CatalogContent.tsx` - Fixed logging
 - `README.md` - Added testing/validation documentation
 - `DEPLOY.md` - Added pre-deploy checklist
@@ -169,6 +175,14 @@ npm run lint:storefront
 npm run build:frontend
 npm run build:storefront
 ```
+
+### Security Note:
+
+Fixed URL hostname validation vulnerability (CodeQL alert):
+- **Before**: `hostname.includes('vercel.app')` - vulnerable to subdomain attacks
+- **After**: `hostname.endsWith('.vercel.app')` - secure domain validation
+
+This prevents malicious domains like `evil.com/vercel.app` from bypassing security checks.
 
 ### After Deploying:
 
