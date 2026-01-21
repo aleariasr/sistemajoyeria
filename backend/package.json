@@ -15,6 +15,9 @@
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
     "test:pos": "jest tests/integration/ventas.routes.test.js tests/integration/devoluciones.routes.test.js tests/integration/cierrecaja.routes.test.js tests/integration/cuentas-por-cobrar.routes.test.js",
+    "test:notifications": "jest tests/integration/notifications.routes.test.js tests/unit/emailService.test.js",
+    "test:orders": "jest tests/integration/pedidos-online.routes.test.js",
+    "test:auth": "jest tests/unit/auth.middleware.test.js tests/integration/auth.routes.test.js",
     "test:old": "node tests/comprehensive-test.js"
   },
   "keywords": [
