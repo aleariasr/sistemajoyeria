@@ -32,7 +32,7 @@ jest.mock('@/components/ui/Button', () => ({
 }));
 
 // Helper to create mock products
-const createMockProduct = (id: number, categoria?: string): Product => ({
+const createMockProduct = (id: number, categoria?: string, varianteId?: number): Product => ({
   id,
   codigo: `PROD-${id}`,
   nombre: `Product ${id}`,
@@ -45,6 +45,8 @@ const createMockProduct = (id: number, categoria?: string): Product => ({
   imagen_url: `https://example.com/image-${id}.jpg`,
   imagenes: [],
   slug: `product-${id}`,
+  _uniqueKey: varianteId ? `${id}-${varianteId}` : `${id}`,
+  variante_id: varianteId,
 });
 
 describe('ProductGrid', () => {
@@ -340,5 +342,115 @@ describe('ProductGrid', () => {
     expect(screen.getByText('Product 1')).toBeInTheDocument();
     expect(screen.getByText('Product 2')).toBeInTheDocument();
     expect(screen.getByText('Product 3')).toBeInTheDocument();
+  });
+
+  describe('_uniqueKey handling', () => {
+    it('uses _uniqueKey for localStorage persistence instead of id', () => {
+      const products = [
+        createMockProduct(1, 'Anillos', 10), // Parent 1, variant 10
+        createMockProduct(1, 'Anillos', 11), // Parent 1, variant 11
+        createMockProduct(2, 'Collares'), // Regular product 2
+      ];
+
+      render(<ProductGrid products={products} />);
+
+      const storedOrder = localStorage.getItem('productOrder');
+      expect(storedOrder).toBeTruthy();
+      
+      // Should store _uniqueKey values, not just IDs
+      expect(storedOrder).toContain('1-10');
+      expect(storedOrder).toContain('1-11');
+      expect(storedOrder).toContain('2');
+    });
+
+    it('maintains order of variant products using _uniqueKey', () => {
+      const products = [
+        createMockProduct(1, 'Anillos', 10),
+        createMockProduct(1, 'Anillos', 11),
+        createMockProduct(1, 'Anillos', 12),
+      ];
+
+      const { unmount } = render(<ProductGrid products={products} />);
+      const firstOrder = screen.getAllByTestId(/product-\d+/).map((el) => 
+        el.getAttribute('data-testid')
+      );
+
+      unmount();
+
+      // Re-render should maintain same order
+      render(<ProductGrid products={products} />);
+      const secondOrder = screen.getAllByTestId(/product-\d+/).map((el) => 
+        el.getAttribute('data-testid')
+      );
+
+      expect(secondOrder).toEqual(firstOrder);
+    });
+  });
+
+  describe('filterContext handling', () => {
+    it('uses separate storage for different filter contexts', () => {
+      const products1 = [
+        createMockProduct(1, 'Anillos'),
+        createMockProduct(2, 'Anillos'),
+      ];
+      const products2 = [
+        createMockProduct(3, 'Collares'),
+        createMockProduct(4, 'Collares'),
+      ];
+
+      const { unmount } = render(
+        <ProductGrid products={products1} filterContext="cat-anillos" />
+      );
+      
+      // Check that context-specific key is created
+      const anillosOrder = localStorage.getItem('productOrder_cat-anillos');
+      expect(anillosOrder).toBeTruthy();
+      
+      unmount();
+
+      render(
+        <ProductGrid products={products2} filterContext="cat-collares" />
+      );
+      
+      const collaresOrder = localStorage.getItem('productOrder_cat-collares');
+      expect(collaresOrder).toBeTruthy();
+
+      // Both orders should exist and be different
+      expect(anillosOrder).not.toEqual(collaresOrder);
+    });
+
+    it('maintains separate orders for different filter contexts', () => {
+      const anillos = [createMockProduct(1), createMockProduct(2)];
+      const collares = [createMockProduct(3), createMockProduct(4)];
+
+      // Render anillos
+      const { unmount: unmount1 } = render(
+        <ProductGrid products={anillos} filterContext="cat-anillos" />
+      );
+      unmount1();
+
+      // Render collares
+      const { unmount: unmount2 } = render(
+        <ProductGrid products={collares} filterContext="cat-collares" />
+      );
+      unmount2();
+
+      // Re-render anillos - should get its own stored order
+      render(
+        <ProductGrid products={anillos} filterContext="cat-anillos" />
+      );
+      
+      const renderedProducts = screen.getAllByTestId(/product-\d+/);
+      const productIds = renderedProducts.map((el) => {
+        const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+
+      // Should show anillos products, not collares
+      expect(productIds).toContain(1);
+      expect(productIds).toContain(2);
+      expect(productIds).not.toContain(3);
+      expect(productIds).not.toContain(4);
+    });
   });
 });
