@@ -123,7 +123,10 @@ class Joya {
     // If shuffle is requested, fetch all results first, shuffle, then paginate
     if (shuffle === true || shuffle === 'true') {
       // Fetch all matching products (without pagination, but with count)
-      const allQuery = query.order('fecha_creacion', { ascending: false });
+      // Order by fecha_creacion DESC with fallback to id DESC for stability
+      const allQuery = query
+        .order('fecha_creacion', { ascending: false })
+        .order('id', { ascending: false });
       const { data: allData, error: allError, count } = await allQuery;
 
       if (allError) {
@@ -156,10 +159,12 @@ class Joya {
     }
 
     // Normal path: order and paginate directly in database
+    // Order by fecha_creacion DESC with fallback to id DESC for stable sorting
     const offset = (paginaNum - 1) * porPaginaNum;
     const hasta = offset + porPaginaNum - 1;
     query = query
       .order('fecha_creacion', { ascending: false })
+      .order('id', { ascending: false })
       .range(offset, hasta);
 
     const { data, error, count } = await query;
@@ -168,8 +173,14 @@ class Joya {
       throw error;
     }
 
+    // Defensive deduplication: ensure no duplicate entries by ID
+    // (Although no joins in query, this is a safety measure)
+    const uniqueJoyas = data && Array.isArray(data) ? Array.from(
+      new Map(data.filter(j => j?.id).map(j => [j.id, j])).values()
+    ) : [];
+
     return {
-      joyas: data,
+      joyas: uniqueJoyas,
       total: count || 0,
       pagina: paginaNum,
       por_pagina: porPaginaNum,

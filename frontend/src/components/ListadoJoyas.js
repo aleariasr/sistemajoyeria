@@ -128,17 +128,10 @@ function ListadoJoyas() {
 
       const response = await obtenerJoyas(filtros);
       const lista = Array.isArray(response.data.joyas) ? response.data.joyas : [];
-      // Dedup por id/codigo por si el backend o la UI repite entradas
-      const seen = new Set();
-      const dedup = [];
-      for (const j of lista) {
-        const key = j.id ?? j.codigo;
-        if (!seen.has(key)) {
-          seen.add(key);
-          dedup.push(j);
-        }
-      }
-      setJoyas(dedup);
+      
+      // Backend now handles deduplication and proper ordering
+      setJoyas(lista);
+      
       // Selection now persists across page/filter changes (managed by SelectionContext)
       setTotalPaginas(response.data.total_paginas);
       setTotal(response.data.total);
