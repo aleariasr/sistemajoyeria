@@ -3,32 +3,11 @@
  * Tests email service functions with mocks (no real email sending)
  */
 
-// Mock Resend BEFORE requiring emailService
-const mockResendInstance = {
-  sentEmails: [],
-  emails: {
-    send: jest.fn(async (emailData) => {
-      const emailId = `mock_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      mockResendInstance.sentEmails.push({
-        id: emailId,
-        ...emailData
-      });
-      return {
-        data: { id: emailId },
-        error: null
-      };
-    })
-  },
-  clearSentEmails: () => {
-    mockResendInstance.sentEmails = [];
-  }
-};
+// Mock Resend with our standard mock
+jest.mock('resend', () => require('../mocks/resend.mock'));
 
-jest.mock('resend', () => {
-  return {
-    Resend: jest.fn(() => mockResendInstance)
-  };
-});
+// Get the mock Resend for assertions
+const { getMockResend } = require('../mocks/resend.mock');
 
 // Set environment variables BEFORE requiring emailService
 process.env.RESEND_API_KEY = 'test-api-key';
@@ -51,11 +30,12 @@ const {
 } = require('../../services/emailService');
 
 describe('Email Service Unit Tests', () => {
+  let mockResendInstance;
   
   beforeEach(() => {
-    // Clear sent emails before each test
-    mockResendInstance.sentEmails = [];
-    mockResendInstance.emails.send.mockClear();
+    // Get mock instance and clear sent emails
+    mockResendInstance = getMockResend();
+    mockResendInstance.clearSentEmails();
   });
 
   describe('enviarConfirmacionPedido - Order Confirmation Email', () => {
@@ -83,9 +63,11 @@ describe('Email Service Unit Tests', () => {
 
       expect(result.sent).toBe(true);
       expect(result.messageId).toBeDefined();
-      expect(mockResendInstance.emails.send).toHaveBeenCalledTimes(1);
       
-      const sentEmail = mockResendInstance.emails.send.mock.calls[0][0];
+      const sentEmails = mockResendInstance.getSentEmails();
+      expect(sentEmails).toHaveLength(1);
+      
+      const sentEmail = sentEmails[0];
       expect(sentEmail.to).toBe('juan@example.com');
       expect(sentEmail.subject).toContain('Confirmación de Pedido');
       expect(sentEmail.html).toContain('Juan Pérez');
@@ -115,7 +97,8 @@ describe('Email Service Unit Tests', () => {
       const result = await enviarConfirmacionPedido(pedido, items);
 
       expect(result.sent).toBe(true);
-      const sentEmail = mockResendInstance.emails.send.mock.calls[0][0];
+      const sentEmails = mockResendInstance.getSentEmails();
+      const sentEmail = sentEmails[0];
       expect(sentEmail.html).not.toContain('Tus comentarios');
     });
 
@@ -191,7 +174,7 @@ describe('Email Service Unit Tests', () => {
       const result = await notificarNuevoPedido(pedido, items);
 
       expect(result.sent).toBe(true);
-      expect(mockResendInstance.emails.send).toHaveBeenCalledTimes(1);
+      expect(mockResendInstance.getSentEmails()).toHaveLength(1);
       
       const sentEmail = mockResendInstance.emails.send.mock.calls[0][0];
       expect(sentEmail.to).toBe('admin@example.com');
