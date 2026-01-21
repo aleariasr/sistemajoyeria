@@ -173,8 +173,8 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 
 ```bash
 # Ejecutar tests
-npm run test:backend          # Tests del backend
-npm run test:storefront       # Tests del storefront (52 tests)
+npm run test:backend          # Backend E2E tests (requiere servidor corriendo)
+npm run test:storefront       # Storefront unit tests (52 tests)
 
 # Linters
 npm run lint:storefront       # ESLint para storefront
@@ -182,6 +182,20 @@ npm run lint:storefront       # ESLint para storefront
 # Builds
 npm run build:frontend        # Build del frontend POS
 npm run build:storefront      # Build del storefront Next.js
+```
+
+**Nota sobre tests del backend:** Los tests del backend son pruebas end-to-end que requieren:
+1. Servidor backend corriendo (`npm run start:backend` en otra terminal)
+2. Base de datos Supabase configurada
+3. Variables de entorno configuradas
+
+Para ejecutar los tests del backend:
+```bash
+# Terminal 1: Iniciar el backend
+npm run start:backend
+
+# Terminal 2: Ejecutar tests
+npm run test:backend
 ```
 
 ### Verificación Rápida
@@ -192,8 +206,7 @@ Antes de desplegar o hacer un PR, ejecute:
 # 1. Instalar dependencias
 npm install
 
-# 2. Tests
-npm run test:backend
+# 2. Tests unitarios (no requieren servidor)
 npm run test:storefront
 
 # 3. Linting

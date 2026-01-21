@@ -199,9 +199,8 @@ Antes de desplegar, ejecute estos comandos localmente para asegurar la calidad:
 # 1. Instalar todas las dependencias
 npm install
 
-# 2. Ejecutar tests
-npm run test:backend          # Backend tests
-npm run test:storefront       # Storefront tests (52 tests)
+# 2. Ejecutar tests unitarios (no requieren servidor)
+npm run test:storefront       # 52 tests del storefront
 
 # 3. Ejecutar linters
 npm run lint:storefront       # ESLint para Next.js
@@ -215,6 +214,8 @@ npm run build:storefront      # Build Next.js storefront
 # Frontend: Revisar frontend/.env vs frontend/.env.example
 # Storefront: Revisar storefront/.env.local vs storefront/.env.example
 ```
+
+**Nota:** Los tests del backend (`npm run test:backend`) son pruebas E2E que requieren el servidor corriendo y la base de datos configurada. Se pueden ejecutar opcionalmente antes del deploy si se tiene el entorno local configurado.
 
 Todos estos comandos deben completarse exitosamente antes de desplegar.
 
