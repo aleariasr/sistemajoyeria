@@ -31,8 +31,14 @@ const calculatingLocks = new Set(); // Prevent race conditions
  * @returns {Promise<number|null>} Total count or null if calculation fails/in-progress
  */
 async function calcularTotalVariantesSeguro(filtros) {
-  // Generate cache key from filters
-  const cacheKey = `total_${filtros.categoria || 'all'}_${filtros.busqueda || ''}_${filtros.precio_min || ''}_${filtros.precio_max || ''}`;
+  // Generate cache key from filters using JSON for reliability
+  const filterKey = {
+    categoria: filtros.categoria || 'all',
+    busqueda: filtros.busqueda || '',
+    precio_min: filtros.precio_min || '',
+    precio_max: filtros.precio_max || ''
+  };
+  const cacheKey = `total_${JSON.stringify(filterKey)}`;
   
   // 1. Try cache first
   const cached = simpleCache.get(cacheKey);

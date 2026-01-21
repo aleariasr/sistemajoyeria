@@ -33,7 +33,8 @@ if (missing === null) {
 
 // Test 3: TTL expiration
 console.log('\n📝 Test 3: TTL expiration (50ms timeout)');
-const shortLivedCache = new (require('../utils/simpleCache').constructor)(100, 50);
+const { SimpleCache } = require('../utils/simpleCache');
+const shortLivedCache = new SimpleCache(100, 50);
 shortLivedCache.set('expire-test', 456);
 setTimeout(() => {
   const expired = shortLivedCache.get('expire-test');
@@ -46,7 +47,7 @@ setTimeout(() => {
   
   // Test 4: LRU eviction
   console.log('\n📝 Test 4: LRU eviction (maxSize=3)');
-  const lruCache = new (require('../utils/simpleCache').constructor)(3, 60000);
+  const lruCache = new SimpleCache(3, 60000);
   lruCache.set('key1', 1);
   lruCache.set('key2', 2);
   lruCache.set('key3', 3);

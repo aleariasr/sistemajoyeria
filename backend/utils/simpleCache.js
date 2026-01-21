@@ -2,8 +2,12 @@
  * Simple in-memory cache with LRU eviction and TTL
  * Used for caching expensive calculations like total variant count
  */
+
+// Default TTL: 30 minutes (in milliseconds)
+const DEFAULT_TTL_MS = 30 * 60 * 1000;
+
 class SimpleCache {
-  constructor(maxSize = 100, ttlMs = 1800000) { // 30 min default TTL
+  constructor(maxSize = 100, ttlMs = DEFAULT_TTL_MS) {
     this.cache = new Map();
     this.maxSize = maxSize;
     this.ttlMs = ttlMs;
@@ -48,5 +52,6 @@ class SimpleCache {
   }
 }
 
-// Export singleton instance
+// Export both the singleton instance and the class for testing
 module.exports = new SimpleCache();
+module.exports.SimpleCache = SimpleCache;
