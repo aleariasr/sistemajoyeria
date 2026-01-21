@@ -46,7 +46,14 @@ const getApiUrl = (): string => {
   const protocol = window.location.protocol;
   
   // If on production domain (Vercel), enforce configuration
-  if (hostname.includes('vercel.app') || hostname.includes('cueroyperla.com')) {
+  // Check if hostname ends with these domains to prevent subdomain attacks
+  const isProductionDomain = 
+    hostname.endsWith('.vercel.app') || 
+    hostname === 'vercel.app' ||
+    hostname.endsWith('.cueroyperla.com') || 
+    hostname === 'cueroyperla.com';
+  
+  if (isProductionDomain) {
     // In production, NEXT_PUBLIC_API_URL is required
     const message = '❌ NEXT_PUBLIC_API_URL no está configurada. Configure esta variable de entorno en Vercel para que la tienda funcione correctamente.';
     console.error(message);
