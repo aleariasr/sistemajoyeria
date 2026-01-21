@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report playwright-report",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.60.5",
@@ -23,6 +28,7 @@
   "devDependencies": {
     "@jest/expect": "^29.7.0",
     "@jest/expect-utils": "^29.7.0",
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^22.9.1",

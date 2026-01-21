@@ -23,6 +23,8 @@
     "lint:storefront": "npm run lint --workspace=storefront",
     "test:backend": "npm run test --workspace=backend",
     "test:storefront": "npm run test --workspace=storefront",
+    "test:storefront:e2e": "npm run test:e2e --workspace=storefront",
+    "test:storefront:all": "npm run test:all --workspace=storefront",
     "test:pos": "npm run test:pos --workspace=backend",
     "test:e2e:pos": "npm run test:frontend --workspace=frontend",
     "audit:backend": "npm audit --workspace=backend",
