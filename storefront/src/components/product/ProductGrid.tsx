@@ -23,6 +23,7 @@ interface ProductGridProps {
   isLoading?: boolean;
   error?: Error | null;
   onRetry?: () => void;
+  filterContext?: string; // Optional context for storage key (e.g., "category-anillos", "search-oro")
 }
 
 /**
@@ -32,52 +33,54 @@ interface ProductGridProps {
  * primarily manages localStorage persistence so users see consistent
  * order when navigating back to the catalog.
  * 
+ * Uses _uniqueKey instead of id to handle variants correctly.
+ * 
  * Key behaviors:
- * 1. If products haven't changed (same IDs), use stored order
+ * 1. If products haven't changed (same _uniqueKeys), use stored order
  * 2. If new products appear (longer list from infinite scroll), append them
  * 3. If products are completely different (filters/search), use new order
  */
-function getOrderedProducts(products: Product[]): Product[] {
+function getOrderedProducts(products: Product[], filterContext?: string): Product[] {
   // Skip localStorage in server-side rendering
   if (typeof window === 'undefined') {
     return products;
   }
 
   try {
-    const storedOrder = localStorage.getItem('productOrder');
-    const productMap = new Map(products.map((p) => [p.id, p]));
+    // Use context-aware storage key to prevent mixing orders between different filters
+    const storageKey = filterContext 
+      ? `productOrder_${filterContext}` 
+      : 'productOrder';
+    
+    const storedOrder = localStorage.getItem(storageKey);
+    const productMap = new Map(products.map((p) => [p._uniqueKey || `${p.id}`, p]));
     
     if (storedOrder) {
-      const storedProductIds = storedOrder.split(',').map((id) => parseInt(id, 10));
+      const storedKeys = storedOrder.split(',');
       
-      // Filter stored IDs to only those that exist in current products
-      const validStoredIds = storedProductIds.filter(id => productMap.has(id));
+      // Filter stored keys to only those that exist in current products
+      const validStoredKeys = storedKeys.filter(key => productMap.has(key));
       
       // Find new products not in stored order
-      const newProductIds = products
-        .map(p => p.id)
-        .filter(id => !storedProductIds.includes(id));
+      const currentKeys = products.map(p => p._uniqueKey || `${p.id}`);
+      const newKeys = currentKeys.filter(key => !storedKeys.includes(key));
       
       // Case 1: All current products are in stored order - maintain order
-      if (newProductIds.length === 0 && validStoredIds.length === products.length) {
-        const orderedProducts = validStoredIds
-          .map((id) => productMap.get(id)!)
+      if (newKeys.length === 0 && validStoredKeys.length === products.length) {
+        const orderedProducts = validStoredKeys
+          .map((key) => productMap.get(key)!)
           .filter((p): p is Product => p !== undefined);
         return orderedProducts;
       }
       
       // Case 2: Some new products from infinite scroll - append them
-      if (validStoredIds.length > 0 && newProductIds.length > 0) {
-        const newProducts = newProductIds
-          .map(id => productMap.get(id))
-          .filter((p): p is Product => p !== undefined);
-        
+      if (validStoredKeys.length > 0 && newKeys.length > 0) {
         // Combine: existing order + new products (already shuffled by backend)
-        const combinedOrder = [...validStoredIds, ...newProducts.map(p => p.id)];
-        localStorage.setItem('productOrder', combinedOrder.join(','));
+        const combinedOrder = [...validStoredKeys, ...newKeys];
+        localStorage.setItem(storageKey, combinedOrder.join(','));
         
         const orderedProducts = combinedOrder
-          .map((id) => productMap.get(id)!)
+          .map((key) => productMap.get(key)!)
           .filter((p): p is Product => p !== undefined);
         return orderedProducts;
       }
@@ -85,7 +88,8 @@ function getOrderedProducts(products: Product[]): Product[] {
     
     // Case 3: No stored order or completely different products
     // Store the new order (already shuffled by backend)
-    localStorage.setItem('productOrder', products.map((p) => p.id).join(','));
+    const newKeys = products.map((p) => p._uniqueKey || `${p.id}`);
+    localStorage.setItem(storageKey, newKeys.join(','));
     return products;
   } catch (error) {
     // If localStorage is not available, just return products as-is
@@ -99,10 +103,14 @@ function ProductGridComponent({
   isLoading = false,
   error = null,
   onRetry,
+  filterContext,
 }: ProductGridProps) {
   // Get ordered products with persistent order from localStorage
-  // useMemo ensures the ordering happens only when products array changes
-  const orderedProducts = useMemo(() => getOrderedProducts(products), [products]);
+  // useMemo ensures the ordering happens only when products array or context changes
+  const orderedProducts = useMemo(
+    () => getOrderedProducts(products, filterContext), 
+    [products, filterContext]
+  );
 
   // Loading state
   if (isLoading) {
