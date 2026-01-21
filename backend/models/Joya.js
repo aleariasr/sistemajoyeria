@@ -49,7 +49,8 @@ class Joya {
       excluir_sets,
       pagina = 1,
       por_pagina = 20,
-      shuffle = false
+      shuffle = false,
+      shuffle_seed = null
     } = filtros;
 
     const paginaNum = Math.max(1, parseInt(pagina, 10) || 1);
@@ -125,8 +126,17 @@ class Joya {
         throw allError;
       }
 
-      // Shuffle the entire result set using Fisher-Yates algorithm
-      const shuffled = this._shuffleArray(allData || []);
+      // Shuffle the entire result set using deterministic or random shuffle
+      let shuffled;
+      if (shuffle_seed) {
+        // Use seeded shuffle for deterministic order
+        shuffled = this._shuffleArraySeeded(allData || [], shuffle_seed);
+        // Apply category balancing to enforce max 3 consecutive rule
+        shuffled = this._balanceCategories(shuffled);
+      } else {
+        // Use non-deterministic shuffle for backward compatibility
+        shuffled = this._shuffleArray(allData || []);
+      }
 
       // Apply pagination to shuffled results
       const offset = (paginaNum - 1) * porPaginaNum;
@@ -171,6 +181,80 @@ class Joya {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }
+
+  // Seeded random number generator (Mulberry32)
+  // Returns a deterministic pseudo-random float between 0 and 1
+  static _seededRandom(seed) {
+    let state = seed;
+    return function() {
+      state = (state + 0x6D2B79F5) | 0;
+      let t = Math.imul(state ^ (state >>> 15), 1 | state);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Fisher-Yates shuffle with seeded RNG for deterministic shuffling
+  static _shuffleArraySeeded(array, seed) {
+    const shuffled = [...array];
+    const random = this._seededRandom(seed);
+    
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    return shuffled;
+  }
+
+  // Balance categories to ensure no more than 3 consecutive products from same category
+  // Uses a sliding window approach to redistribute products when violations are found
+  static _balanceCategories(products, maxConsecutive = 3) {
+    if (!products || products.length <= maxConsecutive) {
+      return products;
+    }
+
+    const result = [...products];
+    let changes = true;
+    let iterations = 0;
+    const maxIterations = 100; // Prevent infinite loops
+
+    while (changes && iterations < maxIterations) {
+      changes = false;
+      iterations++;
+
+      for (let i = 0; i <= result.length - maxConsecutive - 1; i++) {
+        // Check if we have maxConsecutive + 1 consecutive items with same category
+        const window = result.slice(i, i + maxConsecutive + 1);
+        const firstCategory = window[0]?.categoria;
+        
+        if (!firstCategory) continue;
+
+        const allSameCategory = window.every(p => p?.categoria === firstCategory);
+        
+        if (allSameCategory) {
+          // Find the next product with a different category after this window
+          let swapIndex = -1;
+          for (let j = i + maxConsecutive + 1; j < result.length; j++) {
+            if (result[j]?.categoria !== firstCategory) {
+              swapIndex = j;
+              break;
+            }
+          }
+
+          // If found a different category, swap it with the violating position
+          if (swapIndex !== -1) {
+            const temp = result[i + maxConsecutive];
+            result[i + maxConsecutive] = result[swapIndex];
+            result[swapIndex] = temp;
+            changes = true;
+          }
+        }
+      }
+    }
+
+    return result;
   }
 
   // Obtener una joya por ID
