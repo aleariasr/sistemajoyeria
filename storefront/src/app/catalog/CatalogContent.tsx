@@ -332,6 +332,7 @@ export default function CatalogContent() {
         error={error as Error | null}
         onRetry={refetch}
         filterContext={filterContext}
+        shuffleSeed={shuffleSeed}
       />
 
       {/* Infinite Scroll Trigger & Load More Button */}
