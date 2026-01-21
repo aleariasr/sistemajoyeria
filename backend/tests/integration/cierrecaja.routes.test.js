@@ -192,7 +192,7 @@ describe('CierreCaja Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Make a payment
       const abonoData = {
@@ -419,7 +419,7 @@ describe('CierreCaja Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Make payment
       const abonoData = {

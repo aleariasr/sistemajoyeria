@@ -236,7 +236,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Get account details
       const response = await adminAgent
@@ -286,7 +286,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Make partial payment
       const abonoData = {
@@ -335,7 +335,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Make full payment
       const abonoData = {
@@ -379,7 +379,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // First payment
       await adminAgent
@@ -448,7 +448,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Payment with cash
       const cashResponse = await adminAgent
@@ -516,7 +516,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Try to pay more than balance
       const abonoData = {
@@ -667,7 +667,7 @@ describe('Cuentas Por Cobrar Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const cuentaId = saleResponse.body.cuenta_por_cobrar.id;
+      const cuentaId = saleResponse.body.id_cuenta_por_cobrar;
 
       // Make payment as dependiente
       const abonoData = {

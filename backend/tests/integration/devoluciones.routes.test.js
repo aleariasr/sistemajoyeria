@@ -133,8 +133,13 @@ describe('Devoluciones Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const saleId = saleResponse.body.venta.id;
-      const itemVentaId = saleResponse.body.items[0].id;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get item IDs
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const itemVentaId = saleDetails.body.items[0].id;
 
       // Get stock before return
       const { supabase } = require('../../supabase-db');
@@ -208,8 +213,13 @@ describe('Devoluciones Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const saleId = saleResponse.body.venta.id;
-      const items = saleResponse.body.items;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get item IDs
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const items = saleDetails.body.items;
 
       // Create complete return
       const returnData = {
@@ -296,8 +306,13 @@ describe('Devoluciones Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const saleId = saleResponse.body.venta.id;
-      const itemVentaId = saleResponse.body.items[0].id;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get item IDs
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const itemVentaId = saleDetails.body.items[0].id;
 
       // Try to return more than sold
       const returnData = {
@@ -343,8 +358,13 @@ describe('Devoluciones Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const saleId = saleResponse.body.venta.id;
-      const itemVentaId = saleResponse.body.items[0].id;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get item IDs
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const itemVentaId = saleDetails.body.items[0].id;
 
       // Create complete return
       const returnData = {
@@ -489,10 +509,16 @@ describe('Devoluciones Routes Integration Tests', () => {
         
         .send(saleData);
 
-      const itemVentaId = saleResponse.body.items[0].id;
+      const saleId = saleResponse.body.id;
+      
+      // Get sale details to get item IDs
+      const saleDetails = await adminAgent
+        .get(`/api/ventas/${saleId}?es_venta_dia=true`);
+      
+      const itemVentaId = saleDetails.body.items[0].id;
 
       const returnData = {
-        id_venta: saleResponse.body.venta.id,
+        id_venta: saleResponse.body.id,
         items: [
           {
             id_item_venta: itemVentaId,
@@ -532,11 +558,15 @@ describe('Devoluciones Routes Integration Tests', () => {
 
   describe('Access Control', () => {
     test('only admins can create returns', async () => {
-      const dependienteSession = {
-        userId: 2,
-        username: 'dependiente',
-        role: 'dependiente'
-      };
+      // Create dependiente agent
+      const dependienteAgent = request.agent(app);
+      await dependienteAgent
+        .post('/api/auth/login')
+        .send({
+          username: 'dependiente',
+          password: 'dependiente123'
+        })
+        .expect(200);
 
       const returnData = {
         id_venta: 1,
@@ -551,9 +581,8 @@ describe('Devoluciones Routes Integration Tests', () => {
         metodo_reembolso: 'Efectivo'
       };
 
-      const response = await adminAgent
+      const response = await dependienteAgent
         .post('/api/devoluciones')
-        .set('Cookie', [`session=${Buffer.from(JSON.stringify(dependienteSession)).toString('base64')}`])
         .send(returnData);
 
       expect(response.status).toBe(403);
