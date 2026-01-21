@@ -19,6 +19,92 @@ const VarianteProducto = require('../models/VarianteProducto');
 const ProductoCompuesto = require('../models/ProductoCompuesto');
 const { ensureProductHasValidImages } = require('../utils/imageValidation');
 
+// Simple cache for total variant counts
+const simpleCache = require('../utils/simpleCache');
+const calculatingLocks = new Set(); // Prevent race conditions
+
+/**
+ * Calculate total number of variants for given filters
+ * Uses caching to avoid expensive recalculation on every request
+ * 
+ * @param {Object} filtros - Filter object (categoria, busqueda, etc)
+ * @returns {Promise<number|null>} Total count or null if calculation fails/in-progress
+ */
+async function calcularTotalVariantesSeguro(filtros) {
+  // Generate cache key from filters using JSON for reliability
+  const filterKey = {
+    categoria: filtros.categoria || 'all',
+    busqueda: filtros.busqueda || '',
+    precio_min: filtros.precio_min || '',
+    precio_max: filtros.precio_max || ''
+  };
+  const cacheKey = `total_${JSON.stringify(filterKey)}`;
+  
+  // 1. Try cache first
+  const cached = simpleCache.get(cacheKey);
+  if (cached !== null) {
+    console.log(`📦 [Cache HIT] Total variants: ${cached}`);
+    return cached;
+  }
+
+  // 2. Prevent concurrent calculations for same key
+  if (calculatingLocks.has(cacheKey)) {
+    console.log(`⏳ [Cache WAIT] Another request is calculating, using estimation...`);
+    return null; // Return null to use estimation fallback
+  }
+
+  calculatingLocks.add(cacheKey);
+
+  try {
+    console.log(`🔍 [Cache MISS] Calculating real total of variants...`);
+    
+    // 3. Query with 5-second timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout calculating total')), 5000)
+    );
+
+    const queryPromise = (async () => {
+      // Get ALL parent products matching filters (no pagination)
+      const todosFiltros = {
+        ...filtros,
+        estado: 'Activo',
+        con_stock: true,
+        mostrar_en_storefront: true,
+        pagina: 1,
+        por_pagina: 99999 // No limit - get all
+      };
+
+      const resultado = await Joya.obtenerTodas(todosFiltros);
+      let totalVariantes = 0;
+
+      // Count variants for each product
+      for (const joya of resultado.joyas) {
+        if (joya.es_producto_variante) {
+          const countVariantes = await VarianteProducto.contarPorProducto(joya.id, true);
+          totalVariantes += countVariantes;
+        } else {
+          totalVariantes += 1; // Non-variant product counts as 1
+        }
+      }
+
+      return totalVariantes;
+    })();
+
+    const total = await Promise.race([queryPromise, timeoutPromise]);
+
+    // 4. Cache the result
+    simpleCache.set(cacheKey, total);
+    console.log(`✅ [Cache SET] Total calculated and cached: ${total}`);
+
+    return total;
+  } catch (error) {
+    console.error(`❌ [Cache ERROR] ${error.message}, falling back to estimation`);
+    return null; // Fallback to estimation
+  } finally {
+    calculatingLocks.delete(cacheKey);
+  }
+}
+
 /**
  * Generate a URL-friendly slug from product code and name
  * @param {string} codigo - Product code
@@ -276,18 +362,21 @@ router.get('/products', async (req, res) => {
     
     console.log(`📦 [Página ${pagina}] Después de deduplicar por _uniqueKey: ${productosUnicos.length}`);
     
-    // CRITICAL FIX: For total count, we need to estimate based on parent products
-    // Since we can't efficiently expand ALL variants on every request, we use a reasonable estimate:
-    // - Total parent products from DB * average expansion ratio
-    // - Or for first page only, calculate the exact ratio and use it
-    let totalGlobalVariantes = resultado.total; // Start with parent product count
-    
-    // Calculate expansion ratio from current page to estimate total
-    // Ensure we don't divide by zero
-    if (joyasUnicas.length > 0 && productosUnicos.length > 0) {
-      const expansionRatio = productosUnicos.length / joyasUnicas.length;
-      totalGlobalVariantes = Math.ceil(resultado.total * expansionRatio);
-      console.log(`📦 [Página ${pagina}] Ratio de expansión: ${expansionRatio.toFixed(2)}, Total estimado: ${totalGlobalVariantes}`);
+    // Calculate total variants with caching for consistent results
+    let totalGlobalVariantes = await calcularTotalVariantesSeguro(filtros);
+
+    // Fallback to estimation if calculation fails or is in progress
+    if (totalGlobalVariantes === null) {
+      totalGlobalVariantes = resultado.total; // Start with parent product count
+      
+      // Estimate based on expansion ratio from current page
+      if (joyasUnicas.length > 0 && productosUnicos.length > 0) {
+        const expansionRatio = productosUnicos.length / joyasUnicas.length;
+        totalGlobalVariantes = Math.ceil(resultado.total * expansionRatio);
+        console.log(`⚠️  [Página ${pagina}] Using estimation (ratio: ${expansionRatio.toFixed(2)}): ${totalGlobalVariantes}`);
+      }
+    } else {
+      console.log(`✅ [Página ${pagina}] Using cached total: ${totalGlobalVariantes}`);
     }
     
     // Calculate total pages based on estimated total variants
