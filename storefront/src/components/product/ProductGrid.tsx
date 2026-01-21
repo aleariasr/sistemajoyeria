@@ -55,15 +55,17 @@ function getOrderedProducts(
   try {
     // Create storage key with seed + filter context for proper namespacing
     // This prevents mixing orders between different shuffle seeds and filters
-    let storageKey = 'productOrder';
+    const keyParts = ['productOrder'];
     
     if (shuffleSeed !== undefined) {
-      storageKey += `_seed${shuffleSeed}`;
+      keyParts.push(`seed${shuffleSeed}`);
     }
     
     if (filterContext) {
-      storageKey += `_${filterContext}`;
+      keyParts.push(filterContext);
     }
+    
+    const storageKey = keyParts.join('_');
     
     const storedOrder = localStorage.getItem(storageKey);
     const productMap = new Map(products.map((p) => [p._uniqueKey || `${p.id}`, p]));

@@ -10,6 +10,18 @@ const MAX_BALANCING_ITERATIONS = 100;
 
 /**
  * Seeded random number generator (Mulberry32)
+ * 
+ * Mulberry32 is a simple and fast 32-bit PRNG with good statistical properties.
+ * It's designed to be deterministic - the same seed always produces the same sequence.
+ * 
+ * Algorithm details:
+ * - 0x6D2B79F5: Prime constant for mixing (1832934389 in decimal)
+ * - Math.imul: 32-bit integer multiplication for consistent results across platforms
+ * - Triple mixing with bit shifts ensures good bit avalanche
+ * - Final division by 2^32 normalizes to [0, 1) range
+ * 
+ * @param {number} seed - Initial seed value (32-bit integer)
+ * @returns {function} Function that returns deterministic pseudo-random floats [0, 1)
  */
 function seededRandom(seed) {
   let state = seed;
