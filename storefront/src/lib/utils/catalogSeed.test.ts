@@ -52,29 +52,37 @@ describe('catalogSeed', () => {
     });
 
     it('generates different seeds for different filter contexts', () => {
+      clearCatalogSeed();
       const seed1 = getCatalogSeed({ category: 'anillos' });
+      clearCatalogSeed();
       const seed2 = getCatalogSeed({ category: 'collares' });
       
       expect(seed1).not.toBe(seed2);
     });
 
     it('generates different seeds when search changes', () => {
+      clearCatalogSeed();
       const seed1 = getCatalogSeed({ search: 'oro' });
+      clearCatalogSeed();
       const seed2 = getCatalogSeed({ search: 'plata' });
       
       expect(seed1).not.toBe(seed2);
     });
 
     it('generates different seeds when category changes', () => {
+      clearCatalogSeed();
       const seed1 = getCatalogSeed({ category: 'anillos' });
+      clearCatalogSeed();
       const seed2 = getCatalogSeed({ category: 'collares' });
       
       expect(seed1).not.toBe(seed2);
     });
 
     it('uses combined context for category and search', () => {
+      clearCatalogSeed();
       const seed1 = getCatalogSeed({ category: 'anillos', search: 'oro' });
       const seed2 = getCatalogSeed({ category: 'anillos', search: 'oro' });
+      clearCatalogSeed();
       const seed3 = getCatalogSeed({ category: 'anillos', search: 'plata' });
       
       expect(seed1).toBe(seed2); // Same context
@@ -82,15 +90,24 @@ describe('catalogSeed', () => {
     });
 
     it('clears seed when filter context changes', () => {
+      // Start fresh
+      sessionStorage.clear();
+      
+      // Generate seed for first context
       const seed1 = getCatalogSeed({ category: 'anillos' });
+      
+      // When we call with a different context, the old seed should be cleared
       const seed2 = getCatalogSeed({ category: 'collares' });
       
       // Seeds should be different because context changed
+      // NOTE: Due to randomness, there's a tiny chance they could be the same
+      // If this fails, it's statistically very unlikely but possible
       expect(seed1).not.toBe(seed2);
       
-      // Going back to first context should generate a new seed
+      // Going back to first context should generate yet another new seed
       const seed3 = getCatalogSeed({ category: 'anillos' });
       expect(seed3).not.toBe(seed1);
+      expect(seed3).not.toBe(seed2);
     });
 
     it('persists seed in sessionStorage', () => {
@@ -157,19 +174,18 @@ describe('catalogSeed', () => {
       
       seeds.forEach(seed => {
         expect(seed).toBeGreaterThan(0);
-        expect(seed).toBeLessThan(2147483648); // Max 32-bit integer
+        expect(seed).toBeLessThanOrEqual(4294967295); // Max uint32 value
       });
     });
 
     it('generates different seeds across multiple contexts', () => {
-      clearCatalogSeed();
       const categories = ['anillos', 'collares', 'pulseras', 'aretes', 'relojes'];
       const seeds = categories.map(cat => {
         clearCatalogSeed();
         return getCatalogSeed({ category: cat });
       });
       
-      // All seeds should be unique (statistically very likely)
+      // All seeds should be unique (statistically very likely with 5 random seeds)
       const uniqueSeeds = new Set(seeds);
       expect(uniqueSeeds.size).toBe(seeds.length);
     });

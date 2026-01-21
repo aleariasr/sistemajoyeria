@@ -78,13 +78,15 @@ export function getCatalogSeed(params?: {
   try {
     const currentContext = getFilterContext(params);
     const storedContext = sessionStorage.getItem(FILTER_CONTEXT_KEY);
-    const storedSeed = sessionStorage.getItem(SEED_STORAGE_KEY);
 
     // If filter context changed, clear the old seed
     if (storedContext !== currentContext) {
       sessionStorage.setItem(FILTER_CONTEXT_KEY, currentContext);
       sessionStorage.removeItem(SEED_STORAGE_KEY);
     }
+
+    // Re-fetch stored seed after potential clearing
+    const storedSeed = sessionStorage.getItem(SEED_STORAGE_KEY);
 
     // If we have a stored seed for this context, use it
     if (storedSeed) {
