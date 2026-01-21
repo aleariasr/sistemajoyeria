@@ -165,19 +165,20 @@ class CuentaPorCobrar {
       throw error;
     }
 
-    if (data) {
-      return {
-        ...data,
-        nombre_cliente: data.clientes?.nombre,
-        telefono_cliente: data.clientes?.telefono,
-        cedula_cliente: data.clientes?.cedula,
-        fecha_venta: data.ventas?.fecha_venta,
-        total_venta: data.ventas?.total,
-        metodo_pago: data.ventas?.metodo_pago
-      };
+    if (!data) {
+      return data;
     }
 
-    return data;
+    // Flatten the joined data for backwards compatibility
+    return {
+      ...data,
+      nombre_cliente: data.clientes?.nombre || null,
+      telefono_cliente: data.clientes?.telefono || null,
+      cedula_cliente: data.clientes?.cedula || null,
+      fecha_venta: data.ventas?.fecha_venta || null,
+      total_venta: data.ventas?.total || null,
+      metodo_pago: data.ventas?.metodo_pago || null
+    };
   }
 
   // Obtener cuentas por cobrar de un cliente
