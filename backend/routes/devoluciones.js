@@ -91,10 +91,10 @@ router.get('/venta/:id_venta', requireAuth, async (req, res) => {
 });
 
 // Crear nueva devolución
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
     const {
-      id_venta, id_joya, cantidad, motivo, tipo_devolucion,
+      id_venta, items, tipo_devolucion,
       metodo_reembolso, notas
     } = req.body;
 
@@ -103,16 +103,8 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'El ID de venta es requerido' });
     }
 
-    if (!id_joya) {
-      return res.status(400).json({ error: 'El ID de la joya es requerido' });
-    }
-
-    if (!cantidad || cantidad <= 0) {
-      return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
-    }
-
-    if (!motivo) {
-      return res.status(400).json({ error: 'El motivo es requerido' });
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Los items a devolver son requeridos' });
     }
 
     if (!tipo_devolucion) {
@@ -120,13 +112,13 @@ router.post('/', requireAuth, async (req, res) => {
     }
 
     // Validar tipo de devolución
-    const tiposValidos = ['Reembolso', 'Cambio', 'Nota de Credito'];
+    const tiposValidos = ['Reembolso', 'Cambio', 'Nota de Credito', 'Parcial', 'Completa'];
     if (!tiposValidos.includes(tipo_devolucion)) {
       return res.status(400).json({ error: 'Tipo de devolución inválido' });
     }
 
     // Si es reembolso, validar método
-    if (tipo_devolucion === 'Reembolso' && !metodo_reembolso) {
+    if ((tipo_devolucion === 'Reembolso' || tipo_devolucion === 'Parcial' || tipo_devolucion === 'Completa') && !metodo_reembolso) {
       return res.status(400).json({ error: 'El método de reembolso es requerido para reembolsos' });
     }
 
@@ -136,52 +128,96 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Venta no encontrada' });
     }
 
-    // Verificar que la joya existe
-    const joya = await Joya.obtenerPorId(id_joya);
-    if (!joya) {
-      return res.status(404).json({ error: 'Joya no encontrada' });
-    }
-
-    // Obtener el item de venta para validar y obtener el precio
+    // Obtener los items de venta para validar
     const itemsVenta = await ItemVenta.obtenerPorVenta(id_venta);
-    const itemVenta = itemsVenta.find(item => item.id_joya === parseInt(id_joya));
     
-    if (!itemVenta) {
-      return res.status(404).json({ error: 'El producto no está en esta venta' });
-    }
+    let totalDevolucion = 0;
+    const devolucionesCreadas = [];
 
-    // Validar que no se devuelva más de lo vendido
-    if (cantidad > itemVenta.cantidad) {
-      return res.status(400).json({ 
-        error: `No se puede devolver más de lo vendido (vendido: ${itemVenta.cantidad})` 
+    // Procesar cada item de devolución
+    for (const item of items) {
+      const { id_item_venta, cantidad, motivo } = item;
+
+      if (!cantidad || cantidad <= 0) {
+        return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
+      }
+
+      if (!motivo) {
+        return res.status(400).json({ error: 'El motivo es requerido para cada item' });
+      }
+
+      // Buscar el item de venta
+      const itemVenta = itemsVenta.find(iv => iv.id === parseInt(id_item_venta));
+      
+      if (!itemVenta) {
+        return res.status(404).json({ error: `Item de venta ${id_item_venta} no encontrado` });
+      }
+
+      // Validar que no se devuelva más de lo vendido
+      if (cantidad > itemVenta.cantidad) {
+        return res.status(400).json({ 
+          error: `No se puede devolver más de lo vendido para el item ${id_item_venta} (vendido: ${itemVenta.cantidad})` 
+        });
+      }
+
+      // Calcular subtotal de la devolución
+      const precio_unitario = itemVenta.precio_unitario;
+      const subtotal = precio_unitario * cantidad;
+      totalDevolucion += subtotal;
+
+      const devolucionData = {
+        id_venta,
+        id_joya: itemVenta.id_joya,
+        cantidad,
+        precio_unitario,
+        subtotal,
+        motivo,
+        tipo_devolucion,
+        monto_reembolsado: (tipo_devolucion === 'Reembolso' || tipo_devolucion === 'Parcial' || tipo_devolucion === 'Completa') ? subtotal : 0,
+        metodo_reembolso: (tipo_devolucion === 'Reembolso' || tipo_devolucion === 'Parcial' || tipo_devolucion === 'Completa') ? metodo_reembolso : null,
+        id_usuario: req.session.userId,
+        usuario: req.session.username,
+        notas
+      };
+
+      const resultado = await Devolucion.crear(devolucionData);
+
+      // Devolver stock inmediatamente (auto-aprobar)
+      const joya = await Joya.obtenerPorId(itemVenta.id_joya);
+      const nuevoStock = joya.stock_actual + cantidad;
+      
+      // Actualizar stock
+      await Joya.actualizarStock(itemVenta.id_joya, nuevoStock);
+
+      // Registrar movimiento de inventario
+      await MovimientoInventario.crear({
+        id_joya: itemVenta.id_joya,
+        tipo_movimiento: 'Entrada',
+        cantidad: cantidad,
+        motivo: `Devolución - Venta #${id_venta} - ${motivo}`,
+        usuario: req.session.username,
+        stock_antes: joya.stock_actual,
+        stock_despues: nuevoStock
+      });
+
+      devolucionesCreadas.push({
+        id: resultado.id,
+        id_joya: itemVenta.id_joya,
+        cantidad,
+        subtotal
       });
     }
 
-    // Calcular subtotal de la devolución
-    const precio_unitario = itemVenta.precio_unitario;
-    const subtotal = precio_unitario * cantidad;
-
-    const devolucionData = {
-      id_venta,
-      id_joya,
-      cantidad,
-      precio_unitario,
-      subtotal,
-      motivo,
-      tipo_devolucion,
-      monto_reembolsado: tipo_devolucion === 'Reembolso' ? subtotal : 0,
-      metodo_reembolso: tipo_devolucion === 'Reembolso' ? metodo_reembolso : null,
-      id_usuario: req.session.userId,
-      usuario: req.session.username,
-      notas
-    };
-
-    const resultado = await Devolucion.crear(devolucionData);
-
     res.status(201).json({
+      success: true,
       mensaje: 'Devolución registrada exitosamente',
-      id: resultado.id,
-      subtotal
+      devolucion: {
+        id_venta,
+        tipo_devolucion,
+        estado: 'Completada',
+        total_devuelto: totalDevolucion,
+        items: devolucionesCreadas
+      }
     });
   } catch (error) {
     console.error('Error al crear devolución:', error);

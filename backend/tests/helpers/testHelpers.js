@@ -7,6 +7,7 @@ const request = require('supertest');
 const express = require('express');
 const cookieSession = require('cookie-session');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
 
 /**
  * Create Express app with mocked dependencies
@@ -65,6 +66,21 @@ async function loginUser(app, username = 'admin', password = 'admin123') {
 }
 
 /**
+ * Create authenticated agent that maintains session cookies
+ * This is the recommended way to test authenticated routes
+ */
+async function createAuthenticatedAgent(app, username = 'admin', password = 'admin123') {
+  const agent = request.agent(app);
+  
+  await agent
+    .post('/api/auth/login')
+    .send({ username, password })
+    .expect(200);
+  
+  return agent;
+}
+
+/**
  * Create request with session data
  */
 function withSession(sessionData = {}) {
@@ -88,12 +104,41 @@ function withDependienteSession() {
   return withSession({ userId: 2, rol: 'Dependiente' });
 }
 
+/**
+ * Setup test users with proper password hashes
+ */
+function setupTestUsers() {
+  const adminHash = bcrypt.hashSync('admin123', 10);
+  const dependienteHash = bcrypt.hashSync('dependiente123', 10);
+  
+  return [
+    {
+      id: 1,
+      username: 'admin',
+      full_name: 'Admin User',
+      password_hash: adminHash,
+      role: 'administrador',
+      fecha_creacion: '2024-01-01T00:00:00Z'
+    },
+    {
+      id: 2,
+      username: 'dependiente',
+      full_name: 'Dependiente User',
+      password_hash: dependienteHash,
+      role: 'dependiente',
+      fecha_creacion: '2024-01-01T00:00:00Z'
+    }
+  ];
+}
+
 module.exports = {
   createTestApp,
   createAuthenticatedRequest,
+  createAuthenticatedAgent,
   encodeSessionCookie,
   loginUser,
   withSession,
   withAdminSession,
-  withDependienteSession
+  withDependienteSession,
+  setupTestUsers
 };

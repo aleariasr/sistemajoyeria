@@ -96,6 +96,11 @@ async function construirResumenDelDia(fecha = null) {
 
   const resumenCompleto = {
     ...resumen,
+    cantidad_ventas: resumen.total_ventas, // Count of sales
+    total_ventas: resumen.total_ingresos, // Amount from sales (rename for test compatibility)
+    efectivo: totalVentasEfectivo + totalAbonosEfectivo + totalIngresosEfectivo,
+    tarjeta: totalVentasTarjeta + totalAbonosTarjeta + totalIngresosTarjeta,
+    transferencia: totalVentasTransferencia + totalAbonosTransferencia + totalIngresosTransferencia,
     total_abonos: abonosDelDia.length,
     monto_total_abonos: totalAbonos,
     abonos_efectivo: abonosEfectivo.length,
@@ -142,7 +147,7 @@ router.get('/ventas-dia', requireAuth, async (req, res) => {
       })
     );
 
-    res.json(ventasConItems);
+    res.json({ ventas: ventasConItems });
   } catch (error) {
     console.error('Error al obtener ventas del día:', error);
     res.status(500).json({ error: 'Error al obtener ventas del día' });
@@ -162,7 +167,7 @@ router.get('/resumen-dia', requireAuth, async (req, res) => {
 });
 
 // Cerrar caja (transferir ventas de contado del día a la base de datos principal)
-router.post('/cerrar-caja', requireAuth, async (req, res) => {
+router.post('/cerrar-caja', requireAdmin, async (req, res) => {
   try {
     // Usar null (fecha actual) de manera consistente en todas las operaciones
     const fechaCierre = null; // null = fecha actual de Costa Rica
@@ -292,8 +297,18 @@ router.post('/cerrar-caja', requireAuth, async (req, res) => {
                      (resultadoIngresosExtras.ingresos?.reduce((sum, ing) => sum + (parseFloat(ing.monto) || 0), 0) || 0)
     };
 
-    res.json({
+    res.status(201).json({
+      success: true,
       mensaje: 'Cierre de caja realizado exitosamente',
+      cierre: {
+        id: Date.now(), // Temporary ID
+        total_efectivo: resumenDetallado.resumen.total_efectivo_combinado,
+        total_tarjeta: resumenDetallado.resumen.total_tarjeta_combinado,
+        total_transferencia: resumenDetallado.resumen.total_transferencia_combinado,
+        ...resumenDetallado.resumen
+      },
+      ventas_transferidas: ventasTransferidas.length,
+      abonos_cerrados: resultadoAbonos.count,
       resumen
     });
   } catch (error) {

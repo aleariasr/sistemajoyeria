@@ -38,7 +38,7 @@ async function validarYPrepararItem(item, username) {
     const stockDisponible = await ProductoCompuesto.calcularStockDisponible(item.id_joya);
     
     if (stockDisponible < item.cantidad) {
-      throw new Error(`Stock insuficiente para set "${joya.nombre}". Disponible: ${stockDisponible}`);
+      throw new Error(`stock insuficiente para set "${joya.nombre}". Disponible: ${stockDisponible}`);
     }
 
     // Get components for later stock deduction
@@ -53,7 +53,7 @@ async function validarYPrepararItem(item, username) {
   } else {
     // Regular product
     if (joya.stock_actual < item.cantidad) {
-      throw new Error(`Stock insuficiente para "${joya.nombre}". Disponible: ${joya.stock_actual}`);
+      throw new Error(`stock insuficiente para "${joya.nombre}". Disponible: ${joya.stock_actual}`);
     }
 
     return {
@@ -147,12 +147,12 @@ async function validarStockPedidoOnline(item) {
     const stockDisponible = await ProductoCompuesto.calcularStockDisponible(item.product_id);
     
     if (stockDisponible < item.quantity) {
-      throw new Error(`Stock insuficiente para set "${joya.nombre}". Disponible: ${stockDisponible}`);
+      throw new Error(`stock insuficiente para set "${joya.nombre}". Disponible: ${stockDisponible}`);
     }
   } else {
     // Regular product
     if (joya.stock_actual < item.quantity) {
-      throw new Error(`Stock insuficiente para "${joya.nombre}". Disponible: ${joya.stock_actual}`);
+      throw new Error(`stock insuficiente para "${joya.nombre}". Disponible: ${joya.stock_actual}`);
     }
   }
 

@@ -13,9 +13,15 @@ class MockSupabaseClient {
       movimientos_inventario: fixtures.movimientos_inventario || [],
       ventas: fixtures.ventas || [],
       items_venta: fixtures.items_venta || [],
+      ventas_dia: fixtures.ventas_dia || [],
+      items_venta_dia: fixtures.items_venta_dia || [],
       clientes: fixtures.clientes || [],
       cuentas_por_cobrar: fixtures.cuentas_por_cobrar || [],
-      abonos: fixtures.abonos || []
+      abonos: fixtures.abonos || [],
+      devoluciones: fixtures.devoluciones || [],
+      movimientos_cuenta: fixtures.movimientos_cuenta || [],
+      ingresos_extras: fixtures.ingresos_extras || [],
+      cierres_caja: fixtures.cierres_caja || []
     };
     this.autoIncrementIds = {};
     this.queryBuilder = null;
@@ -88,6 +94,7 @@ class MockQueryBuilder {
     this.insertData = null;
     this.updateData = null;
     this.isSingle = false;
+    this.joins = [];
   }
 
   /**
@@ -98,7 +105,71 @@ class MockQueryBuilder {
     if (options.count) {
       this.countOption = options.count;
     }
+    // Parse foreign key relationships from select string
+    this.parseJoins(columns);
     return this;
+  }
+
+  /**
+   * Parse foreign key joins from select string
+   * Example: "*, clientes!cuentas_por_cobrar_id_cliente_fkey (nombre, telefono)"
+   */
+  parseJoins(selectStr) {
+    if (typeof selectStr !== 'string') {
+      this.joins = [];
+      return;
+    }
+
+    const joins = [];
+    // Match patterns like: table!foreign_key_name (columns)
+    const joinPattern = /(\w+)![\w_]+\s*\(([^)]+)\)/g;
+    let match;
+    
+    while ((match = joinPattern.exec(selectStr)) !== null) {
+      const foreignTable = match[1];
+      const foreignColumns = match[2].split(',').map(c => c.trim());
+      joins.push({ foreignTable, foreignColumns });
+    }
+    
+    this.joins = joins;
+  }
+
+  /**
+   * Apply joins to result data
+   */
+  _applyJoins(data) {
+    if (!this.joins || this.joins.length === 0) {
+      return data;
+    }
+
+    return data.map(item => {
+      const result = { ...item };
+      
+      for (const join of this.joins) {
+        const { foreignTable, foreignColumns } = join;
+        const foreignData = this.client.getFixtures(foreignTable);
+        
+        // Find foreign record by matching ID
+        // Common patterns: id_cliente -> clientes.id, id_venta -> ventas.id
+        const foreignKeyField = `id_${foreignTable.replace(/s$/, '')}`;
+        const foreignId = item[foreignKeyField];
+        
+        if (foreignId) {
+          const foreignRecord = foreignData.find(f => f.id === foreignId);
+          
+          if (foreignRecord) {
+            // Extract only requested columns
+            const joinedData = {};
+            for (const col of foreignColumns) {
+              joinedData[col] = foreignRecord[col];
+            }
+            result[foreignTable] = joinedData;
+          }
+        }
+      }
+      
+      return result;
+    });
   }
 
   /**
@@ -261,7 +332,8 @@ class MockQueryBuilder {
           return regex.test(String(item[filter.column] || '').toLowerCase());
         }
         if (filter.type === 'or') {
-          // Parse OR query like "codigo.ilike.%search%,nombre.ilike.%search%"
+          // Parse OR query like "codigo.ilike.%search%,nome.ilike.%search%"
+          // or "tipo_venta.eq.Contado,tipo_venta.is.null"
           const orConditions = filter.query.split(',');
           return orConditions.some(condition => {
             const parts = condition.split('.');
@@ -273,6 +345,15 @@ class MockQueryBuilder {
               const pattern = val.toLowerCase().replace(/%/g, '.*');
               const regex = new RegExp(pattern);
               return regex.test(String(item[col] || '').toLowerCase());
+            }
+            if (op === 'eq') {
+              return item[col] === val;
+            }
+            if (op === 'is') {
+              if (val === 'null') {
+                return item[col] === null || item[col] === undefined;
+              }
+              return false;
             }
             return false;
           });
@@ -367,6 +448,9 @@ class MockQueryBuilder {
         return 0;
       });
     }
+
+    // Apply joins
+    result = this._applyJoins(result);
 
     // Get count before pagination
     const count = result.length;
