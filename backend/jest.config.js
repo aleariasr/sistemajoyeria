@@ -6,7 +6,11 @@ module.exports = {
     '**/tests/integration/ventas.routes.test.js',
     '**/tests/integration/devoluciones.routes.test.js',
     '**/tests/integration/cierrecaja.routes.test.js',
-    '**/tests/integration/cuentas-por-cobrar.routes.test.js'
+    '**/tests/integration/cuentas-por-cobrar.routes.test.js',
+    '**/tests/integration/notifications.routes.test.js',
+    '**/tests/integration/pedidos-online.routes.test.js',
+    '**/tests/integration/public.routes.test.js',
+    '**/tests/integration/joyas.routes.test.js'
   ],
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
