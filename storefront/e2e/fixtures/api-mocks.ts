@@ -41,11 +41,12 @@ export async function setupApiMocks(page: Page, options: {
   productsError?: boolean;
   orderError?: boolean;
 } = {}) {
-  const baseUrl = 'http://localhost:3001/api';
+  // Match any backend API URL pattern (localhost:3001 or environment variable)
+  const apiPattern = '**/api/public/**';
   
   // Mock products list
   if (options.mockProducts !== false) {
-    await page.route(`${baseUrl}/public/products`, async (route: Route) => {
+    await page.route(`${apiPattern}/products`, async (route: Route) => {
       const url = new URL(route.request().url());
       const page = parseInt(url.searchParams.get('pagina') || '1');
       const perPage = parseInt(url.searchParams.get('por_pagina') || '20');
@@ -106,7 +107,7 @@ export async function setupApiMocks(page: Page, options: {
   
   // Mock featured products
   if (options.mockFeatured !== false) {
-    await page.route(`${baseUrl}/public/products/featured`, async (route: Route) => {
+    await page.route(`${apiPattern}/products/featured`, async (route: Route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -117,7 +118,7 @@ export async function setupApiMocks(page: Page, options: {
   
   // Mock categories
   if (options.mockCategories !== false) {
-    await page.route(`${baseUrl}/public/categories`, async (route: Route) => {
+    await page.route(`${apiPattern}/categories`, async (route: Route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -128,7 +129,7 @@ export async function setupApiMocks(page: Page, options: {
   
   // Mock product detail
   if (options.mockProductDetail !== false) {
-    await page.route(`${baseUrl}/public/products/*`, async (route: Route) => {
+    await page.route(`${apiPattern}/products/*`, async (route: Route) => {
       const url = new URL(route.request().url());
       const pathParts = url.pathname.split('/');
       const productId = parseInt(pathParts[pathParts.length - 1]);
@@ -158,7 +159,7 @@ export async function setupApiMocks(page: Page, options: {
     });
     
     // Mock product components
-    await page.route(`${baseUrl}/public/products/*/componentes`, async (route: Route) => {
+    await page.route(`${apiPattern}/products/*/componentes`, async (route: Route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -188,7 +189,7 @@ export async function setupApiMocks(page: Page, options: {
   
   // Mock order creation
   if (options.mockOrders !== false) {
-    await page.route(`${baseUrl}/public/orders`, async (route: Route) => {
+    await page.route(`${apiPattern}/orders`, async (route: Route) => {
       if (route.request().method() === 'POST') {
         if (options.orderError) {
           await route.fulfill({
@@ -221,7 +222,7 @@ export async function setupApiMocks(page: Page, options: {
     });
     
     // Mock order detail
-    await page.route(`${baseUrl}/public/orders/*`, async (route: Route) => {
+    await page.route(`${apiPattern}/orders/*`, async (route: Route) => {
       if (route.request().method() === 'GET') {
         const url = new URL(route.request().url());
         const pathParts = url.pathname.split('/');
@@ -271,9 +272,9 @@ export async function waitForApiCall(page: Page, endpoint: string, timeout = 500
  * Mock API error
  */
 export async function mockApiError(page: Page, endpoint: string, status = 500, message = 'Internal server error') {
-  const baseUrl = 'http://localhost:3001/api';
+  const apiPattern = '**/api/public';
   
-  await page.route(`${baseUrl}${endpoint}`, async (route: Route) => {
+  await page.route(`${apiPattern}${endpoint}`, async (route: Route) => {
     await route.fulfill({
       status,
       contentType: 'application/json',
@@ -286,9 +287,9 @@ export async function mockApiError(page: Page, endpoint: string, status = 500, m
  * Mock empty products response
  */
 export async function mockEmptyProducts(page: Page) {
-  const baseUrl = 'http://localhost:3001/api';
+  const apiPattern = '**/api/public';
   
-  await page.route(`${baseUrl}/public/products`, async (route: Route) => {
+  await page.route(`${apiPattern}/products`, async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

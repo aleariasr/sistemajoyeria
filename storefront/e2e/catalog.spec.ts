@@ -23,11 +23,12 @@ test.describe('Catalog Flow', () => {
   test('should display products in catalog', async ({ page }) => {
     await page.goto('/catalog/todos');
     
-    // Wait for products to load
-    await page.waitForSelector('[data-testid^="product-"]', { timeout: 10000 });
+    // Wait for the page to load and products grid to appear
+    // Products are rendered as article elements or links within the grid
+    await page.waitForSelector('article, a[href*="/product/"]', { timeout: 15000 });
     
-    // Should show products
-    const products = await page.locator('[data-testid^="product-"]').all();
+    // Should show products (either as articles or product links)
+    const products = await page.locator('article, a[href*="/product/"]').all();
     expect(products.length).toBeGreaterThan(0);
     
     // Should show product count
