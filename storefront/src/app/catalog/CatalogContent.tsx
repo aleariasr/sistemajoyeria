@@ -133,8 +133,11 @@ export default function CatalogContent() {
       new Map(allProducts.map(p => [p._uniqueKey || `${p.id}-${p.variante_id || 0}`, p])).values()
     );
     
-    console.log(`📦 [Frontend] Total productos de ${data.pages.length} páginas: ${allProducts.length}`);
-    console.log(`📦 [Frontend] Después de deduplicar: ${uniqueProducts.length}`);
+    // Log only in development for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📦 [Frontend] Total productos de ${data.pages.length} páginas: ${allProducts.length}`);
+      console.log(`📦 [Frontend] Después de deduplicar: ${uniqueProducts.length}`);
+    }
     
     return uniqueProducts;
   }, [data]);

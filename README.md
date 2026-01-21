@@ -169,6 +169,43 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 2. `backend/migrations/create-pedidos-online.sql`
 3. `backend/migrations/complete-pedidos-online.sql` (para sistema de pedidos)
 
+## 🧪 Testing y Calidad
+
+```bash
+# Ejecutar tests
+npm run test:backend          # Tests del backend
+npm run test:storefront       # Tests del storefront (52 tests)
+
+# Linters
+npm run lint:storefront       # ESLint para storefront
+
+# Builds
+npm run build:frontend        # Build del frontend POS
+npm run build:storefront      # Build del storefront Next.js
+```
+
+### Verificación Rápida
+
+Antes de desplegar o hacer un PR, ejecute:
+
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Tests
+npm run test:backend
+npm run test:storefront
+
+# 3. Linting
+npm run lint:storefront
+
+# 4. Builds
+npm run build:frontend
+npm run build:storefront
+```
+
+Todos los comandos deben completarse sin errores.
+
 ## 📚 Documentación
 
 - 📦 **[Sistema de Pedidos Online](PEDIDOS_ONLINE.md)** - Guía completa del sistema de gestión de pedidos
@@ -183,6 +220,7 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 - ✅ Headers de seguridad (HSTS, X-Frame-Options, X-Content-Type-Options)
 - ✅ SQL injection: queries parametrizadas + escape en ILIKE
 - ✅ XSS prevention: escape de HTML en entradas de usuario
+- ✅ Validación de variables de entorno en startup (zod schema)
 
 ---
 
