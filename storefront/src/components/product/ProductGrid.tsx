@@ -24,6 +24,7 @@ interface ProductGridProps {
   error?: Error | null;
   onRetry?: () => void;
   filterContext?: string; // Optional context for storage key (e.g., "category-anillos", "search-oro")
+  shuffleSeed?: number; // Optional shuffle seed for namespacing storage
 }
 
 /**
@@ -34,23 +35,35 @@ interface ProductGridProps {
  * order when navigating back to the catalog.
  * 
  * Uses _uniqueKey instead of id to handle variants correctly.
+ * Namespaces storage key by seed + filters to prevent mixing orders.
  * 
  * Key behaviors:
  * 1. If products haven't changed (same _uniqueKeys), use stored order
  * 2. If new products appear (longer list from infinite scroll), append them
  * 3. If products are completely different (filters/search), use new order
  */
-function getOrderedProducts(products: Product[], filterContext?: string): Product[] {
+function getOrderedProducts(
+  products: Product[], 
+  filterContext?: string,
+  shuffleSeed?: number
+): Product[] {
   // Skip localStorage in server-side rendering
   if (typeof window === 'undefined') {
     return products;
   }
 
   try {
-    // Use context-aware storage key to prevent mixing orders between different filters
-    const storageKey = filterContext 
-      ? `productOrder_${filterContext}` 
-      : 'productOrder';
+    // Create storage key with seed + filter context for proper namespacing
+    // This prevents mixing orders between different shuffle seeds and filters
+    let storageKey = 'productOrder';
+    
+    if (shuffleSeed !== undefined) {
+      storageKey += `_seed${shuffleSeed}`;
+    }
+    
+    if (filterContext) {
+      storageKey += `_${filterContext}`;
+    }
     
     const storedOrder = localStorage.getItem(storageKey);
     const productMap = new Map(products.map((p) => [p._uniqueKey || `${p.id}`, p]));
@@ -104,12 +117,13 @@ function ProductGridComponent({
   error = null,
   onRetry,
   filterContext,
+  shuffleSeed,
 }: ProductGridProps) {
   // Get ordered products with persistent order from localStorage
-  // useMemo ensures the ordering happens only when products array or context changes
+  // useMemo ensures the ordering happens only when products array, context, or seed changes
   const orderedProducts = useMemo(
-    () => getOrderedProducts(products, filterContext), 
-    [products, filterContext]
+    () => getOrderedProducts(products, filterContext, shuffleSeed), 
+    [products, filterContext, shuffleSeed]
   );
 
   // Loading state

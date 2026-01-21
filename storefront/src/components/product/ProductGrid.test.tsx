@@ -453,4 +453,133 @@ describe('ProductGrid', () => {
       expect(productIds).not.toContain(4);
     });
   });
+
+  describe('shuffleSeed handling', () => {
+    it('uses separate storage for different shuffle seeds', () => {
+      const products = [
+        createMockProduct(1, 'Anillos'),
+        createMockProduct(2, 'Collares'),
+        createMockProduct(3, 'Aretes'),
+      ];
+
+      // Render with seed 12345
+      const { unmount: unmount1 } = render(
+        <ProductGrid products={products} shuffleSeed={12345} />
+      );
+      
+      const order1 = localStorage.getItem('productOrder_seed12345');
+      expect(order1).toBeTruthy();
+      unmount1();
+
+      // Render with seed 67890
+      const { unmount: unmount2 } = render(
+        <ProductGrid products={products} shuffleSeed={67890} />
+      );
+      
+      const order2 = localStorage.getItem('productOrder_seed67890');
+      expect(order2).toBeTruthy();
+      unmount2();
+
+      // Both orders should exist independently
+      expect(localStorage.getItem('productOrder_seed12345')).toBeTruthy();
+      expect(localStorage.getItem('productOrder_seed67890')).toBeTruthy();
+    });
+
+    it('maintains stable order with same seed across remounts', () => {
+      const products = [
+        createMockProduct(1, 'Anillos'),
+        createMockProduct(2, 'Collares'),
+        createMockProduct(3, 'Aretes'),
+      ];
+
+      const seed = 12345;
+
+      // First render with seed
+      const { unmount: unmount1 } = render(
+        <ProductGrid products={products} shuffleSeed={seed} />
+      );
+      const firstOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+        const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      unmount1();
+
+      // Second render with same seed - should use stored order
+      const { unmount: unmount2 } = render(
+        <ProductGrid products={products} shuffleSeed={seed} />
+      );
+      const secondOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+        const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      unmount2();
+
+      // Third render with same seed - should still use stored order
+      render(
+        <ProductGrid products={products} shuffleSeed={seed} />
+      );
+      const thirdOrder = screen.getAllByTestId(/product-\d+/).map((el) => {
+        const match = el.getAttribute('data-testid')?.match(/product-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+
+      // All orders should be identical
+      expect(secondOrder).toEqual(firstOrder);
+      expect(thirdOrder).toEqual(firstOrder);
+    });
+
+    it('combines seed and filterContext for storage key', () => {
+      const products = [
+        createMockProduct(1, 'Anillos'),
+        createMockProduct(2, 'Anillos'),
+      ];
+
+      render(
+        <ProductGrid 
+          products={products} 
+          shuffleSeed={12345} 
+          filterContext="cat-anillos" 
+        />
+      );
+
+      // Should have combined storage key
+      const order = localStorage.getItem('productOrder_seed12345_cat-anillos');
+      expect(order).toBeTruthy();
+      expect(order).toContain('1');
+      expect(order).toContain('2');
+    });
+
+    it('maintains separate orders for different seed+filter combinations', () => {
+      const anillos = [createMockProduct(1), createMockProduct(2)];
+      const collares = [createMockProduct(3), createMockProduct(4)];
+
+      // Render anillos with seed 12345
+      const { unmount: unmount1 } = render(
+        <ProductGrid 
+          products={anillos} 
+          shuffleSeed={12345} 
+          filterContext="cat-anillos" 
+        />
+      );
+      unmount1();
+
+      // Render collares with same seed but different filter
+      const { unmount: unmount2 } = render(
+        <ProductGrid 
+          products={collares} 
+          shuffleSeed={12345} 
+          filterContext="cat-collares" 
+        />
+      );
+      unmount2();
+
+      // Both should exist independently
+      const anillosOrder = localStorage.getItem('productOrder_seed12345_cat-anillos');
+      const collaresOrder = localStorage.getItem('productOrder_seed12345_cat-collares');
+      
+      expect(anillosOrder).toBeTruthy();
+      expect(collaresOrder).toBeTruthy();
+      expect(anillosOrder).not.toEqual(collaresOrder);
+    });
+  });
 });
