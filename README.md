@@ -174,20 +174,48 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 ### Suite Completa de QA (Recomendado)
 
 ```bash
-# Ejecutar TODA la suite de QA en un solo comando
+# Ejecutar TODA la suite de QA en un solo comando (100% mocked)
 npm run test:full
 
-# Incluye:
-# - Tests unitarios backend
-# - Tests de integración backend
-# - Tests E2E smoke (flujo completo)
-# - Tests de performance
-# - Tests storefront
-# - Builds (frontend y storefront)
-# - Linting
+# O usar el shell script directamente
+./scripts/test-full.sh
 ```
 
-**Ver** [QUICK_VERIFICATION_GUIDE.md](QUICK_VERIFICATION_GUIDE.md) para documentación completa.
+**15 Suites de Tests** ejecutadas en secuencia (~2-3 minutos):
+1. ✅ Backend unit tests (modelos, utilidades)
+2. ✅ Backend auth tests (autenticación, middleware)
+3. ✅ Backend joyas CRUD tests (crear, leer, actualizar, eliminar)
+4. ✅ Backend public API tests (endpoints storefront)
+5. ✅ Backend POS tests (ventas, devoluciones, cierre caja, cuentas)
+6. ✅ Backend pedidos online tests
+7. ✅ Backend notifications tests (email, push)
+8. ✅ Backend smoke E2E tests (flujos completos)
+9. ✅ Backend performance tests (benchmarks API)
+10. ✅ Frontend POS tests (componentes React)
+11. ✅ Storefront unit tests
+12. ✅ Storefront lint check
+13. ✅ Frontend build verification
+14. ✅ Storefront build verification
+15. ⭕ Storefront E2E tests (opcional - requiere servidor activo)
+
+**Nota sobre E2E**: Los tests E2E de Playwright están deshabilitados por defecto porque requieren un servidor corriendo. Para incluirlos:
+```bash
+RUN_E2E_TESTS=true npm run test:full
+```
+
+**Ventajas**:
+- ✅ **100% Mocked** - No requiere servicios reales (Supabase, Cloudinary, Resend)
+- ✅ **Sin credenciales** - No necesita variables de entorno
+- ✅ **CI/CD Ready** - Ejecuta limpiamente en cualquier entorno
+- ✅ **Rápido** - Suite completa en 2-3 minutos
+- ✅ **Determinístico** - Mismo resultado cada vez
+
+**Ver** [QUICK_VERIFICATION_GUIDE.md](QUICK_VERIFICATION_GUIDE.md) para documentación completa con:
+- 📋 Detalles de cada suite de tests
+- 🎯 Arquitectura de mocks (Supabase, Cloudinary, Resend)
+- 🔧 Troubleshooting y debugging
+- 📊 Benchmarks de performance
+- 🚀 Integración CI/CD
 
 ### Tests Individuales
 

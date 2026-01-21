@@ -3,16 +3,32 @@
 /**
  * Test Orchestrator - Comprehensive QA Suite Runner
  * 
- * Executes all test suites in sequence and reports results:
- * 1. Backend unit tests
- * 2. Backend integration tests (auth, passing)
- * 3. Backend smoke E2E tests
- * 4. Backend performance tests
- * 5. Storefront unit tests
- * 6. Build verification (frontend and storefront)
- * 7. Lint verification (storefront)
+ * Executes all test suites in sequence with 100% mocked coverage:
+ * 1. Backend unit tests (models, utilities, business logic)
+ * 2. Backend auth tests (authentication, middleware)
+ * 3. Backend joyas CRUD tests (create, read, update, delete, listings)
+ * 4. Backend public API tests (storefront endpoints, mocked)
+ * 5. Backend POS tests (ventas, devoluciones, cierre caja, cuentas por cobrar)
+ * 6. Backend pedidos online tests (online orders)
+ * 7. Backend notifications tests (email, push notifications)
+ * 8. Backend smoke E2E tests (complete flows)
+ * 9. Backend performance tests (API benchmarks)
+ * 10. Frontend POS tests (React components)
+ * 11. Storefront unit tests (components, utilities)
+ * 12. Storefront lint check
+ * 13. Frontend build verification
+ * 14. Storefront build verification
+ * 15. Storefront E2E tests (optional - set RUN_E2E_TESTS=true)
  * 
- * Usage: npm run test:full
+ * All tests use mocks - no real services required:
+ * - Supabase mocked (in-memory database)
+ * - Cloudinary mocked (fake image URLs)
+ * - Resend mocked (no emails sent)
+ * - Web-push mocked (no notifications sent)
+ * 
+ * Usage: 
+ *   npm run test:full                    # Run all tests except E2E
+ *   RUN_E2E_TESTS=true npm run test:full # Run all tests including E2E (requires server)
  */
 
 const { spawn } = require('child_process');
@@ -129,6 +145,7 @@ async function main() {
 
   // Test suite definitions
   const testSuites = [
+    // Backend Unit Tests
     {
       name: 'Backend Unit Tests',
       command: 'npx',
@@ -136,13 +153,62 @@ async function main() {
       cwd: backendDir,
       emoji: '🔬'
     },
+    
+    // Backend Integration Tests - Auth
     {
-      name: 'Backend Integration Tests (Auth)',
+      name: 'Backend Auth Tests',
       command: 'npx',
-      args: ['jest', 'tests/integration/auth.routes.test.js'],
+      args: ['jest', 'tests/unit/auth.middleware.test.js', 'tests/integration/auth.routes.test.js'],
       cwd: backendDir,
       emoji: '🔐'
     },
+    
+    // Backend Integration Tests - Joyas CRUD
+    {
+      name: 'Backend Joyas CRUD Tests (Mocked)',
+      command: 'npx',
+      args: ['jest', 'tests/integration/joyas-crud-mocked.test.js', 'tests/integration/joyas-admin-listing-mocked.test.js'],
+      cwd: backendDir,
+      emoji: '💎'
+    },
+    
+    // Backend Integration Tests - Public API
+    {
+      name: 'Backend Public API Tests (Mocked)',
+      command: 'npx',
+      args: ['jest', 'tests/integration/public.routes.test.js', 'tests/integration/public-listing-mocked.test.js'],
+      cwd: backendDir,
+      emoji: '🌐'
+    },
+    
+    // Backend Integration Tests - POS (Ventas, Devoluciones, Cierre Caja, Cuentas)
+    {
+      name: 'Backend POS Tests',
+      command: 'npx',
+      args: ['jest', 'tests/integration/ventas.routes.test.js', 'tests/integration/devoluciones.routes.test.js', 'tests/integration/cierrecaja.routes.test.js', 'tests/integration/cuentas-por-cobrar.routes.test.js'],
+      cwd: backendDir,
+      emoji: '🏪'
+    },
+    
+    // Backend Integration Tests - Pedidos Online
+    {
+      name: 'Backend Pedidos Online Tests',
+      command: 'npx',
+      args: ['jest', 'tests/integration/pedidos-online.routes.test.js'],
+      cwd: backendDir,
+      emoji: '📦'
+    },
+    
+    // Backend Integration Tests - Notifications
+    {
+      name: 'Backend Notifications Tests',
+      command: 'npx',
+      args: ['jest', 'tests/integration/notifications.routes.test.js', 'tests/unit/emailService.test.js'],
+      cwd: backendDir,
+      emoji: '📧'
+    },
+    
+    // Backend Smoke E2E Tests
     {
       name: 'Backend Smoke E2E Tests',
       command: 'npx',
@@ -150,6 +216,8 @@ async function main() {
       cwd: backendDir,
       emoji: '🚀'
     },
+    
+    // Backend Performance Tests
     {
       name: 'Backend Performance Tests',
       command: 'npx',
@@ -157,6 +225,17 @@ async function main() {
       cwd: backendDir,
       emoji: '⚡'
     },
+    
+    // Frontend POS Tests
+    {
+      name: 'Frontend POS Tests',
+      command: 'npm',
+      args: ['run', 'test'],
+      cwd: frontendDir,
+      emoji: '🖥️'
+    },
+    
+    // Storefront Unit Tests
     {
       name: 'Storefront Unit Tests',
       command: 'npm',
@@ -164,6 +243,17 @@ async function main() {
       cwd: storefrontDir,
       emoji: '🛍️'
     },
+    
+    // Storefront Lint Check
+    {
+      name: 'Storefront Lint Check',
+      command: 'npm',
+      args: ['run', 'lint'],
+      cwd: storefrontDir,
+      emoji: '✨'
+    },
+    
+    // Build Verification - Frontend
     {
       name: 'Frontend Build Verification',
       command: 'npm',
@@ -171,6 +261,8 @@ async function main() {
       cwd: frontendDir,
       emoji: '🏗️'
     },
+    
+    // Build Verification - Storefront
     {
       name: 'Storefront Build Verification',
       command: 'npm',
@@ -178,14 +270,28 @@ async function main() {
       cwd: storefrontDir,
       emoji: '🏗️'
     },
-    {
-      name: 'Storefront Lint Check',
-      command: 'npm',
-      args: ['run', 'lint'],
-      cwd: storefrontDir,
-      emoji: '✨'
-    }
+    
+    // Storefront E2E Tests (Playwright) - Optional, requires running server
+    // Uncomment to include E2E tests (requires storefront server running on port 3002)
+    // {
+    //   name: 'Storefront E2E Tests (Playwright)',
+    //   command: 'npm',
+    //   args: ['run', 'test:e2e'],
+    //   cwd: storefrontDir,
+    //   emoji: '🎭'
+    // }
   ];
+  
+  // Allow skipping E2E tests via environment variable
+  if (process.env.RUN_E2E_TESTS === 'true') {
+    testSuites.push({
+      name: 'Storefront E2E Tests (Playwright)',
+      command: 'npm',
+      args: ['run', 'test:e2e'],
+      cwd: storefrontDir,
+      emoji: '🎭'
+    });
+  }
 
   // Run each test suite
   for (const suite of testSuites) {
