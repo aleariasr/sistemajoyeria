@@ -332,7 +332,8 @@ class MockQueryBuilder {
           return regex.test(String(item[filter.column] || '').toLowerCase());
         }
         if (filter.type === 'or') {
-          // Parse OR query like "codigo.ilike.%search%,nombre.ilike.%search%"
+          // Parse OR query like "codigo.ilike.%search%,nome.ilike.%search%"
+          // or "tipo_venta.eq.Contado,tipo_venta.is.null"
           const orConditions = filter.query.split(',');
           return orConditions.some(condition => {
             const parts = condition.split('.');
@@ -344,6 +345,15 @@ class MockQueryBuilder {
               const pattern = val.toLowerCase().replace(/%/g, '.*');
               const regex = new RegExp(pattern);
               return regex.test(String(item[col] || '').toLowerCase());
+            }
+            if (op === 'eq') {
+              return item[col] === val;
+            }
+            if (op === 'is') {
+              if (val === 'null') {
+                return item[col] === null || item[col] === undefined;
+              }
+              return false;
             }
             return false;
           });
