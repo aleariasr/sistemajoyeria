@@ -196,7 +196,12 @@ npm run test:full
 12. ✅ Storefront lint check
 13. ✅ Frontend build verification
 14. ✅ Storefront build verification
-15. ✅ Storefront E2E tests (Playwright)
+15. ⭕ Storefront E2E tests (opcional - requiere servidor activo)
+
+**Nota sobre E2E**: Los tests E2E de Playwright están deshabilitados por defecto porque requieren un servidor corriendo. Para incluirlos:
+```bash
+RUN_E2E_TESTS=true npm run test:full
+```
 
 **Ventajas**:
 - ✅ **100% Mocked** - No requiere servicios reales (Supabase, Cloudinary, Resend)

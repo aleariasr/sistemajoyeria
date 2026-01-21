@@ -18,7 +18,7 @@
  * 12. Storefront lint check
  * 13. Frontend build verification
  * 14. Storefront build verification
- * 15. Storefront E2E tests (Playwright)
+ * 15. Storefront E2E tests (optional - set RUN_E2E_TESTS=true)
  * 
  * All tests use mocks - no real services required:
  * - Supabase mocked (in-memory database)
@@ -26,7 +26,9 @@
  * - Resend mocked (no emails sent)
  * - Web-push mocked (no notifications sent)
  * 
- * Usage: npm run test:full
+ * Usage: 
+ *   npm run test:full                    # Run all tests except E2E
+ *   RUN_E2E_TESTS=true npm run test:full # Run all tests including E2E (requires server)
  */
 
 const { spawn } = require('child_process');
@@ -269,15 +271,27 @@ async function main() {
       emoji: '🏗️'
     },
     
-    // Storefront E2E Tests (Playwright)
-    {
+    // Storefront E2E Tests (Playwright) - Optional, requires running server
+    // Uncomment to include E2E tests (requires storefront server running on port 3002)
+    // {
+    //   name: 'Storefront E2E Tests (Playwright)',
+    //   command: 'npm',
+    //   args: ['run', 'test:e2e'],
+    //   cwd: storefrontDir,
+    //   emoji: '🎭'
+    // }
+  ];
+  
+  // Allow skipping E2E tests via environment variable
+  if (process.env.RUN_E2E_TESTS === 'true') {
+    testSuites.push({
       name: 'Storefront E2E Tests (Playwright)',
       command: 'npm',
       args: ['run', 'test:e2e'],
       cwd: storefrontDir,
       emoji: '🎭'
-    }
-  ];
+    });
+  }
 
   // Run each test suite
   for (const suite of testSuites) {
