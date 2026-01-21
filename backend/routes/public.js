@@ -237,26 +237,16 @@ router.get('/products', async (req, res) => {
         // NO crear joyaParaVariante clonado con datos del padre
         // transformToPublicProduct ya construye correctamente el producto desde la variante
         for (const variante of variantes) {
-          console.log(`📦 [Página ${pagina}] Expandiendo variante ${variante.id}: ${variante.nombre_variante}`);
-          
-          // ✅ Pasar joya original con imagenes ya cargadas
-          const joyaConImagenes = {
-            ...joya,
-            imagenes: imagenes.map(img => ({
-              id: img.id,
-              url: img.imagen_url,
-              orden: img.orden_display,
-              es_principal: img.es_principal
-            }))
-          };
-          
-          const productoVariante = transformToPublicProduct(joyaConImagenes, false, variante);
-          console.log(`📦 [Página ${pagina}] Variante expandida:`, {
-            id: variante.id,
-            nombre: productoVariante.nombre,
-            imagen: productoVariante.imagen_url,
-            producto_padre: joya.codigo
+          console.log(`📦 [Página ${pagina}] Expandiendo variante:`, {
+            variante_id: variante.id,
+            nombre_variante: variante.nombre_variante,
+            imagen_url: variante.imagen_url,
+            producto_padre_id: joya.id,
+            producto_padre_nombre: joya.nombre
           });
+          
+          // ✅ Pasar joya directamente, transformToPublicProduct maneja las variantes correctamente
+          const productoVariante = transformToPublicProduct(joya, false, variante);
           productosExpandidos.push(productoVariante);
         }
       } else {
