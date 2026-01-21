@@ -175,8 +175,8 @@ class Joya {
 
     // Defensive deduplication: ensure no duplicate entries by ID
     // (Although no joins in query, this is a safety measure)
-    const uniqueJoyas = data ? Array.from(
-      new Map(data.map(j => [j.id, j])).values()
+    const uniqueJoyas = data && Array.isArray(data) ? Array.from(
+      new Map(data.filter(j => j?.id).map(j => [j.id, j])).values()
     ) : [];
 
     return {

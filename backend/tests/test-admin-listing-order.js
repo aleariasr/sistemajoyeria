@@ -263,23 +263,40 @@ async function testFiltersWithOrder() {
   console.log('Test 5: Verify filters maintain correct order and totals');
   
   try {
+    // First, get a sample categoria from the database
+    const dataSample = await getJoyas({ pagina: 1, por_pagina: 50 });
+    
+    if (!dataSample.joyas || dataSample.joyas.length === 0) {
+      console.log('⚠️  No joyas found in database. Skipping filter test.');
+      return;
+    }
+    
+    // Find the most common category to test with
+    const categorias = dataSample.joyas
+      .map(j => j.categoria)
+      .filter(c => c && c.trim() !== '');
+    
+    if (categorias.length === 0) {
+      console.log('⚠️  No categories found in joyas. Skipping filter test.');
+      return;
+    }
+    
+    const categoriaTest = categorias[0];
+    console.log(`  ℹ️  Testing with category: "${categoriaTest}"`);
+    
     // Test with category filter
-    const data = await getJoyas({ pagina: 1, por_pagina: 20, categoria: 'Anillos' });
+    const data = await getJoyas({ pagina: 1, por_pagina: 20, categoria: categoriaTest });
     
     if (!data.joyas || data.joyas.length === 0) {
-      console.log('⚠️  No joyas found with filter. Trying without filter.');
-      const dataNoFilter = await getJoyas({ pagina: 1, por_pagina: 20 });
-      if (dataNoFilter.joyas && dataNoFilter.joyas.length > 0) {
-        console.log(`  ℹ️  Database has ${dataNoFilter.total} joyas without filter`);
-      }
+      console.log('⚠️  No joyas found with filter. Test inconclusive.');
       return;
     }
     
     console.log(`  📦 Filtered results: ${data.joyas.length} items (total: ${data.total})`);
     
-    // Verify all items match the filter
+    // Verify all items match the filter (case-insensitive)
     const allMatchFilter = data.joyas.every(j => 
-      j.categoria && j.categoria.toLowerCase() === 'anillos'
+      j.categoria && j.categoria.toLowerCase() === categoriaTest.toLowerCase()
     );
     
     if (allMatchFilter) {
