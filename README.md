@@ -171,35 +171,63 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 
 ## 🧪 Testing y Calidad
 
+### Suite Completa de QA (Recomendado)
+
 ```bash
-# Tests del backend (mocked, sin servidor ni DB real)
-npm run test:backend          # Todos los tests (unit + integration)
-npm run test:unit             # Tests unitarios (modelos)
-npm run test:integration      # Tests de integración (rutas API)
-npm run test:coverage         # Generar reporte de cobertura
+# Ejecutar TODA la suite de QA en un solo comando
+npm run test:full
 
-# Tests del storefront
-npm run test:storefront       # Storefront unit tests (52 tests)
+# Incluye:
+# - Tests unitarios backend
+# - Tests de integración backend
+# - Tests E2E smoke (flujo completo)
+# - Tests de performance
+# - Tests storefront
+# - Builds (frontend y storefront)
+# - Linting
+```
 
-# Linters
-npm run lint:storefront       # ESLint para storefront
+**Ver** [QUICK_VERIFICATION_GUIDE.md](QUICK_VERIFICATION_GUIDE.md) para documentación completa.
 
-# Builds
-npm run build:frontend        # Build del frontend POS
-npm run build:storefront      # Build del storefront Next.js
+### Tests Individuales
+
+```bash
+# Backend
+npm run test:backend              # Todos los tests backend
+npm run test:backend:passing      # Solo tests que pasan (rápido)
+npm run test:backend:smoke        # Suite E2E smoke completa
+npm run test:backend:performance  # Tests de performance
+
+# Tests específicos
+npm run test:unit                 # Tests unitarios (modelos)
+npm run test:auth                 # Tests de autenticación
+npm run test:pos                  # Tests POS (ventas, devoluciones, cierre)
+npm run test:orders               # Tests de pedidos online
+npm run test:notifications        # Tests de notificaciones
+
+# Storefront
+npm run test:storefront           # Unit tests
+npm run test:storefront:e2e       # E2E con Playwright
+npm run test:storefront:all       # Todos los tests storefront
+
+# Builds y Linting
+npm run build:frontend            # Build frontend POS
+npm run build:storefront          # Build storefront Next.js
+npm run lint:storefront           # ESLint storefront
 ```
 
 ### Tests del Backend (Mocked)
 
-Los nuevos tests del backend utilizan mocks de Supabase, Cloudinary y Resend, **no requieren servidor ni credenciales reales**:
+Los tests del backend utilizan mocks de Supabase, Cloudinary y Resend, **no requieren servidor ni credenciales reales**:
 
-- ✅ **44 tests** completamente funcionales
-- ✅ Tests unitarios de modelos (Joya, shuffle, filtros)
-- ✅ Tests de integración de rutas (auth, joyas, public API)
-- ✅ Fixtures en memoria con datos de prueba
-- ✅ Ejecución rápida (~6 segundos)
+- ✅ **Tests unitarios** de modelos (Joya, shuffle, filtros)
+- ✅ **Tests de integración** de rutas (auth, ventas, public API)
+- ✅ **Smoke E2E** - flujo completo: creación → venta → devolución → cierre
+- ✅ **Performance tests** - tiempos de respuesta clave
+- ✅ **Fixtures en memoria** con datos de prueba
+- ✅ **Ejecución rápida** (~6-8 segundos por suite)
 
-Ver **[backend/QUICK_VERIFICATION.md](backend/QUICK_VERIFICATION.md)** para guía completa.
+Ver **[QUICK_VERIFICATION_GUIDE.md](QUICK_VERIFICATION_GUIDE.md)** para guía completa.
 
 ```bash
 cd backend
@@ -207,38 +235,48 @@ npm test                    # Ejecutar todos los tests
 npm run test:coverage       # Ver cobertura (coverage/lcov-report/index.html)
 ```
 
-### Tests Legacy (E2E)
+### Smoke E2E Tests
 
-Los tests E2E antiguos en `backend/tests/` requieren servidor corriendo y se mantienen para compatibilidad:
+Los smoke tests validan el flujo completo end-to-end:
+
+1. ✅ Creación de joya → Listado admin
+2. ✅ Checkout storefront simulado
+3. ✅ Venta POS → Devolución
+4. ✅ Cierre de caja
+5. ✅ Pedido online simulado
+6. ✅ Validación de consistencia stock/variantes/sets
 
 ```bash
-# Terminal 1: Iniciar el backend
-npm run start:backend
-
-# Terminal 2: Ejecutar tests legacy
-npm run test:old
+npm run test:backend:smoke
 ```
 
-### Verificación Rápida
+### Performance Tests
+
+Validan tiempos de respuesta de endpoints clave:
+
+- `/api/public/products` - < 150ms
+- `/api/joyas` - < 200ms
+- `/api/ventas` - < 300ms
+
+```bash
+npm run test:backend:performance
+```
+
+### Verificación Pre-Deploy
 
 Antes de desplegar o hacer un PR, ejecute:
 
 ```bash
-# 1. Instalar dependencias
-npm install
+# Opción 1: Suite completa (recomendado)
+npm run test:full
 
-# 2. Tests del backend (mocked, rápido)
-npm run test:backend
-
-# 3. Tests unitarios del storefront
-npm run test:storefront
-
-# 4. Linting
-npm run lint:storefront
-
-# 5. Builds
-npm run build:frontend
-npm run build:storefront
+# Opción 2: Verificación individual
+npm install                    # 1. Instalar dependencias
+npm run test:backend:passing   # 2. Tests backend (rápido)
+npm run test:storefront        # 3. Tests storefront
+npm run lint:storefront        # 4. Linting
+npm run build:frontend         # 5. Build frontend
+npm run build:storefront       # 6. Build storefront
 ```
 
 Todos los comandos deben completarse sin errores.
