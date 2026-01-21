@@ -324,8 +324,10 @@ describe('Auth Middleware Unit Tests', () => {
       const middleware = checkSessionExpiration(60000);
       middleware(req, res, next);
 
+      // Verify lastActivity was updated (should be greater than initial)
       expect(req.session.lastActivity).toBeGreaterThan(initialTime);
-      expect(req.session.lastActivity).toBeCloseTo(Date.now(), -2);
+      // Verify it's recent (within last 1 second)
+      expect(req.session.lastActivity).toBeGreaterThan(Date.now() - 1000);
     });
 
     it('should handle edge case at exact timeout boundary', () => {

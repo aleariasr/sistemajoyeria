@@ -250,11 +250,14 @@ process.env.ADMIN_EMAIL = 'admin@example.com';
 ## Environment Variables
 
 ### Required for Tests
-None - tests use mocks and don't require real API keys.
+Tests use mocks and set test environment variables, but do not require **real** API keys:
+- Tests set `RESEND_API_KEY='test-api-key'` for email mocks
+- Tests set `VAPID_PUBLIC_KEY='test-vapid-public-key'` for push notification mocks
+- No actual API calls are made during tests
 
 ### Required for Production
 ```bash
-# Email Service (Resend)
+# Email Service (Resend) - Required for real email sending
 RESEND_API_KEY=your_resend_api_key
 EMAIL_FROM=noreply@yourdomain.com
 EMAIL_FROM_NAME=Your Store Name
@@ -266,7 +269,7 @@ STORE_NAME=Your Jewelry Store
 STORE_URL=https://yourdomain.com
 STORE_PHONE=+1234567890
 
-# Push Notifications (Optional)
+# Push Notifications (Optional) - Required for real push notifications
 VAPID_PUBLIC_KEY=your_vapid_public_key
 VAPID_PRIVATE_KEY=your_vapid_private_key
 ```

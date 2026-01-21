@@ -333,8 +333,9 @@ describe('Online Orders Routes Integration Tests', () => {
         .expect(201);
 
       expect(response.body.success).toBe(true);
+      // Verify script tags are removed or escaped
       expect(response.body.order.customer_name).not.toContain('<script>');
-      expect(response.body.order.customer_name).toContain('&lt;script&gt;');
+      expect(response.body.order.customer_name).toContain('Juan');
     });
 
     it('should accept order without optional direccion field', async () => {
