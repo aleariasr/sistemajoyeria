@@ -194,11 +194,14 @@ export default function CatalogContent() {
 
   const hasFilters = searchTerm || selectedCategory;
 
+  // Maximum characters from search term to include in storage key
+  const SEARCH_TERM_MAX_LENGTH = 10;
+
   // Create a filter context string for storage key differentiation
   const filterContext = useMemo(() => {
     const parts: string[] = [];
     if (selectedCategory) parts.push(`cat-${selectedCategory}`);
-    if (debouncedSearch) parts.push(`search-${debouncedSearch.slice(0, 10)}`);
+    if (debouncedSearch) parts.push(`search-${debouncedSearch.slice(0, SEARCH_TERM_MAX_LENGTH)}`);
     return parts.join('_') || 'all';
   }, [selectedCategory, debouncedSearch]);
 

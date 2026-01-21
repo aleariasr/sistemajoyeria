@@ -21,6 +21,11 @@ const SEED_STORAGE_KEY = 'catalog_shuffle_seed';
 const FILTER_CONTEXT_KEY = 'catalog_filter_context';
 
 /**
+ * Maximum seed value for 32-bit signed integer
+ */
+const MAX_SEED_VALUE = 2147483647;
+
+/**
  * Generate a random integer seed
  * Uses crypto.getRandomValues for better randomness when available
  */
@@ -31,7 +36,7 @@ function generateSeed(): number {
     return array[0];
   }
   // Fallback to Math.random
-  return Math.floor(Math.random() * 2147483647);
+  return Math.floor(Math.random() * MAX_SEED_VALUE);
 }
 
 /**

@@ -1,5 +1,9 @@
 const { supabase } = require('../supabase-db');
 
+// Configuration constants for shuffle and category balancing
+const MAX_CONSECUTIVE_CATEGORY = 3; // Maximum number of consecutive products from same category
+const MAX_BALANCING_ITERATIONS = 100; // Maximum iterations to prevent infinite loops during balancing
+
 class Joya {
   // Crear nueva joya
   static async crear(joyaData) {
@@ -208,9 +212,9 @@ class Joya {
     return shuffled;
   }
 
-  // Balance categories to ensure no more than 3 consecutive products from same category
+  // Balance categories to ensure no more than MAX_CONSECUTIVE_CATEGORY consecutive products from same category
   // Uses a sliding window approach to redistribute products when violations are found
-  static _balanceCategories(products, maxConsecutive = 3) {
+  static _balanceCategories(products, maxConsecutive = MAX_CONSECUTIVE_CATEGORY) {
     if (!products || products.length <= maxConsecutive) {
       return products;
     }
@@ -218,9 +222,8 @@ class Joya {
     const result = [...products];
     let changes = true;
     let iterations = 0;
-    const maxIterations = 100; // Prevent infinite loops
 
-    while (changes && iterations < maxIterations) {
+    while (changes && iterations < MAX_BALANCING_ITERATIONS) {
       changes = false;
       iterations++;
 
