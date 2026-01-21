@@ -11,6 +11,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useInfiniteProducts, useCategories } from '@/hooks/useApi';
 import { ProductGrid } from '@/components/product';
 import { debounce } from '@/lib/utils';
+import { getCatalogSeed } from '@/lib/utils/catalogSeed';
 
 export default function CatalogContent() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,9 +90,18 @@ export default function CatalogContent() {
     []
   );
 
+  // Get or generate session seed for deterministic shuffle
+  // Seed changes when filters (category/search) change
+  const shuffleSeed = useMemo(() => {
+    return getCatalogSeed({
+      category: selectedCategory || undefined,
+      search: debouncedSearch || undefined,
+    });
+  }, [selectedCategory, debouncedSearch]);
+
   // Fetch products with infinite scroll
-  // shuffle=true for randomized product display, but we cache the order in React Query
-  // so returning from product detail shows the same shuffled order
+  // shuffle=true for randomized product display with deterministic seed
+  // The same seed ensures consistent order across navigation and pagination
   const {
     data,
     isLoading,
@@ -105,6 +115,7 @@ export default function CatalogContent() {
     category: selectedCategory || undefined,
     per_page: 20, // Load 20 products at a time for smoother experience
     shuffle: true,
+    shuffle_seed: shuffleSeed, // Pass deterministic seed
   });
 
   // Fetch categories
@@ -182,6 +193,17 @@ export default function CatalogContent() {
   };
 
   const hasFilters = searchTerm || selectedCategory;
+
+  // Maximum characters from search term to include in storage key
+  const SEARCH_TERM_MAX_LENGTH = 10;
+
+  // Create a filter context string for storage key differentiation
+  const filterContext = useMemo(() => {
+    const parts: string[] = [];
+    if (selectedCategory) parts.push(`cat-${selectedCategory}`);
+    if (debouncedSearch) parts.push(`search-${debouncedSearch.slice(0, SEARCH_TERM_MAX_LENGTH)}`);
+    return parts.join('_') || 'all';
+  }, [selectedCategory, debouncedSearch]);
 
   return (
     <div className="space-y-8">
@@ -309,6 +331,7 @@ export default function CatalogContent() {
         isLoading={isLoading}
         error={error as Error | null}
         onRetry={refetch}
+        filterContext={filterContext}
       />
 
       {/* Infinite Scroll Trigger & Load More Button */}

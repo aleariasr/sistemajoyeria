@@ -188,6 +188,7 @@ export const api = {
     page?: number;
     per_page?: number;
     shuffle?: boolean;
+    shuffle_seed?: number;
   }): Promise<ProductsResponse> {
     return withRetry(async () => {
       const response = await apiClient.get<ProductsResponse>('/public/products', {
@@ -199,6 +200,7 @@ export const api = {
           pagina: params?.page,
           por_pagina: params?.per_page,
           shuffle: params?.shuffle,
+          shuffle_seed: params?.shuffle_seed,
         },
       });
       return response.data;

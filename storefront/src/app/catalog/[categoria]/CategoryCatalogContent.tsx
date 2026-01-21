@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useInfiniteProducts, useCategories } from '@/hooks/useApi';
 import { ProductGrid } from '@/components/product';
 import { debounce } from '@/lib/utils';
+import { getCatalogSeed } from '@/lib/utils/catalogSeed';
 
 interface CategoryCatalogContentProps {
   initialCategory: string;
@@ -57,9 +58,18 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
     []
   );
 
+  // Get or generate session seed for deterministic shuffle
+  // Seed changes when filters (category/search) change
+  const shuffleSeed = useMemo(() => {
+    return getCatalogSeed({
+      category: categoryFilter || undefined,
+      search: debouncedSearch || undefined,
+    });
+  }, [categoryFilter, debouncedSearch]);
+
   // Fetch products with infinite scroll
-  // shuffle=true for randomized product display, but we cache the order in React Query
-  // so returning from product detail shows the same shuffled order
+  // shuffle=true for randomized product display with deterministic seed
+  // The same seed ensures consistent order across navigation and pagination
   const {
     data,
     isLoading,
@@ -73,6 +83,7 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
     category: categoryFilter || undefined,
     per_page: 20,
     shuffle: true,
+    shuffle_seed: shuffleSeed, // Pass deterministic seed
   });
 
   // Fetch categories
@@ -187,6 +198,17 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
   };
 
   const hasFilters = searchTerm;
+
+  // Maximum characters from search term to include in storage key
+  const SEARCH_TERM_MAX_LENGTH = 10;
+
+  // Create a filter context string for storage key differentiation
+  const filterContext = useMemo(() => {
+    const parts: string[] = [];
+    if (categoryFilter) parts.push(`cat-${categoryFilter}`);
+    if (debouncedSearch) parts.push(`search-${debouncedSearch.slice(0, SEARCH_TERM_MAX_LENGTH)}`);
+    return parts.join('_') || 'all';
+  }, [categoryFilter, debouncedSearch]);
 
   return (
     <div className="space-y-8">
@@ -303,6 +325,7 @@ export default function CategoryCatalogContent({ initialCategory }: CategoryCata
         isLoading={isLoading}
         error={error as Error | null}
         onRetry={refetch}
+        filterContext={filterContext}
       />
 
       {/* Infinite Scroll Trigger & Load More Button */}

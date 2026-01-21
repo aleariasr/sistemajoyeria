@@ -56,6 +56,7 @@ export function useInfiniteProducts(params?: {
   price_max?: number;
   per_page?: number;
   shuffle?: boolean;
+  shuffle_seed?: number;
 }) {
   return useInfiniteQuery({
     queryKey: ['products', 'infinite', params], // Separate key for infinite queries
@@ -74,6 +75,10 @@ export function useInfiniteProducts(params?: {
     // Disable refetch on window focus to avoid unnecessary re-fetching
     // Users can manually refresh if needed
     refetchOnWindowFocus: false,
+    
+    // CRITICAL: Disable refetch on mount to preserve order when navigating back
+    // This ensures the same shuffled order is maintained when returning from product detail
+    refetchOnMount: false,
   });
 }
 

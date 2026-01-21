@@ -131,12 +131,15 @@ function shuffleArray(array) {
  * 
  * Query Parameters:
  * - shuffle: boolean - If 'true', randomizes products before pagination for global shuffle
+ * - shuffle_seed: number - Optional seed for deterministic shuffle. If provided with shuffle=true,
+ *                          ensures the same order across multiple requests and enforces category balancing
  */
 router.get('/products', async (req, res) => {
   try {
     const pagina = parseInt(req.query.pagina || req.query.page || 1);
     const porPagina = parseInt(req.query.por_pagina || req.query.per_page || 50);
     const shouldShuffle = req.query.shuffle === 'true';
+    const shuffleSeed = req.query.shuffle_seed ? parseInt(req.query.shuffle_seed, 10) : null;
     
     const filtros = {
       busqueda: req.query.busqueda || req.query.search,
@@ -149,7 +152,8 @@ router.get('/products', async (req, res) => {
       mostrar_en_storefront: true, // Only show products marked as visible in storefront
       pagina: pagina,
       por_pagina: porPagina,
-      shuffle: shouldShuffle // Pass shuffle flag to model
+      shuffle: shouldShuffle, // Pass shuffle flag to model
+      shuffle_seed: shuffleSeed // Pass seed for deterministic shuffle
     };
 
     const resultado = await Joya.obtenerTodas(filtros);
