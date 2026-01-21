@@ -477,7 +477,7 @@ router.get('/categories', async (req, res) => {
   try {
     // Use efficient database query to get categories from available products
     const categorias = await Joya.obtenerCategoriasDisponibles();
-    res.json(categorias);
+    res.json({ categories: categorias });
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Error fetching categories' });
