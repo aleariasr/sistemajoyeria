@@ -172,8 +172,13 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 ## 🧪 Testing y Calidad
 
 ```bash
-# Ejecutar tests
-npm run test:backend          # Backend E2E tests (requiere servidor corriendo)
+# Tests del backend (mocked, sin servidor ni DB real)
+npm run test:backend          # Todos los tests (unit + integration)
+npm run test:unit             # Tests unitarios (modelos)
+npm run test:integration      # Tests de integración (rutas API)
+npm run test:coverage         # Generar reporte de cobertura
+
+# Tests del storefront
 npm run test:storefront       # Storefront unit tests (52 tests)
 
 # Linters
@@ -184,18 +189,34 @@ npm run build:frontend        # Build del frontend POS
 npm run build:storefront      # Build del storefront Next.js
 ```
 
-**Nota sobre tests del backend:** Los tests del backend son pruebas end-to-end que requieren:
-1. Servidor backend corriendo (`npm run start:backend` en otra terminal)
-2. Base de datos Supabase configurada
-3. Variables de entorno configuradas
+### Tests del Backend (Mocked)
 
-Para ejecutar los tests del backend:
+Los nuevos tests del backend utilizan mocks de Supabase, Cloudinary y Resend, **no requieren servidor ni credenciales reales**:
+
+- ✅ **44 tests** completamente funcionales
+- ✅ Tests unitarios de modelos (Joya, shuffle, filtros)
+- ✅ Tests de integración de rutas (auth, joyas, public API)
+- ✅ Fixtures en memoria con datos de prueba
+- ✅ Ejecución rápida (~6 segundos)
+
+Ver **[backend/QUICK_VERIFICATION.md](backend/QUICK_VERIFICATION.md)** para guía completa.
+
+```bash
+cd backend
+npm test                    # Ejecutar todos los tests
+npm run test:coverage       # Ver cobertura (coverage/lcov-report/index.html)
+```
+
+### Tests Legacy (E2E)
+
+Los tests E2E antiguos en `backend/tests/` requieren servidor corriendo y se mantienen para compatibilidad:
+
 ```bash
 # Terminal 1: Iniciar el backend
 npm run start:backend
 
-# Terminal 2: Ejecutar tests
-npm run test:backend
+# Terminal 2: Ejecutar tests legacy
+npm run test:old
 ```
 
 ### Verificación Rápida
@@ -206,13 +227,16 @@ Antes de desplegar o hacer un PR, ejecute:
 # 1. Instalar dependencias
 npm install
 
-# 2. Tests unitarios (no requieren servidor)
+# 2. Tests del backend (mocked, rápido)
+npm run test:backend
+
+# 3. Tests unitarios del storefront
 npm run test:storefront
 
-# 3. Linting
+# 4. Linting
 npm run lint:storefront
 
-# 4. Builds
+# 5. Builds
 npm run build:frontend
 npm run build:storefront
 ```
