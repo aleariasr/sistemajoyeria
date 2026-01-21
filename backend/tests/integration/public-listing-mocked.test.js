@@ -185,13 +185,14 @@ describe('Public Products Listing - Comprehensive Mocked Tests', () => {
     });
 
     it('should mark products as es_producto_compuesto', async () => {
-      // First, fix SET-001 by giving all components stock
-      const joyasFixtures = mockSupabase.getFixtures('joyas');
-      const pulsera1 = joyasFixtures.find(j => j.id === 3);
+      // Create fresh fixtures with component having stock
+      const freshFixtures = getFixtures();
+      const pulsera1 = freshFixtures.joyas.find(j => j.id === 3);
       if (pulsera1) {
         pulsera1.stock_actual = 5; // Give it stock
       }
-      mockSupabase.setFixtures('joyas', joyasFixtures);
+      // Update mock with fresh fixtures
+      mockSupabase.setFixtures('joyas', freshFixtures.joyas);
 
       const response = await request(app)
         .get('/api/public/products')
@@ -241,13 +242,14 @@ describe('Public Products Listing - Comprehensive Mocked Tests', () => {
     });
 
     it('should show set components in detail', async () => {
-      // Give all components stock first
-      const joyasFixtures = mockSupabase.getFixtures('joyas');
-      const pulsera1 = joyasFixtures.find(j => j.id === 3);
+      // Create fresh fixtures with all components having stock
+      const freshFixtures = getFixtures();
+      const pulsera1 = freshFixtures.joyas.find(j => j.id === 3);
       if (pulsera1) {
         pulsera1.stock_actual = 5;
       }
-      mockSupabase.setFixtures('joyas', joyasFixtures);
+      // Update mock with fresh fixtures
+      mockSupabase.setFixtures('joyas', freshFixtures.joyas);
 
       const response = await request(app)
         .get('/api/public/products/11') // SET-001

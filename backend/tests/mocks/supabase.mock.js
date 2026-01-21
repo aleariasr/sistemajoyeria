@@ -108,7 +108,8 @@ class MockQueryBuilder {
     if (options.count) {
       this.countOption = options.count;
     }
-    // If this is a delete operation, we should return the deleted rows
+    // If this is a delete operation followed by select(), return the deleted rows
+    // This matches Supabase's actual behavior where .delete().select() returns deleted data
     if (this.isDelete) {
       this.shouldSelectAfterDelete = true;
     }
