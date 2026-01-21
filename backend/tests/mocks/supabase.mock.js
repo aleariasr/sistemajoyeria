@@ -380,7 +380,8 @@ class MockQueryBuilder {
     // Return result
     if (this.isSingle) {
       if (result.length === 0) {
-        return { data: null, error: { message: 'No rows found' } };
+        // Supabase returns null data with a specific error code for no rows
+        return { data: null, error: { code: 'PGRST116', message: 'No rows found' }, count: this.countOption ? count : undefined };
       }
       return { data: result[0], error: null, count: this.countOption ? count : undefined };
     }
