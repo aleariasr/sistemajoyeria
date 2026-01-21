@@ -2,6 +2,17 @@
 // This must run before other modules that read process.env
 require('dotenv').config();
 
+// Validate environment variables with comprehensive schema
+const { validateEnv, logEnvStatus } = require('./utils/env-validation');
+
+try {
+  const env = validateEnv(process.env.NODE_ENV === 'production');
+  logEnvStatus(env);
+} catch (error) {
+  console.error('\n❌ Error de inicialización:', error.message);
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -29,22 +40,6 @@ if (NODE_ENV === 'production') {
   // Trust first proxy (Railway edge)
   app.set('trust proxy', 1);
   console.log('🔒 Proxy trust enabled for Railway edge');
-}
-
-// Validar variables de entorno críticas en producción
-if (NODE_ENV === 'production') {
-  const requiredVars = ['SESSION_SECRET', 'FRONTEND_URL', 'SUPABASE_URL', 'SUPABASE_KEY'];
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    console.error('❌ FATAL: Variables de entorno faltantes:', missingVars.join(', '));
-    console.error('   Configure estas variables en Railway antes de continuar');
-    process.exit(1);
-  }
-  
-  console.log('✅ Variables de entorno validadas correctamente');
-  console.log('🔐 SESSION_SECRET: Configurado');
-  console.log('🌐 FRONTEND_URL configurado:', process.env.FRONTEND_URL);
 }
 
 // Database connection state (used for health check)

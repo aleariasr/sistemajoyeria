@@ -45,10 +45,26 @@ const getApiUrl = (): string => {
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
   
-  // If on Vercel production, warn about missing config
-  if (hostname.includes('vercel.app')) {
-    console.warn('⚠️ NEXT_PUBLIC_API_URL no configurada. Configure esta variable para producción.');
-    return '/api'; // Will cause 404 but better than hardcoding
+  // If on production domain (Vercel), enforce configuration
+  // Check if hostname ends with these domains to prevent subdomain attacks
+  const isProductionDomain = 
+    hostname.endsWith('.vercel.app') || 
+    hostname === 'vercel.app' ||
+    hostname.endsWith('.cueroyperla.com') || 
+    hostname === 'cueroyperla.com';
+  
+  if (isProductionDomain) {
+    // In production, NEXT_PUBLIC_API_URL is required
+    const message = '❌ NEXT_PUBLIC_API_URL no está configurada. Configure esta variable de entorno en Vercel para que la tienda funcione correctamente.';
+    console.error(message);
+    
+    // In development build, throw error
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(message);
+    }
+    
+    // In production, return '/api' which will cause 404 but with clear error message
+    return '/api';
   }
   
   // If localhost or 127.0.0.1
@@ -98,9 +114,10 @@ const createApiClient = (): AxiosInstance => {
     withCredentials: true,
   });
 
-  // Request interceptor for logging in development
+  // Request interceptor for logging (development only)
   client.interceptors.request.use(
     (config) => {
+      // Only log in development mode
       if (process.env.NODE_ENV === 'development') {
         console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`);
       }

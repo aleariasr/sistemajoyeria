@@ -169,6 +169,56 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 2. `backend/migrations/create-pedidos-online.sql`
 3. `backend/migrations/complete-pedidos-online.sql` (para sistema de pedidos)
 
+## 🧪 Testing y Calidad
+
+```bash
+# Ejecutar tests
+npm run test:backend          # Backend E2E tests (requiere servidor corriendo)
+npm run test:storefront       # Storefront unit tests (52 tests)
+
+# Linters
+npm run lint:storefront       # ESLint para storefront
+
+# Builds
+npm run build:frontend        # Build del frontend POS
+npm run build:storefront      # Build del storefront Next.js
+```
+
+**Nota sobre tests del backend:** Los tests del backend son pruebas end-to-end que requieren:
+1. Servidor backend corriendo (`npm run start:backend` en otra terminal)
+2. Base de datos Supabase configurada
+3. Variables de entorno configuradas
+
+Para ejecutar los tests del backend:
+```bash
+# Terminal 1: Iniciar el backend
+npm run start:backend
+
+# Terminal 2: Ejecutar tests
+npm run test:backend
+```
+
+### Verificación Rápida
+
+Antes de desplegar o hacer un PR, ejecute:
+
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Tests unitarios (no requieren servidor)
+npm run test:storefront
+
+# 3. Linting
+npm run lint:storefront
+
+# 4. Builds
+npm run build:frontend
+npm run build:storefront
+```
+
+Todos los comandos deben completarse sin errores.
+
 ## 📚 Documentación
 
 - 📦 **[Sistema de Pedidos Online](PEDIDOS_ONLINE.md)** - Guía completa del sistema de gestión de pedidos
@@ -183,6 +233,7 @@ PostgreSQL en Supabase. Ejecutar migraciones en orden:
 - ✅ Headers de seguridad (HSTS, X-Frame-Options, X-Content-Type-Options)
 - ✅ SQL injection: queries parametrizadas + escape en ILIKE
 - ✅ XSS prevention: escape de HTML en entradas de usuario
+- ✅ Validación de variables de entorno en startup (zod schema)
 
 ---
 

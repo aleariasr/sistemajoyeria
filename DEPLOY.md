@@ -191,7 +191,35 @@ NEXT_PUBLIC_SITE_URL=https://tu-storefront.vercel.app
 
 ## 5️⃣ Verificación Final
 
-### Checklist de Verificación
+### Pre-Deploy Checklist
+
+Antes de desplegar, ejecute estos comandos localmente para asegurar la calidad:
+
+```bash
+# 1. Instalar todas las dependencias
+npm install
+
+# 2. Ejecutar tests unitarios (no requieren servidor)
+npm run test:storefront       # 52 tests del storefront
+
+# 3. Ejecutar linters
+npm run lint:storefront       # ESLint para Next.js
+
+# 4. Construir aplicaciones
+npm run build:frontend        # Build React POS
+npm run build:storefront      # Build Next.js storefront
+
+# 5. Verificar variables de entorno
+# Backend: Revisar backend/.env vs backend/.env.example
+# Frontend: Revisar frontend/.env vs frontend/.env.example
+# Storefront: Revisar storefront/.env.local vs storefront/.env.example
+```
+
+**Nota:** Los tests del backend (`npm run test:backend`) son pruebas E2E que requieren el servidor corriendo y la base de datos configurada. Se pueden ejecutar opcionalmente antes del deploy si se tiene el entorno local configurado.
+
+Todos estos comandos deben completarse exitosamente antes de desplegar.
+
+### Checklist de Verificación en Producción
 
 - [ ] Backend responde en `/health`
 - [ ] Frontend POS puede hacer login
