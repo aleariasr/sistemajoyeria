@@ -12,12 +12,16 @@ const { createMockSupabase } = require('../mocks/supabase.mock');
 const { getFixtures } = require('../fixtures/data');
 
 // Mock Supabase before requiring any modules that use it
+// Export a mutable object that can be updated in beforeEach
 jest.mock('../../supabase-db', () => {
-  const fixtures = require('../fixtures/data').getFixtures();
-  const mockSupabase = require('../mocks/supabase.mock').createMockSupabase(fixtures);
-  return {
-    supabase: mockSupabase
+  const { createMockSupabase } = require('../mocks/supabase.mock');
+  const { getFixtures } = require('../fixtures/data');
+  
+  const mockSupabaseModule = {
+    supabase: createMockSupabase(getFixtures()) // Initialize with default fixtures
   };
+  
+  return mockSupabaseModule;
 });
 
 // Mock Cloudinary
@@ -41,8 +45,6 @@ jest.mock('../../middleware/upload', () => ({
   cleanupTempFile: jest.fn()
 }));
 
-const joyasRoutes = require('../../routes/joyas');
-
 describe('Joyas CRUD - Comprehensive Mocked Tests', () => {
   let app;
   let mockSupabase;
@@ -50,6 +52,10 @@ describe('Joyas CRUD - Comprehensive Mocked Tests', () => {
   let authCookie;
 
   beforeEach(async () => {
+    // Get the mocked supabase module (always the same instance)
+    const supabaseDb = require('../../supabase-db');
+    mockSupabase = supabaseDb.supabase;
+    
     // Get fresh fixtures for each test
     fixtures = getFixtures();
     
@@ -76,21 +82,23 @@ describe('Joyas CRUD - Comprehensive Mocked Tests', () => {
       }
     ];
 
-    // Create mock Supabase with fixtures
-    mockSupabase = createMockSupabase(fixtures);
-    
-    // Replace the supabase instance in the mocked module
-    const supabaseDb = require('../../supabase-db');
-    supabaseDb.supabase = mockSupabase;
+    // Reset fixtures on the existing mockSupabase instance
+    Object.keys(fixtures).forEach(table => {
+      mockSupabase.setFixtures(table, fixtures[table]);
+    });
+    mockSupabase.autoIncrementIds = {}; // Reset auto-increment
 
-    // Clear the require cache for routes to pick up new mock
-    delete require.cache[require.resolve('../../routes/joyas')];
-    delete require.cache[require.resolve('../../routes/auth')];
+    // Clear the require cache for models and routes
     delete require.cache[require.resolve('../../models/Joya')];
     delete require.cache[require.resolve('../../models/Usuario')];
     delete require.cache[require.resolve('../../models/MovimientoInventario')];
     delete require.cache[require.resolve('../../models/VarianteProducto')];
     delete require.cache[require.resolve('../../models/ProductoCompuesto')];
+    delete require.cache[require.resolve('../../routes/joyas')];
+    delete require.cache[require.resolve('../../routes/auth')];
+    
+    // Require routes AFTER cache clearing to pick up mocks
+    const joyasRoutes = require('../../routes/joyas');
     
     // Create Express app
     app = express();
@@ -112,7 +120,7 @@ describe('Joyas CRUD - Comprehensive Mocked Tests', () => {
     // Mount routes
     const authRoutes = require('../../routes/auth');
     app.use('/api/auth', authRoutes);
-    app.use('/api/joyas', joyasRoutes);
+    app.use('/api/joyas', joyasRoutes); // Uses locally required joyasRoutes
 
     // Login to get auth cookie
     const loginRes = await request(app)

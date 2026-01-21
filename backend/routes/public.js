@@ -189,10 +189,31 @@ router.get('/products', async (req, res) => {
       });
     }
 
+    // Filter out composite products (sets) with no stock
+    // Check each composite product to see if it has any available stock
+    const joyasCompositas = joyasUnicas.filter(j => j.es_producto_compuesto);
+    const joyasCompositasConStock = [];
+    
+    for (const joya of joyasCompositas) {
+      const stockDisponible = await ProductoCompuesto.calcularStockDisponible(joya.id);
+      if (stockDisponible > 0) {
+        joyasCompositasConStock.push(joya.id);
+      }
+    }
+    
+    // Filter joyasUnicas to remove composite products without stock
+    const joyasUnicasFiltradas = joyasUnicas.filter(joya => {
+      if (joya.es_producto_compuesto && !joyasCompositasConStock.includes(joya.id)) {
+        console.log(`📦 [Página ${pagina}] Filtrando set ${joya.codigo} por falta de stock`);
+        return false; // Exclude this composite product
+      }
+      return true; // Include all non-composite products and composite products with stock
+    });
+
     const productosExpandidos = [];
     const procesadosIds = new Set(); // Track processed parent products to avoid duplicates
 
-    for (const joya of joyasUnicas) {
+    for (const joya of joyasUnicasFiltradas) {
       // Skip if this product was already processed
       if (procesadosIds.has(joya.id)) {
         console.warn(`⚠️  Producto duplicado detectado: ${joya.id} - ${joya.codigo}. Saltando...`);
@@ -288,7 +309,7 @@ router.get('/products', async (req, res) => {
       total_products: totalGlobalVariantes, // Same as total - kept for API compatibility
       page: resultado.pagina,
       per_page: resultado.por_pagina,
-      total_pages: totalPagesEstimated, // Recalculate based on estimated variants
+      total_paginas: totalPagesEstimated, // Recalculate based on estimated variants
       has_more: resultado.pagina < totalPagesEstimated // More variants to load
     });
   } catch (error) {
@@ -423,9 +444,21 @@ router.get('/products/:id', async (req, res) => {
     // If product is a set, include component info
     if (joya.es_producto_compuesto) {
       const stockDisponible = await ProductoCompuesto.calcularStockDisponible(joya.id);
+      const componentes = await ProductoCompuesto.obtenerComponentesConDetalles(joya.id);
+      
       producto.stock_set = stockDisponible;
       producto.stock = stockDisponible; // Override with calculated set stock
       producto.stock_disponible = stockDisponible > 0;
+      
+      // Add components array
+      producto.componentes = componentes.map(comp => ({
+        id: comp.producto.id,
+        nombre: comp.producto.nombre,
+        imagen_url: comp.producto.imagen_url,
+        stock: comp.producto.stock_actual,
+        cantidad_requerida: comp.cantidad_requerida,
+        precio: comp.producto.precio_venta
+      }));
     }
 
     res.json(producto);
@@ -444,7 +477,7 @@ router.get('/categories', async (req, res) => {
   try {
     // Use efficient database query to get categories from available products
     const categorias = await Joya.obtenerCategoriasDisponibles();
-    res.json({ categories: categorias });
+    res.json(categorias);
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ error: 'Error fetching categories' });

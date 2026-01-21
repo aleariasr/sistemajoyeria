@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Joya = require('../models/Joya');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const VarianteProducto = require('../models/VarianteProducto');
+const ProductoCompuesto = require('../models/ProductoCompuesto');
 const { requireAuth } = require('../middleware/auth');
 const { uploadMiddleware, cleanupTempFile } = require('../middleware/upload');
 const { uploadImage, deleteImage } = require('../cloudinary-config');
@@ -136,16 +138,41 @@ router.get('/stock-bajo', async (req, res) => {
 // GET /api/joyas/:id - Obtener una joya por ID
 router.get('/:id', async (req, res) => {
   try {
-    const joya = await Joya.obtenerPorId(req.params.id);
+    const id = parseInt(req.params.id, 10);
+    const joya = await Joya.obtenerPorId(id);
     
     if (!joya) {
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
     // Obtener historial de movimientos
-    const movimientos = await MovimientoInventario.obtenerPorJoya(req.params.id, 10);
+    const movimientos = await MovimientoInventario.obtenerPorJoya(id, 10);
     
-    res.json({ ...joya, movimientos });
+    const response = { ...joya, movimientos };
+    
+    // Si es un producto con variantes, obtenerlas
+    if (joya.es_producto_variante) {
+      try {
+        const variantes = await VarianteProducto.obtenerPorProducto(id);
+        response.variantes = variantes;
+      } catch (err) {
+        console.error('Error al obtener variantes:', err);
+        response.variantes = [];
+      }
+    }
+    
+    // Si es un producto compuesto, obtener sus componentes
+    if (joya.es_producto_compuesto) {
+      try {
+        const componentes = await ProductoCompuesto.obtenerComponentesConDetalles(id);
+        response.componentes = componentes;
+      } catch (err) {
+        console.error('Error al obtener componentes:', err);
+        response.componentes = [];
+      }
+    }
+    
+    res.json(response);
   } catch (error) {
     console.error('Error al obtener joya:', error);
     res.status(500).json({ error: 'Error al obtener joya' });
@@ -155,13 +182,14 @@ router.get('/:id', async (req, res) => {
 // GET /api/joyas/:id/dependencias - Verificar dependencias de una joya
 router.get('/:id/dependencias', async (req, res) => {
   try {
-    const joya = await Joya.obtenerPorId(req.params.id);
+    const id = parseInt(req.params.id, 10);
+    const joya = await Joya.obtenerPorId(id);
     
     if (!joya) {
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
-    const dependencias = await Joya.verificarDependencias(req.params.id);
+    const dependencias = await Joya.verificarDependencias(id);
     res.json(dependencias);
   } catch (error) {
     console.error('Error al verificar dependencias:', error);
@@ -239,6 +267,18 @@ router.post('/', uploadMiddleware, async (req, res) => {
 // PUT /api/joyas/:id - Actualizar joya
 router.put('/:id', uploadMiddleware, async (req, res) => {
   try {
+    const id = parseInt(req.params.id, 10);
+    
+    // Check if joya exists first, before validating
+    const joyaExistente = await Joya.obtenerPorId(id);
+    if (!joyaExistente) {
+      // Limpiar archivo temporal si existe
+      if (req.file) {
+        cleanupTempFile(req.file.path);
+      }
+      return res.status(404).json({ error: 'Joya no encontrada' });
+    }
+
     // Convert numeric fields from strings to numbers
     const joyaData = convertirCamposNumericos(req.body);
 
@@ -252,18 +292,9 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
       return res.status(400).json({ errores });
     }
 
-    const joyaExistente = await Joya.obtenerPorId(req.params.id);
-    if (!joyaExistente) {
-      // Limpiar archivo temporal si existe
-      if (req.file) {
-        cleanupTempFile(req.file.path);
-      }
-      return res.status(404).json({ error: 'Joya no encontrada' });
-    }
-
     // Verificar que el código no esté duplicado en otra joya (case-insensitive)
     const joyaConCodigo = await Joya.obtenerPorCodigo(joyaData.codigo);
-    if (joyaConCodigo && joyaConCodigo.id.toString() !== req.params.id) {
+    if (joyaConCodigo && joyaConCodigo.id.toString() !== id.toString()) {
       // Limpiar archivo temporal si existe
       if (req.file) {
         cleanupTempFile(req.file.path);
@@ -306,7 +337,7 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
       const cantidad = Math.abs(diferencia);
       
       await MovimientoInventario.crear({
-        id_joya: req.params.id,
+        id_joya: id,
         tipo_movimiento: tipoMovimiento,
         cantidad: cantidad,
         motivo: 'Ajuste de inventario por modificación',
@@ -316,7 +347,7 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
       });
     }
 
-    await Joya.actualizar(req.params.id, joyaData);
+    await Joya.actualizar(id, joyaData);
     res.json({ mensaje: 'Joya actualizada correctamente' });
   } catch (error) {
     console.error('Error al actualizar joya:', error);
@@ -331,12 +362,13 @@ router.put('/:id', uploadMiddleware, async (req, res) => {
 // DELETE /api/joyas/:id - Eliminar joya físicamente o marcar como descontinuado
 router.delete('/:id', async (req, res) => {
   try {
-    const joya = await Joya.obtenerPorId(req.params.id);
+    const id = parseInt(req.params.id, 10);
+    const joya = await Joya.obtenerPorId(id);
     if (!joya) {
       return res.status(404).json({ error: 'Joya no encontrada' });
     }
 
-    const resultado = await Joya.eliminar(req.params.id);
+    const resultado = await Joya.eliminar(id);
 
     if (resultado.eliminado) {
       // Eliminación física exitosa - eliminar imagen de Cloudinary
