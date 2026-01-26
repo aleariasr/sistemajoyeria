@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from './providers';
 import { Header, Footer } from '@/components/layout';
 import { CartDrawer } from '@/components/cart';
@@ -75,6 +76,7 @@ export default function RootLayout({
           <CartDrawer />
           <Toaster />
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   );
