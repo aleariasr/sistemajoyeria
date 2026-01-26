@@ -1,0 +1,42 @@
+# Vercel Speed Insights Implementation
+
+## Summary
+Successfully installed and configured Vercel Speed Insights for the Next.js storefront application.
+
+## Changes Made
+
+### 1. Package Installation
+- Installed `@vercel/speed-insights` version 1.3.1 using pnpm
+- Package added to dependencies in `package.json`
+
+### 2. Root Layout Update (src/app/layout.tsx)
+- Imported `SpeedInsights` component from `@vercel/speed-insights/next`
+- Added `<SpeedInsights />` component inside the `<body>` tag, after the `<Providers>` wrapper
+- Placement ensures it's globally available across all pages
+
+## Implementation Details
+
+**Next.js Version**: 14.2.18 (App Router)
+
+Since this project uses Next.js 14.2.18 with App Router (which is newer than 13.5), I used the recommended approach:
+- Import from `@vercel/speed-insights/next`
+- Component placed directly in the root layout
+- No need for client directive or manual route passing
+
+**Files Modified**:
+- `package.json` - Added @vercel/speed-insights dependency
+- `src/app/layout.tsx` - Added SpeedInsights import and component
+- `pnpm-lock.yaml` - Generated lock file with dependencies
+
+## Verification
+
+✅ **Build**: Production build completed successfully
+✅ **Linting**: No new linting errors introduced (only pre-existing warning in CategoryCatalogContent.tsx)
+✅ **Tests**: All 52 tests pass (3 test suites)
+
+## Notes
+
+- The SpeedInsights component is placed after the Providers wrapper but still inside the body tag
+- This component will automatically track Web Vitals and send data to Vercel when deployed
+- No additional configuration is required for basic functionality
+- The component will only be active in production environments on Vercel
