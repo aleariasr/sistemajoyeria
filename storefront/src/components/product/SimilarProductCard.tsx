@@ -16,24 +16,25 @@ interface MiniCardProps {
 }
 
 export function SimilarProductCard({ item }: MiniCardProps) {
-  // Build the detail page URL
-  const detailLink = item.variante_id 
+  // Build URL for detail page
+  const targetUrl = item.variante_id 
     ? `/product/${item.id}?variante_id=${item.variante_id}`
     : `/product/${item.id}`;
 
-  // Select image to display
-  const mainImg = item.imagenes?.find(i => i.es_principal)?.url || item.imagenes?.[0]?.url || item.imagen_url || '';
+  // Get display image
+  const displayImage = item.imagenes?.find(i => i.es_principal)?.url || item.imagenes?.[0]?.url || item.imagen_url || '';
 
-  // Format price display
-  const priceText = `${item.moneda === 'CRC' ? '₡' : item.moneda === 'USD' ? '$' : '€'}${item.precio.toLocaleString()}`;
+  // Simple price formatting
+  const currencySymbol = item.moneda === 'CRC' ? '₡' : item.moneda === 'USD' ? '$' : '€';
+  const formattedAmount = item.precio.toLocaleString('es-CR');
 
   return (
-    <Link href={detailLink} className="block hover:opacity-80 transition-opacity">
+    <Link href={targetUrl} className="block hover:opacity-80 transition-opacity">
       <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div className="relative w-full" style={{ paddingTop: '100%' }}>
-          {mainImg ? (
+          {displayImage ? (
             <Image
-              src={mainImg}
+              src={displayImage}
               alt={item.nombre}
               fill
               className="object-cover"
@@ -49,7 +50,9 @@ export function SimilarProductCard({ item }: MiniCardProps) {
           <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
             {item.nombre}
           </h4>
-          <p className="text-base font-bold text-gray-900">{priceText}</p>
+          <p className="text-base font-bold text-gray-900">
+            {currencySymbol}{formattedAmount}
+          </p>
         </div>
       </div>
     </Link>

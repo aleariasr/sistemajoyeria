@@ -18,20 +18,24 @@ import { useProducts } from '@/hooks/useApi';
 import { SimilarProductCard } from './SimilarProductCard';
 import type { Product } from '@/lib/types';
 
+// Configuration constants
+const MIN_PRODUCTS_TO_SHOW = 3;
+const MAX_PRODUCTS_TO_SHOW = 6;
+const PRODUCTS_FETCH_LIMIT = 50;
+
 interface SimilarProductsProps {
   currentProductId: number;
   currentVariantId?: number;
 }
 
 export function SimilarProducts({ currentProductId, currentVariantId }: SimilarProductsProps) {
-  // Fetch all available products
-  const { data, isLoading } = useProducts({ per_page: 100 });
+  // Fetch available products (limited to reduce payload)
+  const { data, isLoading } = useProducts({ per_page: PRODUCTS_FETCH_LIMIT });
 
   if (isLoading || !data?.products) {
     return null; // Silent fail - not critical to page
   }
 
-  // Filter out the current product and randomly select 3-6 items
   const allProducts = data.products;
   
   // Remove current product from list
@@ -48,15 +52,15 @@ export function SimilarProducts({ currentProductId, currentVariantId }: SimilarP
     return true;
   });
 
-  // Shuffle using simple random sort (frontend-only, as specified)
+  // Simple shuffle using random sort (as specified: frontend random simple)
   const shuffled = [...filteredItems].sort(() => Math.random() - 0.5);
   
-  // Pick random count between 3 and 6
-  const targetCount = Math.floor(Math.random() * 4) + 3; // 3 to 6
-  const selectedItems = shuffled.slice(0, Math.min(targetCount, shuffled.length));
+  // Pick random count between min and max
+  const randomCount = Math.floor(Math.random() * (MAX_PRODUCTS_TO_SHOW - MIN_PRODUCTS_TO_SHOW + 1)) + MIN_PRODUCTS_TO_SHOW;
+  const selectedItems = shuffled.slice(0, Math.min(randomCount, shuffled.length));
 
-  // Don't show section if we don't have at least 3 products
-  if (selectedItems.length < 3) {
+  // Don't show section if we don't have minimum products
+  if (selectedItems.length < MIN_PRODUCTS_TO_SHOW) {
     return null;
   }
 
