@@ -18,6 +18,7 @@ import { ProductDetailSkeleton } from '@/components/ui/Skeleton';
 import { toast } from '@/components/ui/Toast';
 import { ProductImageGallery } from '@/components/product/ProductImageGallery';
 import { SetComponents } from '@/components/product/SetComponents';
+import { SimilarProducts } from '@/components/product/SimilarProducts';
 import { formatPrice } from '@/lib/utils';
 
 interface ProductDetailProps {
@@ -260,6 +261,13 @@ export default function ProductDetail({ productId, varianteId }: ProductDetailPr
       {product.es_producto_compuesto && (
         <SetComponents setId={product.id} setName={product.nombre} />
       )}
+
+      {/* Similar Products Section - Shows 3-6 random products
+          NOTE: Does NOT modify product loading, variant, or cart logic */}
+      <SimilarProducts 
+        currentProductId={productId} 
+        currentVariantId={varianteId}
+      />
     </div>
   );
 }
