@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
+    // All images are served directly from Cloudinary (res.cloudinary.com).
+    // Vercel's /_next/image proxy is disabled to prevent double-processing.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -9,9 +12,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // Optimize images from Cloudinary
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   // Enable experimental features for better performance
   experimental: {
