@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { obtenerClientes, eliminarCliente } from '../services/api';
 import '../styles/Clientes.css';
+
+const SEARCH_DEBOUNCE_MS = 350;
 
 function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -11,17 +13,14 @@ function Clientes() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
   const navigate = useNavigate();
+  const debounceTimer = useRef(null);
 
-  useEffect(() => {
-    cargarClientes();
-  }, [paginaActual, busqueda]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const cargarClientes = async () => {
+  const cargarClientes = useCallback(async (query, pagina) => {
     try {
       setLoading(true);
       const response = await obtenerClientes({
-        busqueda,
-        pagina: paginaActual,
+        busqueda: query,
+        pagina,
         por_pagina: 20
       });
       setClientes(response.data.clientes);
@@ -33,18 +32,29 @@ function Clientes() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    cargarClientes(busqueda, paginaActual);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // busqueda is intentionally excluded: search changes are handled via debounce in handleBusquedaChange
+  }, [paginaActual, cargarClientes]);
 
   const handleBusquedaChange = (e) => {
-    setBusqueda(e.target.value);
+    const value = e.target.value;
+    setBusqueda(value);
     setPaginaActual(1);
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      cargarClientes(value, 1);
+    }, SEARCH_DEBOUNCE_MS);
   };
 
   const handleEliminar = async (id, nombre) => {
     if (window.confirm(`¿Está seguro de eliminar al cliente "${nombre}"?`)) {
       try {
         await eliminarCliente(id);
-        cargarClientes();
+        cargarClientes(busqueda, paginaActual);
       } catch (error) {
         console.error('Error al eliminar cliente:', error);
         setError('Error al eliminar el cliente');
@@ -64,7 +74,7 @@ function Clientes() {
     navigate(`/cuentas-por-cobrar?cliente=${id}`);
   };
 
-  if (loading) {
+  if (loading && clientes.length === 0) {
     return (
       <div className="clientes-container">
         <div className="loading">Cargando clientes...</div>
