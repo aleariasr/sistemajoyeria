@@ -36,8 +36,8 @@ function Clientes() {
 
   useEffect(() => {
     cargarClientes(busqueda, paginaActual);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     // busqueda is intentionally excluded: search changes are handled via debounce in handleBusquedaChange
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginaActual, cargarClientes]);
 
   const handleBusquedaChange = (e) => {
