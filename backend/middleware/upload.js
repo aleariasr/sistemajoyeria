@@ -1,9 +1,11 @@
 const multer = require('multer');
+const os = require('os');
 const path = require('path');
 const fs = require('fs');
 
-// Crear directorio temporal si no existe
-const tmpDir = path.join(__dirname, '../tmp/uploads');
+// Directorio temporal para uploads: usa /tmp en Lambda (único path writable)
+// y el directorio temporal del sistema en desarrollo local (os.tmpdir()).
+const tmpDir = path.join(os.tmpdir(), 'uploads');
 if (!fs.existsSync(tmpDir)) {
   fs.mkdirSync(tmpDir, { recursive: true });
 }
