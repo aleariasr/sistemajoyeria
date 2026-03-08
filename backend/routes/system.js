@@ -1,35 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const { obtenerFechaCostaRica, formatearFechaSQL, TIMEZONE } = require('../utils/timezone');
+const { formatInTimeZone } = require('date-fns-tz');
+
+const COSTA_RICA = 'America/Costa_Rica';
 
 /**
  * GET /api/system/time
- * Devuelve la hora actual del servidor
+ * Devuelve la hora actual del servidor en UTC y hora local de Costa Rica.
  * Esta es la misma hora que se usa en facturas, reportes, cierres de caja, etc.
- * 
+ *
  * No requiere autenticación para permitir que el reloj del sistema funcione
- * incluso en la página de login
+ * incluso en la página de login.
  */
 router.get('/time', (req, res) => {
   try {
-    const fechaActual = obtenerFechaCostaRica();
-    const fechaSQL = formatearFechaSQL();
-    
+    const now = new Date();
+
+    // True UTC ISO timestamp
+    const timestamp_utc = now.toISOString();
+
+    // Format local time in Costa Rica - this is NOT a shifted UTC, but the real local hour
+    const local_iso = formatInTimeZone(now, COSTA_RICA, "yyyy-MM-dd'T'HH:mm:ss");
+    const local_date = formatInTimeZone(now, COSTA_RICA, 'yyyy-MM-dd');
+    const local_time = formatInTimeZone(now, COSTA_RICA, 'HH:mm:ss');
+
     res.json({
-      timestamp: fechaActual.toISOString(),
-      formatted: fechaSQL,
-      timezone: TIMEZONE,
-      // Componentes para facilitar el uso en el frontend
-      date: {
-        year: fechaActual.getFullYear(),
-        month: fechaActual.getMonth() + 1,
-        day: fechaActual.getDate()
-      },
-      time: {
-        hours: fechaActual.getHours(),
-        minutes: fechaActual.getMinutes(),
-        seconds: fechaActual.getSeconds()
-      }
+      timezone: COSTA_RICA,
+      timestamp_utc,
+      local_iso,
+      local_date,
+      local_time
     });
   } catch (error) {
     console.error('Error obteniendo hora del sistema:', error);
