@@ -16,8 +16,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().transform(val => parseInt(val, 10)).default('3001'),
   HOST: z.string().default('0.0.0.0'),
-  TZ: z.string().default('America/Costa_Rica'),
-
+  TIMEZONE: z.string().default('America/Costa_Rica'),
+  TZ: z.string().optional(),
   // Session Configuration
   SESSION_SECRET: z.string().min(16, 'SESSION_SECRET debe tener al menos 16 caracteres'),
 
