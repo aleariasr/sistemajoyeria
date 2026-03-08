@@ -13,8 +13,9 @@ const { parseISO } = require('date-fns');
 
 // Zona horaria configurable desde variable de entorno
 // Por defecto: America/Costa_Rica (UTC-6)
-const TIMEZONE = process.env.TZ || 'America/Costa_Rica';
-
+const rawTimezone = process.env.TIMEZONE || process.env.APP_TIMEZONE || process.env.TZ || 'America/Costa_Rica';
+const normalizedTimezone = rawTimezone.startsWith(':') ? rawTimezone.slice(1) : rawTimezone;
+const TIMEZONE = normalizedTimezone || 'America/Costa_Rica';
 // Mantener constante por compatibilidad con código existente
 const COSTA_RICA_OFFSET_HOURS = -6;
 
@@ -36,10 +37,13 @@ function obtenerFechaCostaRica() {
  * @returns {string} Fecha formateada para SQL en formato ISO 8601
  */
 function formatearFechaSQL(fecha = null) {
-  const fechaCR = fecha || obtenerFechaCostaRica();
-  
-  // Usar date-fns-tz para formatear correctamente en la zona horaria
-  // Formato ISO 8601: YYYY-MM-DDTHH:MM:SS (compatible con PostgreSQL)
+  let fechaCR = fecha || obtenerFechaCostaRica();
+
+  // Asegurar que sea un Date válido
+  if (!(fechaCR instanceof Date) || isNaN(fechaCR.getTime())) {
+    fechaCR = new Date();
+  }
+
   return formatInTimeZone(fechaCR, TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
