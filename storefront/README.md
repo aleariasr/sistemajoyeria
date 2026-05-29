@@ -1,6 +1,6 @@
 # Storefront
 
-Aplicación Next.js para la tienda online pública de Sistema Joyería, redactada en estilo de portafolio técnico para entrevistas.
+Aplicación React para la tienda online pública de Sistema Joyería.
 
 ## Propósito
 
