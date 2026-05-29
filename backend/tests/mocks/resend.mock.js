@@ -5,15 +5,17 @@
 
 class MockResend {
   constructor(apiKey) {
+    if (mockResendInstance) {
+      mockResendInstance.apiKey = apiKey;
+      return mockResendInstance;
+    }
+
     this.apiKey = apiKey;
     this.sentEmails = [];
-  }
-
-  get emails() {
-    return {
-      send: async (emailData) => {
+    this.emails = {
+      send: jest.fn(async (emailData) => {
         const emailId = `mock_email_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        
+
         // Store sent email for verification
         this.sentEmails.push({
           id: emailId,
@@ -26,8 +28,10 @@ class MockResend {
           data: { id: emailId },
           error: null
         };
-      }
+      })
     };
+
+    mockResendInstance = this;
   }
 
   getSentEmails() {
@@ -36,6 +40,7 @@ class MockResend {
 
   clearSentEmails() {
     this.sentEmails = [];
+    this.emails.send.mockClear();
   }
 }
 
@@ -54,7 +59,7 @@ let mockResendInstance = null;
  */
 function getMockResend() {
   if (!mockResendInstance) {
-    mockResendInstance = new MockResend('test-key');
+    return new MockResend('test-key');
   }
   return mockResendInstance;
 }
