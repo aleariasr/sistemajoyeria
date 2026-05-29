@@ -8,8 +8,8 @@
 El sistema integra procesos de punto de venta, administración operativa y comercio electrónico en una arquitectura modular.
 
 - **backend/**: API REST (Node.js + Express + Supabase)
-- **frontend/**: POS administrativo (React)
-- **storefront/**: tienda online pública (Next.js)
+- **frontend/**: POS administrativo (Next.js)
+- **storefront/**: tienda online pública (React)
 
 ## Tabla de contenido
 
