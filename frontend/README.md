@@ -1,6 +1,6 @@
 # Frontend POS
 
-Aplicación React para operación interna de la joyería (punto de venta, inventario y reportes), presentada en formato de portafolio para entrevista técnica.
+Aplicación Next.js para operación interna de la joyería (punto de venta, inventario y reportes).
 
 ## Propósito
 
