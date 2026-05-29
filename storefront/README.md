@@ -1,6 +1,10 @@
 # Storefront
 
-Aplicación Next.js para la tienda pública en línea.
+Aplicación Next.js para la tienda online pública de Sistema Joyería, redactada en estilo de portafolio técnico para entrevistas.
+
+## Propósito
+
+Este módulo cubre la experiencia de compra digital de cliente final y consume la API pública del backend.
 
 ## Configuración
 
@@ -12,11 +16,11 @@ cp .env.example .env.local
 
 ## Variables de entorno
 
-Ver [`storefront/.env.example`](.env.example).
+La referencia está en [`storefront/.env.example`](.env.example).
 
 Variables principales:
 - `NEXT_PUBLIC_API_URL`
-- `NEXT_PUBLIC_SITE_URL` (SEO/sitemap en producción)
+- `NEXT_PUBLIC_SITE_URL` (SEO y sitemap en producción)
 
 ## Scripts
 

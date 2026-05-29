@@ -1,6 +1,10 @@
 # Frontend POS
 
-Aplicación React para operación interna (punto de venta, inventario y reportes).
+Aplicación React para operación interna de la joyería (punto de venta, inventario y reportes), presentada en formato de portafolio para entrevista técnica.
+
+## Propósito
+
+Este módulo ofrece una interfaz administrativa para procesos diarios del negocio, con foco en productividad operativa y trazabilidad.
 
 ## Configuración
 
@@ -12,11 +16,11 @@ cp .env.example .env
 
 ## Variables de entorno
 
-Ver [`frontend/.env.example`](.env.example).
+La referencia está en [`frontend/.env.example`](.env.example).
 
 Variables principales:
 - `HOST=0.0.0.0` (acceso desde dispositivos en red local)
-- `REACT_APP_API_URL` (opcional en local, requerido en despliegues externos)
+- `REACT_APP_API_URL` (opcional en local y requerido en despliegues externos)
 
 ## Scripts
 
@@ -27,7 +31,7 @@ npm run build
 npm run test:coverage
 ```
 
-## Notas
+## Notas operativas
 
 - El frontend detecta automáticamente la IP del backend en escenarios de red local.
-- Para producción, configure `REACT_APP_API_URL` hacia la API publicada.
+- En producción, se debe configurar `REACT_APP_API_URL` apuntando a la API publicada.

@@ -1,13 +1,17 @@
 # Backend (API)
 
-API REST de Sistema Joyería construida con Express y Supabase.
+Servicio API REST de Sistema Joyería, documentado en formato de portafolio técnico para entrevistas.
+
+## Propósito
+
+El backend centraliza reglas de negocio, autenticación, gestión operativa y exposición de endpoints para el POS y la tienda online.
 
 ## Stack
 
 - Node.js + Express
 - Supabase (PostgreSQL)
-- Cloudinary (imágenes)
-- Resend (emails)
+- Cloudinary (gestión de imágenes)
+- Resend (notificaciones por correo)
 
 ## Configuración
 
@@ -19,7 +23,7 @@ cp .env.example .env
 
 ## Variables de entorno
 
-Ver detalle completo en [`backend/.env.example`](.env.example).
+La referencia completa se encuentra en [`backend/.env.example`](.env.example).
 
 Variables críticas:
 - `SESSION_SECRET`
@@ -42,9 +46,9 @@ npm run test:coverage
 
 ## Estructura
 
-- `routes/`: endpoints HTTP
-- `models/`: acceso y reglas de datos
-- `middleware/`: autenticación, validaciones, upload
+- `routes/`: definición de endpoints HTTP
+- `models/`: acceso a datos y reglas de dominio
+- `middleware/`: autenticación, validaciones y carga de archivos
 - `services/`: integraciones externas
-- `tests/`: pruebas unitarias/integración/performance
+- `tests/`: pruebas unitarias, de integración y de rendimiento
 - `migrations/`: scripts SQL

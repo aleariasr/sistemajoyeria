@@ -1,45 +1,49 @@
-# Notification Sound
+# Sonido de notificación
 
-A notification sound file is expected at:
+Se espera un archivo de sonido en la ruta:
 `frontend/public/sounds/notification.mp3`
 
-## Creating the Sound
+## Objetivo
 
-### Option 1: Find Free Sound Effects
+Este recurso aporta una alerta auditiva para eventos del POS y mejora la confirmación de acciones en el flujo operativo.
+
+## Cómo obtener el archivo
+
+### Opción 1: Usar efectos de sonido libres
 - https://freesound.org/
 - https://www.zapsplat.com/
-- Search for "notification" or "alert"
-- Download as MP3
+- Buscar términos como "notification" o "alert"
+- Descargar en formato MP3
 
-### Option 2: Generate Sound
-- Use online tone generator
-- Create a simple beep or chime
-- Export as MP3
+### Opción 2: Generar un sonido
+- Utilizar un generador de tonos en línea
+- Crear un beep o campanilla simple
+- Exportar en MP3
 
-### Recommended Specs
-- Duration: 0.5-2 seconds
-- Format: MP3
-- Volume: Moderate (will be set to 50% in code)
-- Type: Pleasant notification sound (not jarring)
+## Especificaciones recomendadas
 
-## Temporary Workaround
+- Duración: 0,5 a 2 segundos
+- Formato: MP3
+- Volumen: moderado (la aplicación lo reproduce al 50%)
+- Tipo: sonido claro y agradable, sin resultar invasivo
 
-If this file is missing:
-- The notification will still work
-- The app will log an error in console
-- Users won't hear audio alert
-- Visual notification will still appear
+## Comportamiento si falta el archivo
 
-## Example Sound Characteristics
+- La notificación funcional se mantiene
+- La aplicación registra un error en consola
+- No se reproduce alerta de audio
+- La notificación visual continúa activa
 
-Good notification sounds are:
-- Short (< 2 seconds)
-- Pleasant and not annoying
-- Clear and attention-getting
-- Professional
+## Referencia de estilo sonoro
 
-Popular choices:
-- Simple beep
-- Chime
-- Bell sound
-- Subtle tone
+Se recomiendan sonidos:
+- breves (menos de 2 segundos)
+- agradables y no molestos
+- nítidos y fáciles de identificar
+- apropiados para uso profesional
+
+Opciones habituales:
+- beep simple
+- campanilla
+- timbre breve
+- tono sutil
