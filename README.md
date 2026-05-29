@@ -3,8 +3,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Licencia: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Repositorio monolítico orientado a portafolio técnico para entrevistas, enfocado en la operación integral de una joyería mediante tres aplicaciones coordinadas.
-
 ## Visión general del proyecto
 
 El sistema integra procesos de punto de venta, administración operativa y comercio electrónico en una arquitectura modular.
